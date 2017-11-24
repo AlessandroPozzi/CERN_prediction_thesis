@@ -6,8 +6,6 @@ Created on 15 nov 2017
 
 import re
 import pandas as pd
-import numpy
-
 
 priority = ('L0', 'L1', 'L2', 'L3')
 data_txt = [] #This list will contain "data_p" elements, one per txt file
@@ -45,7 +43,6 @@ class Data_extractor:
     -------------------------------------------------------------------------------------------------------------
 
     '''
-
     def __init__(self):
         '''
         Constructor
@@ -328,7 +325,7 @@ class Data_extractor:
                             else:    
                                 value = 0
                             dict_data[ud] = value
-                    array_data.append(dict_data)
+                        array_data.append(dict_data)
         else:
             print("training_instances generation method not chosen correctly")
         return(array_data)

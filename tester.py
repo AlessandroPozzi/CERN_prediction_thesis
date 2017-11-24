@@ -48,7 +48,7 @@ extractor.take_n_variables(13)
 '''
 ''' 3) Count occurrences of ALL devices and selects only the n most frequent '''
 ordered_list = extractor.count_occurrences_all_devices()
-extractor.take_n_variables(8)
+extractor.take_n_variables(9)
 
 ''' 4) Adds 6 extra variables as "causes" (compatible with the previous points)
 causes = ['trigger_EHS60/BE', 'trigger_EMC001*9', 'trigger_ESS11/5H', 'trigger_ESS1*84', 'trigger_EXS4/8X', 'trigger_EXS106/2X']
@@ -58,24 +58,37 @@ extractor.add_variable_names(causes)
 
 #print(ordered_list)
 
-''' BUILDING THE DATAFRAME '''
+''' BUILDING THE DATAFRAME
 variables = extractor.get_variable_names()
-print("There are " + str(len(variables)) + " variables in the network: " + " ".join(variables))
+print("There are " + str(len(variables)) + " variables in the network: " + " ".join(variables)) '''
 ''' 1) Pandas dataframe for pgmpy library 
- data = extractor.build_dataframe(training_instances="all_events")
- print("There are " + str(len(data)) + " 'training' instances in the dataframe.")
+data = extractor.build_dataframe(training_instances="all_events")
+print("There are " + str(len(data)) + " 'training' instances in the dataframe.")
 '''
 ''' 2) Dictionary for libpgm library '''
-data = extractor.build_libpgm_data()
+data = extractor.build_libpgm_data(training_instances="all_events")
 
 
 
-''' ONLY FOR LIBPGM: EVERYTHING IS DONE HERE 
+''' ONLY FOR LIBPGM: EVERYTHING IS DONE HERE '''
 learner = PGMLearner()
-result = learner.discrete_estimatebn(data)
+graph_skeleton = learner.discrete_constraint_estimatestruct(data)
+result = learner.discrete_mle_estimateparams(graph_skeleton, data)
+#result = learner.discrete_estimatebn(data)
 print json.dumps(result.E, indent=2)
 print json.dumps(result.Vdata, indent=2)
-'''
+graph = BayesianModel()
+for v in graph_skeleton.V:
+    graph.add_node(v)
+for e in graph_skeleton.E:
+    graph.add_edge(e[0], e[1])
+    
+pos = nx.spring_layout(graph)
+nx.draw_networkx_nodes(graph, pos, cmap=plt.get_cmap('jet'), node_size = 500)
+nx.draw_networkx_labels(graph, pos, font_size=9)
+nx.draw_networkx_edges(graph, pos)
+
+plt.show() #keep this at the end
 
 
 ''' SELECT METHOD FOR STRUCTURE LEARNING '''

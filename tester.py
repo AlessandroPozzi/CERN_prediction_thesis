@@ -12,7 +12,7 @@ import networkx as nx
 from Data_extractor import Data_extractor
 from pgmpy.estimators import HillClimbSearch, BicScore, BayesianEstimator, K2Score
 from pgmpy.models import BayesianModel
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from pgmpy.inference import VariableElimination
 from pgmpy.estimators.ExhaustiveSearch import ExhaustiveSearch
 import json
@@ -20,6 +20,8 @@ from libpgm.nodedata import NodeData
 from libpgm.graphskeleton import GraphSkeleton
 from libpgm.discretebayesiannetwork import DiscreteBayesianNetwork
 from libpgm.pgmlearner import PGMLearner
+from pgmpy.estimators import ConstraintBasedEstimator
+import pyBN
 
 file_names = ["EHS60BE","EMC0019", "ES115H","ESS184","EXS48X","EXS1062X"]
 true_device_names = ['EHS60/BE', 'EMC001*9', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X']
@@ -58,19 +60,26 @@ extractor.add_variable_names(causes)
 
 #print(ordered_list)
 
-''' BUILDING THE DATAFRAME
+''' BUILDING THE DATAFRAME '''
 variables = extractor.get_variable_names()
-print("There are " + str(len(variables)) + " variables in the network: " + " ".join(variables)) '''
-''' 1) Pandas dataframe for pgmpy library 
+print("There are " + str(len(variables)) + " variables in the network: " + " ".join(variables)) 
+''' 1) Pandas dataframe for pgmpy library  '''
 data = extractor.build_dataframe(training_instances="all_events")
 print("There are " + str(len(data)) + " 'training' instances in the dataframe.")
-'''
-''' 2) Dictionary for libpgm library '''
+
+est = ConstraintBasedEstimator(data)
+bn = est.estimate()
+#skel, sep_sets = est.estimate_skeleton()
+
+
+print("stop")
+
+''' 2) Dictionary for libpgm library 
 data = extractor.build_libpgm_data(training_instances="all_events")
+'''
 
 
-
-''' ONLY FOR LIBPGM: EVERYTHING IS DONE HERE '''
+''' ONLY FOR LIBPGM: EVERYTHING IS DONE HERE 
 learner = PGMLearner()
 graph_skeleton = learner.discrete_constraint_estimatestruct(data)
 result = learner.discrete_mle_estimateparams(graph_skeleton, data)
@@ -82,7 +91,9 @@ for v in graph_skeleton.V:
     graph.add_node(v)
 for e in graph_skeleton.E:
     graph.add_edge(e[0], e[1])
+'''
     
+''' TEMP
 pos = nx.spring_layout(graph)
 nx.draw_networkx_nodes(graph, pos, cmap=plt.get_cmap('jet'), node_size = 500)
 nx.draw_networkx_labels(graph, pos, font_size=9)
@@ -90,7 +101,8 @@ nx.draw_networkx_edges(graph, pos)
 
 plt.show() #keep this at the end
 
-
+'''
+    
 ''' SELECT METHOD FOR STRUCTURE LEARNING '''
 ''''1) Scoring methods '''
 #scoring_method = BicScore(data)
@@ -121,12 +133,12 @@ print("Search terminated")
 
 
 
-''' DRAWING THE NETWORK '''
+''' DRAWING THE NETWORK 
 pos = nx.spring_layout(best_model)
 nx.draw_networkx_nodes(best_model, pos, cmap=plt.get_cmap('jet'), node_size = 500)
 nx.draw_networkx_labels(best_model, pos, font_size=9)
 nx.draw_networkx_edges(best_model, pos)
-
+'''
 
 
 ''' PARAMETER ESTIMATION '''
@@ -149,5 +161,5 @@ phi_query = inference.max_marginal(variables, evidence)
 print(phi_query)
 '''
 
-plt.show() #keep this at the end
+#plt.show() #keep this at the end
 

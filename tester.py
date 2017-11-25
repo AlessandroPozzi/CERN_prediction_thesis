@@ -21,7 +21,6 @@ from libpgm.graphskeleton import GraphSkeleton
 from libpgm.discretebayesiannetwork import DiscreteBayesianNetwork
 from libpgm.pgmlearner import PGMLearner
 from pgmpy.estimators import ConstraintBasedEstimator
-import pyBN
 
 file_names = ["EHS60BE","EMC0019", "ES115H","ESS184","EXS48X","EXS1062X"]
 true_device_names = ['EHS60/BE', 'EMC001*9', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X']

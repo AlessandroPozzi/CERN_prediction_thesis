@@ -215,7 +215,7 @@ class Data_extractor:
         global variable_names 
         variable_names = new_list
     
-    def build_dataframe(self, training_instances="none"):
+    def build_dataframe(self, training_instances="none", priority_node = False):
         ''' 
         Builds and returns the pandas dataframe
         training_instances = 
@@ -226,9 +226,10 @@ class Data_extractor:
             
             ADD OPTION TO IGNORE PRIORITY
         '''
-        print("Priority node will be now added.")    
         dict_data = dict()
-        dict_data['priority'] = [] #add the "priority" key
+        if priority_node:
+            print("Priority node will be now added.")    
+            dict_data['priority'] = [] #add the "priority" key
         
         if training_instances == "support":
             i = -1
@@ -238,7 +239,8 @@ class Data_extractor:
                     for freq_set in p: #and for each frequent set (i.e the tuples that represent the extracted frequent sets) in a priority set... - n iter
                         iters = int(freq_set[2]) - (freq_set[3] - 1) # the support generates duplicates
                         for s in range(1, iters):
-                            dict_data['priority'].append(freq_set[0])
+                            if priority_node:
+                                dict_data['priority'].append(freq_set[0])
                             for ud in variable_names: # - m iter
                                 if ud in freq_set[1] or ud==file_names[i]:
                                     value = 1 #in this set, the device has triggered an event
@@ -255,7 +257,8 @@ class Data_extractor:
             for key in events_by_file:
                 for tupl in events_by_file[key]: #each "line" is a list of an event sequence (+ priority as the other element of the tuple) to be turned into a training instance
                     if self.not_empty_check(tupl[0]): #i.e. consider only events lines that generate a NON-EMPTY training instance
-                        dict_data['priority'].append(tupl[1])
+                        if priority_node:
+                            dict_data['priority'].append(tupl[1])
                         for ud in variable_names:
                             if ud in tupl[0] or ud==key:
                                 value = 1
@@ -272,7 +275,8 @@ class Data_extractor:
             for key in events_by_file:
                 for tupl in events_by_file[key]: #each "line" is a list of an event sequence (+ priority as the other element of the tuple) to be turned into a training instance
                     if self.not_empty_check(tupl[0]): #i.e. consider only events lines that generate a NON-EMPTY training instance
-                        dict_data['priority'].append(tupl[1])
+                        if priority_node:
+                            dict_data['priority'].append(tupl[1])
                         for ud in variable_names:
                             if ud in tupl[0] or ud==key:
                                 value = tupl[1]
@@ -289,7 +293,8 @@ class Data_extractor:
             for key in events_by_file:
                 for tupl in events_by_file[key]: #each "line" is a list of an event sequence (+ priority as the other element of the tuple) to be turned into a training instance
                     if self.not_empty_check(tupl[0]): #i.e. consider only events lines that generate a NON-EMPTY training instance
-                        dict_data['priority'].append(tupl[1])
+                        if priority_node:
+                            dict_data['priority'].append(tupl[1])
                         for ud in variable_names:
                             if ud in tupl[0] or self.check_trigger(ud, key):
                                 value = 1
@@ -307,7 +312,7 @@ class Data_extractor:
         data = pd.DataFrame(dict_data)
         return data
     
-    def build_libpgm_data(self, training_instances='none'):
+    def build_libpgm_data(self, training_instances='none', priority_node = False):
         ''' Builds and return the array of dictionaries required by the libpgm's PGMlearner class.
             training_instances = 
             all_events -- to generate one training instance per event (in "distinct devices after 5 minutes")
@@ -318,7 +323,8 @@ class Data_extractor:
                 for tupl in events_by_file[key]: #each "line" is a list of an event sequence (+ priority as the other element of the tuple) to be turned into a training instance
                     if self.not_empty_check(tupl[0]): #i.e. consider only events lines that generate a NON-EMPTY training instance
                         dict_data = dict()
-                        dict_data['priority'] = tupl[1]
+                        if priority_node:
+                            dict_data['priority'] = tupl[1]
                         for ud in variable_names:
                             if ud in tupl[0] or ud==key:
                                 value = 1

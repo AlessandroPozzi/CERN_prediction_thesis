@@ -6,6 +6,7 @@ Created on 15 nov 2017
 
 import re
 import pandas as pd
+import numpy as np
 
 priority = ('L0', 'L1', 'L2', 'L3')
 data_txt = [] #This list will contain "data_p" elements, one per txt file
@@ -223,8 +224,7 @@ class Data_extractor:
             all_events             -- to generate one training instance per event (in "distinct devices after 5 minutes")
             all_events_with_causes -- like all_events, but also considers the 6 causes variables
             all_events_priority    -- like all_event but instead of using [0, 1] as values for variables, uses the priority related to the event: [0, L0, L1, L2, L3]
-            
-            ADD OPTION TO IGNORE PRIORITY
+        priority_node      =  True if you want to ignore the priority node
         '''
         dict_data = dict()
         if priority_node:
@@ -309,6 +309,7 @@ class Data_extractor:
         
         else:
             print("training_instances generation method not chosen correctly")
+            return
         data = pd.DataFrame(dict_data)
         return data
     
@@ -334,8 +335,45 @@ class Data_extractor:
                         array_data.append(dict_data)
         else:
             print("training_instances generation method not chosen correctly")
+            return
         return(array_data)
     
+    def build_numpy_data(self, training_instances='none', priority_node = False):
+        '''     
+        Builds and returns the numpy array used by the pyBn library       
+        training_instances = 
+        all_events -- to generate one training instance per event (in "distinct devices after 5 minutes")
+        '''
+        list_of_lists = []
+        single_list = []
+        #To create the numpy array we use a list of list. The first list has the column headers (nodes).
+        if priority_node:
+            single_list.append(priority)
+        for ud in variable_names:
+            single_list.append(ud)
+        list_of_lists.append(single_list)
+        
+        if training_instances == "all_events":
+            for key in events_by_file:
+                for tupl in events_by_file[key]: #each "line" is a list of an event sequence (+ priority as the other element of the tuple) to be turned into a training instance
+                    if self.not_empty_check(tupl[0]): #i.e. consider only events lines that generate a NON-EMPTY training instance
+                        single_list = []
+                        if priority_node:
+                            single_list.append(tupl[1]) #add the priority
+                        for ud in variable_names: 
+                            if ud in tupl[0] or ud==key:
+                                value = 1
+                            else:    
+                                value = 0
+                            single_list.append(value) #This works if the "for" cycle over variable_names is always done in the same order
+                        list_of_lists.append(single_list)
+        else:
+            print("training_instances generation method not chosen correctly")
+            return
+        data = numpy.array(list_of_lists)
+        return data
+        
+        
     def not_empty_check(self, device_list):
         ''' Takes a list of devices as checks if at least one variable is present in that list '''
         global variable_names

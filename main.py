@@ -19,7 +19,7 @@ extra_var = "none"  #none, causes
 network_handler.select_variables(var_type, var_num, extra_var, log = True)
 
 # 3) BUILD DATA
-library = "pgmpy"               #pgmpy, libpgm
+library = "pyBN"               #pgmpy, libpgm, pyBN
 training_instances="all_events" #all_events, all_events_with_causes, all_events_priority, support
 priority_node = False
 network_handler.build_data(library, training_instances, priority_node, log = True)
@@ -30,7 +30,7 @@ scoring_method = "bic"  #bic, K2
 prior = "none"          #none, priority
 network_handler.learn_structure(method, scoring_method, prior, log = True) 
 
-# 5) ESTIMATE THE PARAMTERS
+# 5) ESTIMATE THE PARAMETERS
 network_handler.estimate_parameters(log = True)
 
 # 6) DRAW THE NETWORK

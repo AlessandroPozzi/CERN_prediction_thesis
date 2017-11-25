@@ -19,6 +19,7 @@ from libpgm.pgmlearner import PGMLearner
 from Data_extractor import Data_extractor
 import warnings
 from pgmpy.estimators import ConstraintBasedEstimator
+import pyBM
 
 class Network_handler:
     '''
@@ -128,6 +129,10 @@ class Network_handler:
             self.data = self.extractor.build_libpgm_data(training_instances, priority_node)
             if log:
                 print("There are " + str(len(self.data)) + " 'training' instances")
+            
+        elif library == "pyBN":
+            self.data = self.extractor.build_numpy_data(training_instances, priority_node)
+            
         else:
             print("Wrong library chosen")
         
@@ -177,6 +182,9 @@ class Network_handler:
             elif prior == "none":
                 self.best_model = est.estimate()
             
+        elif self.lib == "pyBN"
+            if method == "scoring":
+                    
             
         if log:
             print("Search terminated")
@@ -207,7 +215,7 @@ class Network_handler:
         
         
     def draw_network(self):
-        ''' (6) Draws the netork.
+        ''' (6) Draws the network.
         '''
         with warnings.catch_warnings():
             warnings.simplefilter("ignore") #suppress warnings

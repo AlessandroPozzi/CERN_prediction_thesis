@@ -256,7 +256,7 @@ class Data_extractor:
         elif training_instances == "all_events":
             for key in events_by_file:
                 for tupl in events_by_file[key]: #each "line" is a list of an event sequence (+ priority as the other element of the tuple) to be turned into a training instance
-                    if self.not_empty_check(tupl[0]): #i.e. consider only events lines that generate a NON-EMPTY training instance
+                    if self.not_empty_check(tupl[0], priority_node): #i.e. consider only events lines that generate a NON-EMPTY training instance
                         if priority_node:
                             dict_data['priority'].append(tupl[1])
                         for ud in variable_names:
@@ -274,7 +274,7 @@ class Data_extractor:
         elif training_instances == "all_events_priority":
             for key in events_by_file:
                 for tupl in events_by_file[key]: #each "line" is a list of an event sequence (+ priority as the other element of the tuple) to be turned into a training instance
-                    if self.not_empty_check(tupl[0]): #i.e. consider only events lines that generate a NON-EMPTY training instance
+                    if self.not_empty_check(tupl[0], priority_node): #i.e. consider only events lines that generate a NON-EMPTY training instance
                         if priority_node:
                             dict_data['priority'].append(tupl[1])
                         for ud in variable_names:
@@ -292,7 +292,7 @@ class Data_extractor:
         elif training_instances == "all_events_with_causes":
             for key in events_by_file:
                 for tupl in events_by_file[key]: #each "line" is a list of an event sequence (+ priority as the other element of the tuple) to be turned into a training instance
-                    if self.not_empty_check(tupl[0]): #i.e. consider only events lines that generate a NON-EMPTY training instance
+                    if self.not_empty_check(tupl[0], priority_node): #i.e. consider only events lines that generate a NON-EMPTY training instance
                         if priority_node:
                             dict_data['priority'].append(tupl[1])
                         for ud in variable_names:
@@ -322,7 +322,7 @@ class Data_extractor:
         if training_instances == 'all_events':
             for key in events_by_file:
                 for tupl in events_by_file[key]: #each "line" is a list of an event sequence (+ priority as the other element of the tuple) to be turned into a training instance
-                    if self.not_empty_check(tupl[0]): #i.e. consider only events lines that generate a NON-EMPTY training instance
+                    if self.not_empty_check(tupl[0],priority_node): #i.e. consider only events lines that generate a NON-EMPTY training instance
                         dict_data = dict()
                         if priority_node:
                             dict_data['priority'] = tupl[1]
@@ -356,7 +356,7 @@ class Data_extractor:
         if training_instances == "all_events":
             for key in events_by_file:
                 for tupl in events_by_file[key]: #each "line" is a list of an event sequence (+ priority as the other element of the tuple) to be turned into a training instance
-                    if self.not_empty_check(tupl[0]): #i.e. consider only events lines that generate a NON-EMPTY training instance
+                    if self.not_empty_check(tupl[0],priority_node): #i.e. consider only events lines that generate a NON-EMPTY training instance
                         single_list = []
                         if priority_node:
                             single_list.append(tupl[1]) #add the priority
@@ -370,16 +370,24 @@ class Data_extractor:
         else:
             print("training_instances generation method not chosen correctly")
             return
-        data = numpy.array(list_of_lists)
+        data = np.array(list_of_lists)
         return data
         
         
-    def not_empty_check(self, device_list):
-        ''' Takes a list of devices as checks if at least one variable is present in that list '''
+    def not_empty_check(self, device_list, priority_node):
+        ''' Takes a list of devices and checks if at least one variable is present in that list.
+        If the priority node is not present, will required that at least 2 devices are present
+        '''
         global variable_names
+        if priority_node:
+            i = 1
+        else:
+            i = 0
         for d in variable_names:
             if d in device_list:
-                return True
+                i += 1
+                if i >=2:
+                    return True
         return False
     
     def get_data_txt(self):
@@ -398,6 +406,9 @@ class Data_extractor:
                 
     def get_variable_names(self):
         return variable_names  
+    
+    def get_unique_frequent_devices_by_file(self):
+        return unique_frequent_devices_by_file
     
     def add_variable_names(self, names):
         global variable_names

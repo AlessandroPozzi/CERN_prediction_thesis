@@ -22,6 +22,16 @@ from libpgm.discretebayesiannetwork import DiscreteBayesianNetwork
 from libpgm.pgmlearner import PGMLearner
 from pgmpy.estimators import ConstraintBasedEstimator
 
+import pandas as pd
+from pgmpy.models import BayesianModel
+from pgmpy.estimators import BayesianEstimator
+data = pd.DataFrame(data={'A': [0, 0, 1], 'B': [0, 1, 0], 'C': [1, 1, 0]})
+model = BayesianModel([('A', 'C'), ('B', 'C')])
+estimator = BayesianEstimator(model, data)
+cpd_C = estimator.estimate_cpd('C', prior_type="dirichlet", pseudo_counts=[1, 2])
+print(cpd_C)
+
+
 file_names = ["EHS60BE","EMC0019", "ES115H","ESS184","EXS48X","EXS1062X"]
 true_device_names = ['EHS60/BE', 'EMC001*9', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X']
 #file_names = ["EHS60BE", "EMC0019", "ES115H"]

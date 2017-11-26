@@ -19,7 +19,7 @@ from libpgm.pgmlearner import PGMLearner
 from Data_extractor import Data_extractor
 import warnings
 from pgmpy.estimators import ConstraintBasedEstimator
-import pyBM
+import pyBN.learning.structure.score.hill_climbing
 
 class Network_handler:
     '''
@@ -182,9 +182,10 @@ class Network_handler:
             elif prior == "none":
                 self.best_model = est.estimate()
             
-        elif self.lib == "pyBN"
+        elif self.lib == "pyBN":
             if method == "scoring":
-                    
+                hl = pyBN.learning.structure.score.hill_climbing.hc
+                hl(self.data)    
             
         if log:
             print("Search terminated")
@@ -208,7 +209,7 @@ class Network_handler:
         elif self.lib == "pgmpy":
             estimator = BayesianEstimator(self.best_model, self.data)
             for node in self.best_model.nodes():
-                cpd = estimator.estimate_cpd(node)
+                cpd = estimator.estimate_cpd(node, prior_type='K2')
                 self.best_model.add_cpds(cpd)
                 if log:
                     print(cpd)
@@ -240,6 +241,7 @@ class Network_handler:
             plt.show() 
         
 
-
+    def data_info(self):
+        print(self.extractor.get_unique_frequent_devices_by_file())
             
         

@@ -1,0 +1,37 @@
+\documentclass[a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[italian]{babel}
+\usepackage{amssymb}
+\usepackage[fleqn]{amsmath}
+\usepackage{amsfonts}
+\usepackage{hyperref}
+\usepackage[margin=1.6in]{geometry}
+
+\begin{document}
+
+\subsection*{Premessa e problemi incontrati}
+In questi giorni abbiamo cercato di ricavare una rete Bayesiana dai dati forniti dalla prof. Mazuran. Ricordiamo che i dati sono costituiti da 6 file relativi ai 6 device che avevano generato più eventi in assoluto. Ogni file è suddiviso in 4 priorità, all'interno delle quali sono presenti due gruppi. Il primo gruppo \textit{''Distinct devices after 5 minutes''} presenta una lista di device per ciascuno degli eventi generati dal device del file. Il secondo invece contiene risultato del mining di itemset frequenti. \\
+Inizialmente ci siamo concentrati sul secondo gruppo e abbiamo cercato di sfruttare il lavoro fatto sugli itemset frequenti per estrarre le correlazioni tra i device. Ci siamo però resi conto che è difficile lavorare unicamente su questi dati in quanto nella fase di training non è possibile considerare correttamente il peso di ciascun itemset (ovvero il supporto) e le sovrapposizioni tra itemset (poiché, ad esempio, l'uno potrebbe contenere l'altro). Anche considerare solo i device negli itemset frequenti e generare i dati per il training con il primo gruppo si è rivelato inefficace perché i ''frequent devices'' di un file non sono mai gli stessi che appaiono negli altri file (di fatto sarebbe come considerare 6 problemi separati). In definitiva, correlazioni tra dati negli itemset frequenti sarebbero più immediati da scovare con una tecnica di data mining come le association rules, pertanto ci siamo concentrati sul primo gruppo di dati. \\
+Per quanto riguardare il software, abbiamo riscontrato dei problemi con le una delle librerie principali per modelli grafici (Pgmpy \url{http://pgmpy.org/}. Gli \textit{score-based methods} di Pgmpy generano una struttura alla quale vengono poi associate distribuzioni di probabilità condizionale completamente uniforme (tutti i valori sono 0.5, oppure 0.25, ...), indipendentemente dal numero di variabili o dati utilizzati. Supponiamo sia un bug, anche perché siamo giunti a questo stesso risultato scrivendo indipendentemente due codici. La seconda libreria, Libpgm (\url{http://pythonhosted.org/libpgm/}) ha a disposizione i \textit{constraint-based methods} che forniscono delle probabilità più sensate, ma in compenso non sempre genera un grafo aciclico per le variabili scelte (il che si traduce in un errore). Stiamo ancora cercando di capire se possiamo risolvere questi errori con delle modifiche alle librerie.
+
+
+\subsection*{Variabili e dataset}
+Per le variabili della bayesian network abbiamo considerato principalmente i seguenti casi:
+\begin{itemize}
+\item le 6 variabili associate ai device dei 6 file
+\item le n delle variabili con più occorrenze in assoluto
+\item le n variabili con più occorrenze con l'aggiunta 6 variabili ''trigger'' che rappresentano il device del file che ha generato l'evento
+\end{itemize}
+Abbiamo generato un'istanza di training per ciascuna delle liste di device nel primo gruppo. Per i valori assegnati alle variabili abbiamo usato 1 quando la variabile era presente nella lista, 0 altrimenti. Abbiamo provato a considerare la priorità come una variabile con valori [L0, L1, L2, L3] ma non sempre la rete imparata sembrava considerarla nel modo corretto (MOSTRA IMMAGINE e spiega in didascalia?), se non forzando i collegamenti prima del learning.
+
+
+
+
+Altre cose da dire:
+- alcune priorità inutili e addirittura alcuni livelli di priorità potrebbero essere considerati indipendentemente dagli altri
+- mostrare qualche rete e qualche cpd
+- abbiamo provato ad escludere i dati con un unico valore posto a 1
+
+\end{document}

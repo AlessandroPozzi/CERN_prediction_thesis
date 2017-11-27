@@ -242,6 +242,23 @@ class Network_handler:
         
 
     def data_info(self):
-        print(self.extractor.get_unique_frequent_devices_by_file())
-            
+        
+        # 1
+        print("Showing now the unique devices in frequent itemset, for each file:")
+        ufd = self.extractor.get_unique_frequent_devices_by_file()
+        print "{:<15} {:<90}".format('File name','Unique devices in frequent itemsets')
+        for k, v in ufd.iteritems():
+            print "{:<15} {:<90}".format(k, v)
+        
+        # 2
+        max = 36
+        print("Showing now the " + str(max) + " absolutely more frequent devices (based on the relative appearance in each file)")
+        fov = self.extractor.frequency_occurences_variables()
+        print "{:<15} {:<90}".format('Device name','Frequency')
+        i = 0 
+        for e in fov: 
+            i = i + 1
+            if i < max: #visualize max "i" elements
+                print "{:<15} {:<90}".format(e[0], e[1])    
+
         

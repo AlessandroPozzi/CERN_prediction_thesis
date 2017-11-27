@@ -14,7 +14,7 @@ network_handler.process_files(ignore_priority, files_used, log = True)
 
 # 2) SELECT VARIABLES
 var_type = "all"    #all, file_name
-var_num = 10
+var_num = 15
 extra_var = "none"  #none, causes
 network_handler.select_variables(var_type, var_num, extra_var, log = True)
 

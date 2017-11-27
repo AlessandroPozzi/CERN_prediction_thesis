@@ -183,25 +183,32 @@ class Data_extractor:
         return ranked_devices_by_count 
     
     def frequency_occurences_variables(self):
-        ''' NON FINITA '''
-        global events_by_file
-        global ranked 
+        ''' Returns the all the devices ordered by their summed individual (in files) frequency '''
+        global events_by_file 
         global ranked_device_by_frequency
-        frequency_by_device = dict() #key = device; value = number of occurrences in SINGLE FILE
-        
+        frequency_by_device = dict() # key = device, value = sum of frequencies of device
+
         for key in events_by_file:
+            occurrences_in_file = dict() #key = device; value = number of occurrences in SINGLE FILE
             total_events = len(events_by_file[key])
             for tupl in events_by_file[key]:
                 for d in tupl[0]:
-                    if d not in frequency_by_device: #create new key
-                        frequency_by_device[d] = 0
+                    if d not in occurrences_in_file: #create new key
+                        occurrences_in_file[d] = 1
                     else: #update key
-                        frequency_by_device[d] = frequency_by_device[d] + 1
-            for d in frequency_by_device:
-                frequency_by_device[d] = frequency_by_device[d] / total_events
-            
-                
+                        occurrences_in_file[d] = occurrences_in_file[d] + 1
+            for d in occurrences_in_file:
+                if d not in frequency_by_device:
+                    frequency_by_device[d] = occurrences_in_file[d] / float(total_events)
+                else:
+                    frequency_by_device[d] = frequency_by_device[d] + occurrences_in_file[d] / float(total_events)
         
+        for d in frequency_by_device:
+            tupl = (d, frequency_by_device[d])
+            ranked_device_by_frequency.append(tupl)
+        
+        ranked_device_by_frequency.sort(key = lambda tup: tup[1], reverse=True)
+        return ranked_device_by_frequency
     
     def take_n_variables(self, n):
         ''' choses the n most frequent devices and uses them as new variables '''

@@ -345,6 +345,13 @@ class Data_extractor:
             return
         return(array_data)
     
+    def build_pomegranate_array(self, training_instances='none', priority_node = False):
+        '''
+        builds and returns the array of data that is needed by the pomegranade library
+        MAYBE NOT NECESSARY; CHECK
+        '''
+    
+    
     def build_numpy_data(self, training_instances='none', priority_node = False):
         '''     
         Builds and returns the numpy array used by the pyBn library       

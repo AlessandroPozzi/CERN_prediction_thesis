@@ -14,12 +14,12 @@ network_handler.process_files(ignore_priority, files_used, log = True)
 
 # 2) SELECT VARIABLES
 var_type = "all"    #all, file_name
-var_num = 15
+var_num = 10
 extra_var = "none"  #none, causes
 network_handler.select_variables(var_type, var_num, extra_var, log = True)
 
 # 3) BUILD DATA
-library = "libpgm"               #pgmpy, libpgm, pyBN
+library = "pomegranate"               #pgmpy, libpgm, pyBN, pomegranate
 training_instances="all_events" #all_events, all_events_with_causes, all_events_priority, support
 priority_node = False
 network_handler.build_data(library, training_instances, priority_node, log = True)

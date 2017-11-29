@@ -20,6 +20,7 @@ from Data_extractor import Data_extractor
 import warnings
 from pgmpy.estimators import ConstraintBasedEstimator
 import pyBN.learning.structure.score.hill_climbing
+from pomegranate import *
 
 class Network_handler:
     '''
@@ -38,6 +39,7 @@ class Network_handler:
         self.learner = PGMLearner()
         self.graph_skeleton = GraphSkeleton()
         self.best_model = BayesianModel()
+        self.bn = BayesianNetwork()
         self.data = []
 
 
@@ -124,6 +126,11 @@ class Network_handler:
             self.data = self.extractor.build_dataframe(training_instances, priority_node)
             if log:
                 print("There are " + str(len(self.data)) + " 'training' instances in the dataframe.")    
+                
+        elif library == "pomegranate":
+            self.data = self.extractor.build_numpy_data(training_instances, priority_node)
+            if log:
+                print("There are " + str(len(self.data)) + " 'training' instances")
         
         elif library == "libpgm":
             self.data = self.extractor.build_libpgm_data(training_instances, priority_node)
@@ -155,8 +162,12 @@ class Network_handler:
         '''
         if self.lib == "libpgm":
             self.graph_skeleton = self.learner.discrete_constraint_estimatestruct(self.data)
-        
-        
+            
+        elif self.lib == "pomegranate":
+            self.bn = BayesianNetwork.from_samples(self.data)
+            if log:
+                print("There are: " + str(self.bn.node_count()) + " in the network")
+                
         elif self.lib == "pgmpy":
             if method == "scoring":
                 if scoring_method == "K2":
@@ -205,6 +216,11 @@ class Network_handler:
             if log:
                 print json.dumps(result.E, indent=2)
                 print json.dumps(result.Vdata, indent=2)
+            
+        elif self.lib == "pomegranate":
+            self.bn.fit(self.data)
+            if log:
+                print self.bn.to_json(indent = 4)
         
         elif self.lib == "pgmpy":
             estimator = BayesianEstimator(self.best_model, self.data)
@@ -237,6 +253,9 @@ class Network_handler:
                 nx.draw_networkx_nodes(self.best_model, pos, cmap=plt.get_cmap('jet'), node_size = 500)
                 nx.draw_networkx_labels(self.best_model, pos, font_size=9)
                 nx.draw_networkx_edges(self.best_model, pos)
+                
+            elif self.lib == "pomegranate":
+                self.bn.plot()
             
             plt.show() 
         

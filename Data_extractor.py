@@ -15,9 +15,9 @@ data_txt = [] #This list will contain "data_p" elements, one per txt file
 variable_names = [] #to be used as nodes in the network
 file_names = [] #stores the names of the files
 events_by_file = dict() #a dictionary that has filenames as keys, and a list of tuples as values. Each tuple is a couple ([device list], priority)
-ranked_devices_by_count = [] #list of tuples that show which devices appear more
+ranked_devices = [] #list of tuples that show which devices appear more
 unique_frequent_devices_by_file = dict() #
-ranked_device_by_frequency = [] #list of tuples that show which devices appear more, considering individual frequencies
+ranked_device = [] #list of tuples that show which devices appear more, considering individual frequencies
 
 class Data_extractor:
     '''
@@ -139,8 +139,8 @@ class Data_extractor:
     def count_occurrences_all_devices(self):
         ''' Finds all the unique devices in all the events '''
         global events_by_file
-        global ranked_devices_by_count #A list of tuples (device, occurrences)
-        ranked_devices_by_count = []
+        global ranked_devices #A list of tuples (device, occurrences)
+        ranked_devices = []
         device_occurrences = dict() #this will help storing the # of occurrences
         
         for key in events_by_file:
@@ -153,17 +153,17 @@ class Data_extractor:
                             device_occurrences[d] = 1 #create key
         
         for key in device_occurrences:
-            ranked_devices_by_count.append((key, device_occurrences[key]))
+            ranked_devices.append((key, device_occurrences[key]))
         
-        ranked_devices_by_count.sort(key = lambda tup: tup[1], reverse=True)
-        return ranked_devices_by_count 
+        ranked_devices.sort(key = lambda tup: tup[1], reverse=True)
+        return ranked_devices 
         
         
     def count_occurrences_variables(self):
         ''' Counts the occurrences of the variable names in all the "Distinct devices after 5 minutes" set '''
         global variable_names
         global events_by_file
-        global ranked_devices_by_count #A list of tuples (device, occurrences)
+        global ranked_devices #A list of tuples (device, occurrences)
         device_occurrences = dict() #this will help storing the # of occurrences
         
         for d in variable_names:
@@ -177,15 +177,16 @@ class Data_extractor:
                             device_occurrences[d] = device_occurrences[d] + 1
                     
         for key in device_occurrences:
-            ranked_devices_by_count.append((key, device_occurrences[key]))
+            ranked_devices.append((key, device_occurrences[key]))
         
-        ranked_devices_by_count.sort(key = lambda tup: tup[1], reverse=True)
-        return ranked_devices_by_count 
+        ranked_devices.sort(key = lambda tup: tup[1], reverse=True)
+        return ranked_devices 
     
     def frequency_occurences_variables(self):
         ''' Returns the all the devices ordered by their summed individual (in files) frequency '''
         global events_by_file 
-        global ranked_device_by_frequency
+        global ranked_devices
+        ranked_device = []
         frequency_by_device = dict() # key = device, value = sum of frequencies of device
 
         for key in events_by_file:
@@ -205,17 +206,18 @@ class Data_extractor:
         
         for d in frequency_by_device:
             tupl = (d, frequency_by_device[d])
-            ranked_device_by_frequency.append(tupl)
+            ranked_device.append(tupl)
         
-        ranked_device_by_frequency.sort(key = lambda tup: tup[1], reverse=True)
-        return ranked_device_by_frequency
+        ranked_device.sort(key = lambda tup: tup[1], reverse=True)
+        return ranked_device
     
     def take_n_variables(self, n):
         ''' choses the n most frequent devices and uses them as new variables '''
         global variable_names
+        global ranked_devices
         variable_names = []
         for i in range(0, n):
-            variable_names.append(ranked_devices_by_count[i][0])
+            variable_names.append(ranked_devices[i][0])
                 
     
     def reset_variable_names(self, new_list):
@@ -360,13 +362,13 @@ class Data_extractor:
         '''
         list_of_lists = []
         single_list = []
-        #To create the numpy array we use a list of list. The first list has the column headers (nodes).
+        '''To create the numpy array we use a list of list. The first list has the column headers (nodes).
         if priority_node:
             single_list.append(priority)
         for ud in variable_names:
             single_list.append(ud)
         list_of_lists.append(single_list)
-        
+        '''
         if training_instances == "all_events":
             for key in events_by_file:
                 for tupl in events_by_file[key]: #each "line" is a list of an event sequence (+ priority as the other element of the tuple) to be turned into a training instance
@@ -400,7 +402,7 @@ class Data_extractor:
         for d in variable_names:
             if d in device_list:
                 i += 1
-                if i >=2:
+                if i >=1:
                     return True
         return False
     

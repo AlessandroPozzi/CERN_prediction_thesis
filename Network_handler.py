@@ -21,6 +21,9 @@ import warnings
 from pgmpy.estimators import ConstraintBasedEstimator
 import pyBN.learning.structure.score.hill_climbing
 from pomegranate import *
+#import pomegranate.pomegranate-master.pomegranate.BayesianNetwork
+#from testBN import BayesianNetwork 
+from networkx.classes import ordered
 
 class Network_handler:
     '''
@@ -32,8 +35,8 @@ class Network_handler:
         '''
         Constructor
         '''
-        self.file_names = ["EHS60BE","EMC0019", "ES115H","ESS184","EXS48X","EXS1062X"]
-        self.true_device_names = ['EHS60/BE', 'EMC001*9', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X']
+        self.file_names = ["EMC0019", "EHS60BE", "ES115H","ESS184","EXS48X","EXS1062X"]
+        self.true_device_names = ["EMC0019", 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X']
         self.extractor = Data_extractor()
         self.lib = ""
         self.learner = PGMLearner()
@@ -74,7 +77,8 @@ class Network_handler:
         -----------------
         Parameters:
         var_type  : The origin of the variables to be considered. Accepted values:
-           -> all       - If we consider the devices from the complete event list
+           -> all_count       - If we consider the devices from the complete event list
+           -> all_frequency   - If we consider the frequency of the devices in the complete event list
            -> file_name - If we consider only the 6 file devices as variables
         var_num   : How many variables to take.
         extra_var : Adds extra variables.
@@ -82,8 +86,14 @@ class Network_handler:
            -> causes    - To add the 6 extra variables corresponding to the 6 file devices.
         log       : "True" if you want to print debug information in the console    
         '''
-        if var_type == "all":
+        if var_type == "all_count":
             ordered_list = self.extractor.count_occurrences_variables()
+            self.extractor.take_n_variables(var_num)
+            if log:
+                print(ordered_list)
+                
+        elif var_type == "all_frequency":
+            ordered_list = self.extractor.frequency_occurences_variables()
             self.extractor.take_n_variables(var_num)
             if log:
                 print(ordered_list)
@@ -161,10 +171,11 @@ class Network_handler:
         log             - "True" if you want to print debug information in the console    
         '''
         if self.lib == "libpgm":
-            self.graph_skeleton = self.learner.discrete_constraint_estimatestruct(self.data)
+            self.graph_skeleton = self.learner.discrete_constraint_estimatestruct(self.data, pvalparam=0.9)
             
         elif self.lib == "pomegranate":
             self.bn = BayesianNetwork.from_samples(self.data)
+            print(self.bn.structure)
             if log:
                 print("There are: " + str(self.bn.node_count()) + " in the network")
                 
@@ -243,10 +254,27 @@ class Network_handler:
                     graph.add_node(v)
                 for e in self.graph_skeleton.E:
                     graph.add_edge(e[0], e[1])
-                pos = nx.spring_layout(graph)
+                #pos = nx.spring_layout(model)
+                pos = nx.fruchterman_reingold_layout(graph)
                 nx.draw_networkx_nodes(graph, pos, cmap=plt.get_cmap('jet'), node_size = 500)
                 nx.draw_networkx_labels(graph, pos, font_size=9)
                 nx.draw_networkx_edges(graph, pos)
+                
+            elif self.lib == "pomegranate":
+                model = BayesianModel()
+                var_names = self.extractor.get_variable_names()
+                for name in var_names:
+                    model.add_node(name)
+                structure = self.bn.structure
+                for parent_tuple, device_name in zip(structure, var_names):
+                    for parent in parent_tuple:
+                        model.add_edge(var_names[parent], device_name)
+                #pos = nx.spring_layout(model)
+                pos = nx.fruchterman_reingold_layout(model)
+                nx.draw_networkx_nodes(model, pos, cmap=plt.get_cmap('jet'), node_size = 500)
+                nx.draw_networkx_labels(model, pos, font_size=9)
+                nx.draw_networkx_edges(model, pos)
+                
                 
             elif self.lib == "pgmpy":
                 pos = nx.spring_layout(self.best_model)

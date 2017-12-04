@@ -5,6 +5,7 @@ Created on 23 nov 2017
 '''
 
 import networkx as nx
+import re
 from Data_extractor import Data_extractor, file_names
 from pgmpy.estimators import HillClimbSearch, BicScore, BayesianEstimator, K2Score
 from pgmpy.models import BayesianModel
@@ -24,6 +25,7 @@ from pomegranate import *
 #import pomegranate.pomegranate-master.pomegranate.BayesianNetwork
 #from testBN import BayesianNetwork 
 from networkx.classes import ordered
+from numpy.core.defchararray import lower
 
 class Network_handler:
     '''
@@ -44,6 +46,7 @@ class Network_handler:
         self.best_model = BayesianModel()
         self.bn = BayesianNetwork()
         self.data = []
+        self.training_instances = ""
 
 
     def process_files(self, ignore_priority = [], files_used = 6, log = True):
@@ -69,7 +72,6 @@ class Network_handler:
 
         if log:
             print("Text files data extraction completed.")
-
     
     def select_variables(self, var_type, var_num = 6, extra_var = "none", log = True):
         ''' (2)
@@ -106,8 +108,7 @@ class Network_handler:
         if extra_var == "causes":
             causes = ['trigger_EHS60/BE', 'trigger_EMC001*9', 'trigger_ESS11/5H', 'trigger_ESS1*84', 'trigger_EXS4/8X', 'trigger_EXS106/2X']
             self.extractor.add_variable_names(causes)
-            
-            
+  
     def build_data(self, library, training_instances="all_events",  priority_node = False, log=True):
         ''' (3)
         Method that builds the data to be used by the graphical model library.
@@ -128,6 +129,7 @@ class Network_handler:
         '''
         self.lib = library
         variables = self.extractor.get_variable_names()
+        self.training_instances = training_instances
         if log:
             print("There are " + str(len(variables)) + " variables in the network: " + " ".join(variables))
             print("Library used: " + library)
@@ -167,18 +169,68 @@ class Network_handler:
             -> bic
         prior           : Initial condition for the structure (only for pgmpy)
             -> none     - default
-            -> priority - Start with edges between priority and the 6 main devices 
+            -> priority - Start with edges between priority and the 6 main devices. In pomegranate, adds trigger in the constraint network.
+            -> trigger  - (for pomegranate) Add trigger in constraint network
         log             - "True" if you want to print debug information in the console    
         '''
         if self.lib == "libpgm":
             self.graph_skeleton = self.learner.discrete_constraint_estimatestruct(self.data, pvalparam=0.9)
             
         elif self.lib == "pomegranate":
-            self.bn = BayesianNetwork.from_samples(self.data)
-            print(self.bn.structure)
-            if log:
-                print("There are: " + str(self.bn.node_count()) + " in the network")
+
+            if prior == "trigger" and self.training_instances == "all_events_with_causes": #Use the constraint graph
+                constraints = nx.DiGraph()
+                var_names = self.extractor.get_variable_names()
+                upper_layer = tuple()
+                lower_layer = tuple()
+                for device in var_names:
+                    check = re.compile('trigger').findall(device)
+                    if check:
+                        #upper_layer.append(device) #triggers can only be parents
+                        upper_layer = upper_layer + (device,)
+                    else:
+                        #lower_layer.append(device)
+                        lower_layer = lower_layer + (device,)
+                constraints.add_edge(upper_layer, lower_layer)
+                constraints.add_edge(lower_layer, lower_layer)
+                self.bn = BayesianNetwork.from_samples(self.data, constraint_graph=constraints)
                 
+                if log:
+                    print("There are: " + str(self.bn.node_count()) + "nodes in the network")
+                    print("Constraints added to the network")
+                    print(self.bn.structure)
+                    '''
+                    pos = nx.spring_layout(constraints)
+                    nx.draw_networkx_nodes(constraints, pos, cmap=plt.get_cmap('jet'), node_size = 500)
+                    nx.draw_networkx_labels(constraints, pos, font_size=9)
+                    nx.draw_networkx_edges(constraints, pos)
+                    plt.show() 
+                    '''
+            elif prior == "priority":
+                constraints = nx.DiGraph()
+                var_names = self.extractor.get_variable_names()
+                upper_layer = tuple()
+                lower_layer = tuple()
+                i = 0
+                for device in var_names:
+                    if device == "priority":
+                        upper_layer = upper_layer + (i,)
+                    else:
+                        lower_layer = lower_layer + (i,)
+                    i = i + 1
+                constraints.add_edge(upper_layer, lower_layer)
+                constraints.add_edge(lower_layer, lower_layer)
+                self.bn = BayesianNetwork.from_samples(self.data, constraint_graph=constraints)
+                    
+                if log:
+                    print("There are: " + str(self.bn.node_count()) + "nodes in the network")
+                    print("Constraints added to the network")
+                    print(self.bn.structure)
+                    
+            else:
+                self.bn = BayesianNetwork.from_samples(self.data)
+            
+            
         elif self.lib == "pgmpy":
             if method == "scoring":
                 if scoring_method == "K2":
@@ -247,6 +299,9 @@ class Network_handler:
         '''
         with warnings.catch_warnings():
             warnings.simplefilter("ignore") #suppress warnings
+            
+            fig = plt.figure()
+            fig.canvas.set_window_title("Library: " + self.lib) 
         
             if self.lib == "libpgm":
                 graph = BayesianModel()
@@ -285,7 +340,7 @@ class Network_handler:
             elif self.lib == "pomegranate":
                 self.bn.plot()
             
-            plt.show() 
+            plt.show()
         
 
     def data_info(self):

@@ -17,7 +17,6 @@ file_names = [] #stores the names of the files
 events_by_file = dict() #a dictionary that has filenames as keys, and a list of tuples as values. Each tuple is a couple ([device list], priority)
 ranked_devices = [] #list of tuples that show which devices appear more
 unique_frequent_devices_by_file = dict() #
-ranked_device = [] #list of tuples that show which devices appear more, considering individual frequencies
 
 class Data_extractor:
     '''
@@ -166,15 +165,13 @@ class Data_extractor:
         global ranked_devices #A list of tuples (device, occurrences)
         device_occurrences = dict() #this will help storing the # of occurrences
         
-        for d in variable_names:
-            device_occurrences[d] = 0
-        
         for key in events_by_file:
             for tupl in events_by_file[key]:
                 for d in tupl[0]:
-                    if d not in priority: #CHECK THIS, COULD BE USELESS NOW
-                        if d in variable_names:
-                            device_occurrences[d] = device_occurrences[d] + 1
+                    if d not in device_occurrences: #create new key
+                        device_occurrences[d] = 1
+                    else: #update key
+                        device_occurrences[d] = device_occurrences[d] + 1
                     
         for key in device_occurrences:
             ranked_devices.append((key, device_occurrences[key]))
@@ -186,7 +183,7 @@ class Data_extractor:
         ''' Returns the all the devices ordered by their summed individual (in files) frequency '''
         global events_by_file 
         global ranked_devices
-        ranked_device = []
+        ranked_devices = []
         frequency_by_device = dict() # key = device, value = sum of frequencies of device
 
         for key in events_by_file:
@@ -206,10 +203,10 @@ class Data_extractor:
         
         for d in frequency_by_device:
             tupl = (d, frequency_by_device[d])
-            ranked_device.append(tupl)
+            ranked_devices.append(tupl)
         
-        ranked_device.sort(key = lambda tup: tup[1], reverse=True)
-        return ranked_device
+        ranked_devices.sort(key = lambda tup: tup[1], reverse=True)
+        return ranked_devices
     
     def take_n_variables(self, n):
         ''' choses the n most frequent devices and uses them as new variables '''

@@ -9,11 +9,11 @@ network_handler = Network_handler()
 
 # 1) PROCESS FILES
 ignore_priority = ['L0', 'L3'] # 'L0', 'L1', 'L2', 'L3'
-files_used = 6
+files_used = 1
 network_handler.process_files(ignore_priority, files_used, log = True)
 
 # 2) SELECT VARIABLES
-var_type = "all_count"    #all_count, file_name, all_frequency
+var_type = "all_frequency"    #all_count, file_name, all_frequency
 var_num = 8
 extra_var = "none"  #none, causes
 network_handler.select_variables(var_type, var_num, extra_var, log = True)

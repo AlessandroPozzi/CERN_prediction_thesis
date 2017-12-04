@@ -183,20 +183,24 @@ class Network_handler:
                 var_names = self.extractor.get_variable_names()
                 upper_layer = tuple()
                 lower_layer = tuple()
+                i = 0
                 for device in var_names:
                     check = re.compile('trigger').findall(device)
                     if check:
                         #upper_layer.append(device) #triggers can only be parents
-                        upper_layer = upper_layer + (device,)
+                        upper_layer = upper_layer + (i,)
                     else:
                         #lower_layer.append(device)
-                        lower_layer = lower_layer + (device,)
+                        lower_layer = lower_layer + (i,)
+                    i = i + 1
+                
                 constraints.add_edge(upper_layer, lower_layer)
                 constraints.add_edge(lower_layer, lower_layer)
                 self.bn = BayesianNetwork.from_samples(self.data, constraint_graph=constraints)
-                
+
                 if log:
-                    print("There are: " + str(self.bn.node_count()) + "nodes in the network")
+                    
+                    print("There are: " + str(self.bn.node_count()) + " nodes in the network")
                     print("Constraints added to the network")
                     print(self.bn.structure)
                     '''

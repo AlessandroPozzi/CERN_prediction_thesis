@@ -9,29 +9,29 @@ network_handler = Network_handler()
 
 # 1) PROCESS FILES
 ignore_priority = ['L0', 'L3'] # 'L0', 'L1', 'L2', 'L3'
-files_used = 1
+files_used = 6
 network_handler.process_files(ignore_priority, files_used, log = True)
 
 # 2) SELECT VARIABLES
 var_type = "all_frequency"    #all_count, file_name, all_frequency
 var_num = 8
-extra_var = "none"  #none, causes
+extra_var = "causes"  #none, causes
 network_handler.select_variables(var_type, var_num, extra_var, log = True)
 
 # 3) BUILD DATA
-library = "pgmpy"               #pgmpy, libpgm, pyBN, pomegranate
-training_instances="all_events" #all_events, all_events_with_causes, all_events_priority, support
+library = "pomegranate"               #pgmpy, libpgm, pyBN, pomegranate
+training_instances="all_events_with_causes" #all_events, all_events_with_causes, all_events_priority, support
 priority_node = False
 network_handler.build_data(library, training_instances, priority_node, log = True)
 
 # 4) LEARN THE STRUCTURE
 method = "scoring"      #scoring, constraint
 scoring_method = "K2"  #bic, K2
-prior = "none"          #none, priority, trigger
-network_handler.learn_structure(method, scoring_method, prior, log = True) 
+prior = "trigger"          #none, priority, trigger
+network_handler.learn_structure(method, scoring_method, prior, log = True)
 
 # 5) ESTIMATE THE PARAMETERS
-network_handler.estimate_parameters(log = True)
+network_handler.estimate_parameters(log = False)
 
 #6 ) DATA INFO
 #network_handler.data_info()

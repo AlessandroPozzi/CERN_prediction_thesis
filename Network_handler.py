@@ -142,12 +142,12 @@ class Network_handler:
         elif library == "pomegranate":
             self.data = self.extractor.build_numpy_data(training_instances, priority_node)
             if log:
-                print("There are " + str(len(self.data)) + " 'training' instances")
+                print("There are " + str(len(self.data)) + " 'training' instances in the dataset")
         
         elif library == "libpgm":
             self.data = self.extractor.build_libpgm_data(training_instances, priority_node)
             if log:
-                print("There are " + str(len(self.data)) + " 'training' instances")
+                print("There are " + str(len(self.data)) + " 'training' instances in the dataset")
             
         elif library == "pyBN":
             self.data = self.extractor.build_numpy_data(training_instances, priority_node)
@@ -177,6 +177,8 @@ class Network_handler:
             self.graph_skeleton = self.learner.discrete_constraint_estimatestruct(self.data, pvalparam=0.9)
             
         elif self.lib == "pomegranate":
+            
+            algorithm="greedy" #greedy, chow-liu, exact, exact-dp
 
             if prior == "trigger" and self.training_instances == "all_events_with_causes": #Use the constraint graph
                 constraints = nx.DiGraph()
@@ -196,7 +198,7 @@ class Network_handler:
                 
                 constraints.add_edge(upper_layer, lower_layer)
                 constraints.add_edge(lower_layer, lower_layer)
-                self.bn = BayesianNetwork.from_samples(self.data, constraint_graph=constraints)
+                self.bn = BayesianNetwork.from_samples(self.data, constraint_graph=constraints, algorithm)
 
                 if log:
                     
@@ -266,6 +268,7 @@ class Network_handler:
                 hl(self.data)    
             
         if log:
+            print("Training instances skipped: " + str(self.extractor.get_skipped_lines()))
             print("Search terminated")
             
         else:

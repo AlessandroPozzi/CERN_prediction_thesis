@@ -7,6 +7,7 @@ Created on 15 nov 2017
 import re
 import pandas as pd
 import numpy as np
+from unittest.case import skip
 
 priority = ('L0', 'L1', 'L2', 'L3')
 data_txt = [] #This list will contain "data_p" elements, one per txt file
@@ -17,6 +18,7 @@ file_names = [] #stores the names of the files
 events_by_file = dict() #a dictionary that has filenames as keys, and a list of tuples as values. Each tuple is a couple ([device list], priority)
 ranked_devices = [] #list of tuples that show which devices appear more
 unique_frequent_devices_by_file = dict() #
+skipped_lines = 0
 
 class Data_extractor:
     '''
@@ -395,6 +397,7 @@ class Data_extractor:
                         if priority_node:
                             single_list.append(tupl[1]) #add the priority
                         list_of_lists.append(single_list)
+        
         else:
             print("training_instances generation method not chosen correctly")
             return
@@ -409,6 +412,7 @@ class Data_extractor:
         If the priority node is not present, will required that at least 2 devices are present
         '''
         global variable_names
+        global skipped_lines
         if priority_node:
             i = 1
         else:
@@ -416,12 +420,16 @@ class Data_extractor:
         for d in variable_names:
             if d in device_list:
                 i += 1
-                if i >=1:
+                if i >=1: #i>=x : accepts training instances with at least x "1".
                     return True
+        skipped_lines += 1
         return False
     
     def get_data_txt(self):
         return data_txt
+    
+    def get_skipped_lines(self):
+        return skipped_lines
     
     def check_trigger(self, name, key):
         ''' 

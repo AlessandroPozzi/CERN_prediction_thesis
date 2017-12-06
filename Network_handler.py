@@ -6,6 +6,7 @@ Created on 23 nov 2017
 
 import networkx as nx
 import re
+import numpy as np
 from Data_extractor import Data_extractor, file_names
 from pgmpy.estimators import HillClimbSearch, BicScore, BayesianEstimator, K2Score
 from pgmpy.models import BayesianModel
@@ -178,7 +179,7 @@ class Network_handler:
             
         elif self.lib == "pomegranate":
             
-            algorithm="greedy" #greedy, chow-liu, exact, exact-dp
+            alg="chow-liu" #greedy, chow-liu, exact, exact-dp
 
             if prior == "trigger" and self.training_instances == "all_events_with_causes": #Use the constraint graph
                 constraints = nx.DiGraph()
@@ -198,7 +199,7 @@ class Network_handler:
                 
                 constraints.add_edge(upper_layer, lower_layer)
                 constraints.add_edge(lower_layer, lower_layer)
-                self.bn = BayesianNetwork.from_samples(self.data, constraint_graph=constraints, algorithm)
+                self.bn = BayesianNetwork.from_samples(self.data, constraint_graph=constraints, algorithm=alg)
 
                 if log:
                     
@@ -226,7 +227,7 @@ class Network_handler:
                     i = i + 1
                 constraints.add_edge(upper_layer, lower_layer)
                 constraints.add_edge(lower_layer, lower_layer)
-                self.bn = BayesianNetwork.from_samples(self.data, constraint_graph=constraints)
+                self.bn = BayesianNetwork.from_samples(self.data, constraint_graph=constraints,  algorithm=alg)
                     
                 if log:
                     print("There are: " + str(self.bn.node_count()) + "nodes in the network")
@@ -234,7 +235,7 @@ class Network_handler:
                     print(self.bn.structure)
                     
             else:
-                self.bn = BayesianNetwork.from_samples(self.data)
+                self.bn = BayesianNetwork.from_samples(self.data,  algorithm=alg)
             
             
         elif self.lib == "pgmpy":
@@ -290,7 +291,10 @@ class Network_handler:
         elif self.lib == "pomegranate":
             self.bn.fit(self.data)
             if log:
-                print self.bn.to_json(indent = 4)
+                json_data = self.bn.to_json()
+                with open('../res/pomegranate_cpds', 'w') as outfile:
+                    json.dump(json_data, outfile)
+                #print self.bn.to_json(indent = 4)
         
         elif self.lib == "pgmpy":
             estimator = BayesianEstimator(self.best_model, self.data)
@@ -300,6 +304,18 @@ class Network_handler:
                 if log:
                     print(cpd)
         
+    def inference(self):
+        
+        if self.lib == "pomegranate":
+            dictionary = dict()
+            for var in self.extractor.get_variable_names():
+                dictionary[var] = None
+            #add manually evidence
+            dictionary['ECE001/BE'] = 1
+            dictionary['EXS106/2X'] = 1
+            numpy_array = np.array([1, 1, 0, None, None, None])
+            print(self.bn.predict_proba(numpy_array))
+    
         
     def draw_network(self):
         ''' (6) Draws the network.
@@ -343,9 +359,6 @@ class Network_handler:
                 nx.draw_networkx_nodes(self.best_model, pos, cmap=plt.get_cmap('jet'), node_size = 500)
                 nx.draw_networkx_labels(self.best_model, pos, font_size=9)
                 nx.draw_networkx_edges(self.best_model, pos)
-                
-            elif self.lib == "pomegranate":
-                self.bn.plot()
             
             plt.show()
         
@@ -370,4 +383,6 @@ class Network_handler:
             if i < max: #visualize max "i" elements
                 print "{:<15} {:<90}".format(e[0], e[1])    
 
+    
+    
         

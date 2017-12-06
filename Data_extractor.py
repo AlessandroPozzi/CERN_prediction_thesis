@@ -157,6 +157,7 @@ class Data_extractor:
             ranked_devices.append((key, device_occurrences[key]))
         
         ranked_devices.sort(key = lambda tup: tup[1], reverse=True)
+        
         return ranked_devices 
         
         

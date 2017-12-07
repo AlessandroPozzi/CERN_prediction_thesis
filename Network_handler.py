@@ -7,12 +7,14 @@ Created on 23 nov 2017
 import networkx as nx
 import re
 import numpy as np
+
 from Data_extractor import Data_extractor, file_names
 from pgmpy.estimators import HillClimbSearch, BicScore, BayesianEstimator, K2Score
 from pgmpy.models import BayesianModel
-import matplotlib.pyplot as plt
+from pgmpy.estimators import ConstraintBasedEstimator
 from pgmpy.inference import VariableElimination
 from pgmpy.estimators.ExhaustiveSearch import ExhaustiveSearch
+
 import json
 from libpgm.nodedata import NodeData
 from libpgm.graphskeleton import GraphSkeleton
@@ -20,7 +22,8 @@ from libpgm.discretebayesiannetwork import DiscreteBayesianNetwork
 from libpgm.pgmlearner import PGMLearner
 from Data_extractor import Data_extractor
 import warnings
-from pgmpy.estimators import ConstraintBasedEstimator
+import matplotlib.pyplot as plt
+
 import pyBN.learning.structure.score.hill_climbing
 from pomegranate import *
 #import pomegranate.pomegranate-master.pomegranate.BayesianNetwork
@@ -50,28 +53,28 @@ class Network_handler:
         self.training_instances = ""
 
 
-    def process_files(self, ignore_priority = [], files_used = 6, log = True):
+    def process_files(self, select_priority = [], file_selection = [], log = True):
         '''  (1)
         Method that extracts data from the text files.
         -----------------
         Parameters:
-        ignore_priority -- list of the priority levels that must be completely ignored
+        select_priority -- list of the priority levels to be considered
         files_used      -- the number of files to be used (min 1, max 6)
         log             -- "True" if you want to print debug information in the console
         '''
-        if files_used > 6 or files_used < 1:
-            print("file_used parameter incorrect")
+        if not select_priority or not file_selection:
+            print("Priority or file not chosen. Exiting now.")
             return
-        else:   
-            i = 0 
-            for name, true_name in zip(self.file_names, self.true_device_names):
-                if i == files_used:
-                    return
-                else:
-                    self.extractor.extract(name, true_name, ignore_priority)
-                i += 1
-
+        else:
+            if log:
+                print("Priority level considered: " + str(select_priority))
+        
+        info = ""
+        for num in file_selection:
+            self.extractor.extract(self.file_names[num], self.true_device_names[num], select_priority)
+            info = self.file_names[num] + " " + info
         if log:
+            print("File considered: " + info)
             print("Text files data extraction completed.")
     
     def select_variables(self, var_type, var_num = 6, extra_var = "none", log = True):
@@ -239,16 +242,24 @@ class Network_handler:
             
             
         elif self.lib == "pgmpy":
-            if method == "scoring":
-                if scoring_method == "K2":
-                    scores = K2Score(self.data)
-                elif scoring_method == "bic":
-                    scores = BicScore(self.data)
+            if scoring_method == "K2":
+                scores = K2Score(self.data)
+            elif scoring_method == "bic":
+                scores = BicScore(self.data)
+            
+            if method == "scoring_approx":
                 if log:
                     print("Search for best approximated structure started...")
                 est = HillClimbSearch(self.data, scores)
                 
+            elif method == "scoring_exhaustive":
+                if log:
+                    print("Exhaustive search for the best structure started...")
+                est = ExhaustiveSearch(self.data, scores)
+                
             elif method == "constraint":
+                if log:
+                    print("Constraint based method for finding the structure started...")
                 est = ConstraintBasedEstimator(self.data)
             
             if prior == "priority":

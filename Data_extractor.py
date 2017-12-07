@@ -50,7 +50,7 @@ class Data_extractor:
         Constructor
         '''
 
-    def extract(self, txtfile, true_device_name, ignore_priority = []):
+    def extract(self, txtfile, true_device_name, select_priority = []):
         '''
         Extracts data from the txt file
         
@@ -76,14 +76,14 @@ class Data_extractor:
             for line in in_file.readlines():
                 #NOTE: the order of IF conditions IS RELEVANT
                 
-                if all_events==1 and priority[p-1] not in ignore_priority:
+                if all_events==1 and priority[p-1] in select_priority: # here we are in the "Distinct devices after 5 min"
                     self.store_line(line, true_device_name, priority[p-1])
                 
-                if re.search(r"PRIORITY", line):
+                if re.search(r"PRIORITY", line): #Here we are in the "PRIORITY level" line
                     p+=1 #priority level
                     all_events = 1
                 
-                if all_events==0 and priority[p-1] not in ignore_priority:
+                if all_events==0 and priority[p-1] in select_priority:
                     match = self.find_devices(line)
                     support = self.find_support(line)
                     if match and support:

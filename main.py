@@ -8,24 +8,24 @@ from Network_handler import Network_handler
 network_handler = Network_handler()
 
 # 1) PROCESS FILES
-ignore_priority = [] # 'L0', 'L1', 'L2', 'L3'
-files_used = 6
-network_handler.process_files(ignore_priority, files_used, log = True)
+select_priority = ['L1'] # 'L0', 'L1', 'L2', 'L3'
+file_selection = [1] # 1 to 6 -->  ("EMC0019", "EHS60BE", "ES115H", "ESS184", "EXS48X", "EXS1062X")
+network_handler.process_files(select_priority, file_selection, log = True)
 
 # 2) SELECT VARIABLES
 var_type = "all_frequency"    #all_count, file_name, all_frequency
-var_num = 7
+var_num = 6
 extra_var = "none"  #none, causes
 network_handler.select_variables(var_type, var_num, extra_var, log = True)
 
 # 3) BUILD DATA
-library = "pomegranate"               #pgmpy, libpgm, pyBN, pomegranate
+library = "pgmpy"               #pgmpy, libpgm, pyBN, pomegranate
 training_instances="all_events" #all_events, all_events_with_causes, all_events_priority, support
 priority_node = False
 network_handler.build_data(library, training_instances, priority_node, log = True)
 
 # 4) LEARN THE STRUCTURE
-method = "scoring"      #scoring, constraint
+method = "scoring_approx"      #scoring_approx, constraint, scoring_exhaustive
 scoring_method = "K2"  #bic, K2
 prior = "none"          #none, priority, trigger
 network_handler.learn_structure(method, scoring_method, prior, log = True)

@@ -8,7 +8,7 @@ import networkx as nx
 import re
 import numpy as np
 
-from Data_extractor import Data_extractor, file_names
+from Data_extractor import Data_extractor
 from pgmpy.estimators import HillClimbSearch, BicScore, BayesianEstimator, K2Score
 from pgmpy.models import BayesianModel
 from pgmpy.estimators import ConstraintBasedEstimator

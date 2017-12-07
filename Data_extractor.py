@@ -7,18 +7,8 @@ Created on 15 nov 2017
 import re
 import pandas as pd
 import numpy as np
-from unittest.case import skip
 
-priority = ('L0', 'L1', 'L2', 'L3')
-data_txt = [] #This list will contain "data_p" elements, one per txt file
-# data_p = [[], [], [], []] this list contains 4 elements, one for each priority. 
-#Each element is a list of tuples of the type: (priority, devices, support). The devices are a list of frequent devices with that particular priority and support
-variable_names = [] #to be used as nodes in the network
-file_names = [] #stores the names of the files
-events_by_file = dict() #a dictionary that has filenames as keys, and a list of tuples as values. Each tuple is a couple ([device list], priority)
-ranked_devices = [] #list of tuples that show which devices appear more
-unique_frequent_devices_by_file = dict() #
-skipped_lines = 0
+
 
 class Data_extractor:
     '''
@@ -49,6 +39,16 @@ class Data_extractor:
         '''
         Constructor
         '''
+        self.priority = ('L0', 'L1', 'L2', 'L3')
+        self.data_txt = [] #This list will contain "data_p" elements, one per txt file
+        # data_p = [[], [], [], []] this list contains 4 elements, one for each priority. 
+        #Each element is a list of tuples of the type: (priority, devices, support). The devices are a list of frequent devices with that particular priority and support
+        self.variable_names = [] #to be used as nodes in the network
+        self.file_names = [] #stores the names of the files
+        self.events_by_file = dict() #a dictionary that has filenames as keys, and a list of tuples as values. Each tuple is a couple ([device list], priority)
+        self.ranked_devices = [] #list of tuples that show which devices appear more
+        self.unique_frequent_devices_by_file = dict() #
+        self.skipped_lines = 0
 
     def extract(self, txtfile, true_device_name, select_priority = []):
         '''
@@ -60,13 +60,10 @@ class Data_extractor:
         true_device_name : the real name of the device in the events
         ignore_priority : a list that contain the priority levels (L0,L1,L2,L3) to be completely ignored
         '''
-        global unique_frequent_devices_by_file
-        global events_by_file
-        global file_names
         data_p = [[], [], [], []]
-        file_names.append(true_device_name)
-        events_by_file[true_device_name] = []
-        unique_frequent_devices_by_file[true_device_name] = []
+        self.file_names.append(true_device_name)
+        self.events_by_file[true_device_name] = []
+        self.unique_frequent_devices_by_file[true_device_name] = []
         
         with open ('../res/' + txtfile +'.txt', 'r') as in_file:
             all_events = 1
@@ -76,18 +73,18 @@ class Data_extractor:
             for line in in_file.readlines():
                 #NOTE: the order of IF conditions IS RELEVANT
                 
-                if all_events==1 and priority[p-1] in select_priority: # here we are in the "Distinct devices after 5 min"
-                    self.store_line(line, true_device_name, priority[p-1])
+                if all_events==1 and self.priority[p-1] in select_priority: # here we are in the "Distinct devices after 5 min"
+                    self.store_line(line, true_device_name, self.priority[p-1])
                 
                 if re.search(r"PRIORITY", line): #Here we are in the "PRIORITY level" line
                     p+=1 #priority level
                     all_events = 1
                 
-                if all_events==0 and priority[p-1] in select_priority:
+                if all_events==0 and self.priority[p-1] in select_priority:
                     match = self.find_devices(line)
                     support = self.find_support(line)
                     if match and support:
-                        content = (priority[p-1], match, support[0], min_support)
+                        content = (self.priority[p-1], match, support[0], min_support)
                         data_p[p-1].append(content)
                         self.unique_frequent_devices(match, true_device_name)
                         
@@ -95,7 +92,7 @@ class Data_extractor:
                     all_events = 0 #i.e. we'll now see the processed frequent itemsets
                     min_support = self.find_min_support(line)
         
-        data_txt.append(data_p)
+        self.data_txt.append(data_p)
             
     def find_devices(self, line):
         ''' Finds all the devices ID in the given line '''
@@ -117,13 +114,11 @@ class Data_extractor:
     
     def unique_frequent_devices(self, devices, file_name):
         ''' Updates a list that contains the IDs of all the unique devices met until this point - to be used as variables in the BN '''
-        global variable_names
-        global unique_frequent_devices_by_file
         for dev in devices:
-            if dev not in variable_names:
-                variable_names.append(dev)
-            if dev not in unique_frequent_devices_by_file[file_name]:
-                unique_frequent_devices_by_file[file_name].append(dev)
+            if dev not in self.variable_names:
+                self.variable_names.append(dev)
+            if dev not in self.unique_frequent_devices_by_file[file_name]:
+                self.unique_frequent_devices_by_file[file_name].append(dev)
                 
 
     def store_line(self, line, file_name, p):
@@ -135,28 +130,26 @@ class Data_extractor:
         devices_found = self.find_devices(line)
         if devices_found:
             tupl = (devices_found, p)
-            events_by_file[file_name].append(tupl)
+            self.events_by_file[file_name].append(tupl)
             
     def count_occurrences_all_devices(self):
         ''' Finds all the unique devices in all the events '''
-        global events_by_file
-        global ranked_devices #A list of tuples (device, occurrences)
-        ranked_devices = []
-        device_occurrences = dict() #this will help storing the # of occurrences
+        self.ranked_devices = []
+        self.device_occurrences = dict() #this will help storing the # of occurrences
         
         for key in events_by_file:
             for line in events_by_file[key]:
                 for d in line[0]: #[0] because it's a tuple
-                    if d not in priority: #we don't want to count the priority
-                        if d in device_occurrences:
-                            device_occurrences[d] = device_occurrences[d] + 1 #update key
+                    if d not in self.priority: #we don't want to count the priority
+                        if d in self.device_occurrences:
+                            self.device_occurrences[d] = self.device_occurrences[d] + 1 #update key
                         else:
-                            device_occurrences[d] = 1 #create key
+                            self.device_occurrences[d] = 1 #create key
         
-        for key in device_occurrences:
-            ranked_devices.append((key, device_occurrences[key]))
+        for key in self.device_occurrences:
+            self.ranked_devices.append((key, self.device_occurrences[key]))
         
-        ranked_devices.sort(key = lambda tup: tup[1], reverse=True)
+        self.ranked_devices.sort(key = lambda tup: tup[1], reverse=True)
         
         return ranked_devices 
         
@@ -169,7 +162,7 @@ class Data_extractor:
         device_occurrences = dict() #this will help storing the # of occurrences
         
         for key in events_by_file:
-            for tupl in events_by_file[key]:
+            for tupl in self.events_by_file[key]:
                 for d in tupl[0]:
                     if d not in device_occurrences: #create new key
                         device_occurrences[d] = 1
@@ -184,15 +177,13 @@ class Data_extractor:
     
     def frequency_occurences_variables(self):
         ''' Returns the all the devices ordered by their summed individual (in files) frequency '''
-        global events_by_file 
-        global ranked_devices
-        ranked_devices = []
+        self.ranked_devices = []
         frequency_by_device = dict() # key = device, value = sum of frequencies of device
 
-        for key in events_by_file:
+        for key in self.events_by_file:
             occurrences_in_file = dict() #key = device; value = number of occurrences in SINGLE FILE
-            total_events = len(events_by_file[key])
-            for tupl in events_by_file[key]:
+            total_events = len(self.events_by_file[key])
+            for tupl in self.events_by_file[key]:
                 for d in tupl[0]:
                     if d not in occurrences_in_file: #create new key
                         occurrences_in_file[d] = 1
@@ -206,24 +197,21 @@ class Data_extractor:
         
         for d in frequency_by_device:
             tupl = (d, frequency_by_device[d])
-            ranked_devices.append(tupl)
+            self.ranked_devices.append(tupl)
         
-        ranked_devices.sort(key = lambda tup: tup[1], reverse=True)
-        return ranked_devices
+        self.ranked_devices.sort(key = lambda tup: tup[1], reverse=True)
+        return self.ranked_devices
     
     def take_n_variables(self, n):
         ''' choses the n most frequent devices and uses them as new variables '''
-        global variable_names
-        global ranked_devices
-        variable_names = []
+        self.variable_names = []
         for i in range(0, n):
-            variable_names.append(ranked_devices[i][0])
+            self.variable_names.append(self.ranked_devices[i][0])
                 
     
     def reset_variable_names(self, new_list):
         ''' Replaces the unique devices with a given list '''
-        global variable_names 
-        variable_names = new_list
+        self.variable_names = new_list
     
     def build_dataframe(self, training_instances="none", priority_node = False):
         ''' 
@@ -242,7 +230,7 @@ class Data_extractor:
         
         if training_instances == "support":
             i = -1
-            for t in data_txt: #for each data group extracted from each txt file... - 6 iter
+            for t in self.data_txt: #for each data group extracted from each txt file... - 6 iter
                 i += 1
                 for p in t: #for each "priority set" (L0,L1,L2,L3) related to the txt file... - 4 iter
                     for freq_set in p: #and for each frequent set (i.e the tuples that represent the extracted frequent sets) in a priority set... - n iter
@@ -250,8 +238,8 @@ class Data_extractor:
                         for s in range(1, iters):
                             if priority_node:
                                 dict_data['priority'].append(freq_set[0])
-                            for ud in variable_names: # - m iter
-                                if ud in freq_set[1] or ud==file_names[i]:
+                            for ud in self.variable_names: # - m iter
+                                if ud in freq_set[1] or ud==self.file_names[i]:
                                     value = 1 #in this set, the device has triggered an event
                                 else:
                                     value = 0 #the device hasn't triggered a event
@@ -263,12 +251,12 @@ class Data_extractor:
                                     dict_data[ud].append(value)
                                 
         elif training_instances == "all_events":
-            for key in events_by_file:
-                for tupl in events_by_file[key]: #each "line" is a list of an event sequence (+ priority as the other element of the tuple) to be turned into a training instance
+            for key in self.events_by_file:
+                for tupl in self.events_by_file[key]: #each "line" is a list of an event sequence (+ priority as the other element of the tuple) to be turned into a training instance
                     if self.not_empty_check(tupl[0], priority_node): #i.e. consider only events lines that generate a NON-EMPTY training instance
                         if priority_node:
                             dict_data['priority'].append(tupl[1])
-                        for ud in variable_names:
+                        for ud in self.variable_names:
                             if ud in tupl[0] or ud==key:
                                 value = 1
                             else:    
@@ -281,12 +269,12 @@ class Data_extractor:
                                 dict_data[ud].append(value)
                             
         elif training_instances == "all_events_priority":
-            for key in events_by_file:
-                for tupl in events_by_file[key]: #each "line" is a list of an event sequence (+ priority as the other element of the tuple) to be turned into a training instance
+            for key in self.events_by_file:
+                for tupl in self.events_by_file[key]: #each "line" is a list of an event sequence (+ priority as the other element of the tuple) to be turned into a training instance
                     if self.not_empty_check(tupl[0], priority_node): #i.e. consider only events lines that generate a NON-EMPTY training instance
                         if priority_node:
                             dict_data['priority'].append(tupl[1])
-                        for ud in variable_names:
+                        for ud in self.variable_names:
                             if ud in tupl[0] or ud==key:
                                 value = tupl[1]
                             else:    
@@ -299,12 +287,12 @@ class Data_extractor:
                                 dict_data[ud].append(value)
                             
         elif training_instances == "all_events_with_causes":
-            for key in events_by_file:
-                for tupl in events_by_file[key]: #each "line" is a list of an event sequence (+ priority as the other element of the tuple) to be turned into a training instance
+            for key in self.events_by_file:
+                for tupl in self.events_by_file[key]: #each "line" is a list of an event sequence (+ priority as the other element of the tuple) to be turned into a training instance
                     if self.not_empty_check(tupl[0], priority_node): #i.e. consider only events lines that generate a NON-EMPTY training instance
                         if priority_node:
                             dict_data['priority'].append(tupl[1])
-                        for ud in variable_names:
+                        for ud in self.variable_names:
                             if ud in tupl[0] or self.check_trigger(ud, key):
                                 value = 1
                             else:    
@@ -334,13 +322,13 @@ class Data_extractor:
         '''
         array_data = []
         if training_instances == 'all_events':
-            for key in events_by_file:
-                for tupl in events_by_file[key]: #each "line" is a list of an event sequence (+ priority as the other element of the tuple) to be turned into a training instance
+            for key in self.events_by_file:
+                for tupl in self.events_by_file[key]: #each "line" is a list of an event sequence (+ priority as the other element of the tuple) to be turned into a training instance
                     if self.not_empty_check(tupl[0],priority_node): #i.e. consider only events lines that generate a NON-EMPTY training instance
                         dict_data = dict()
                         if priority_node:
                             dict_data['priority'] = tupl[1]
-                        for ud in variable_names:
+                        for ud in self.variable_names:
                             if ud in tupl[0] or ud==key:
                                 value = 1
                             else:    
@@ -370,11 +358,11 @@ class Data_extractor:
         list_of_lists = []
         single_list = []
         if training_instances == "all_events":
-            for key in events_by_file:
-                for tupl in events_by_file[key]: #each "line" is a list of an event sequence (+ priority as the other element of the tuple) to be turned into a training instance
+            for key in self.events_by_file:
+                for tupl in self.events_by_file[key]: #each "line" is a list of an event sequence (+ priority as the other element of the tuple) to be turned into a training instance
                     if self.not_empty_check(tupl[0],priority_node): #i.e. consider only events lines that generate a NON-EMPTY training instance
                         single_list = []
-                        for ud in variable_names: 
+                        for ud in self.variable_names: 
                             if ud in tupl[0] or ud==key:
                                 value = 1
                             else:    
@@ -385,11 +373,11 @@ class Data_extractor:
                         list_of_lists.append(single_list)         
                         
         elif training_instances == "all_events_with_causes":
-            for key in events_by_file:
-                for tupl in events_by_file[key]: #each "line" is a list of an event sequence (+ priority as the other element of the tuple) to be turned into a training instance
+            for key in self.events_by_file:
+                for tupl in self.events_by_file[key]: #each "line" is a list of an event sequence (+ priority as the other element of the tuple) to be turned into a training instance
                     if self.not_empty_check(tupl[0],priority_node): #i.e. consider only events lines that generate a NON-EMPTY training instance
                         single_list = []
-                        for ud in variable_names:
+                        for ud in self.variable_names:
                             if ud in tupl[0] or self.check_trigger(ud, key): #or ud==key omitted
                                 value = 1
                             else:    
@@ -403,7 +391,7 @@ class Data_extractor:
             print("training_instances generation method not chosen correctly")
             return
         if priority_node:
-            variable_names.append('priority')
+            self.variable_names.append('priority')
         data = np.array(list_of_lists)
         return data
         
@@ -412,25 +400,23 @@ class Data_extractor:
         ''' Takes a list of devices and checks if at least one variable is present in that list.
         If the priority node is not present, will required that at least 2 devices are present
         '''
-        global variable_names
-        global skipped_lines
         if priority_node:
             i = 1
         else:
             i = 0
-        for d in variable_names:
+        for d in self.variable_names:
             if d in device_list:
                 i += 1
                 if i >=1: #i>=x : accepts training instances with at least x "1".
                     return True
-        skipped_lines += 1
+        self.skipped_lines += 1
         return False
     
     def get_data_txt(self):
-        return data_txt
+        return self.data_txt
     
     def get_skipped_lines(self):
-        return skipped_lines
+        return self.skipped_lines
     
     def check_trigger(self, name, key):
         ''' 
@@ -444,13 +430,12 @@ class Data_extractor:
                 return device
                 
     def get_variable_names(self):
-        return variable_names  
+        return self.variable_names  
     
     def get_unique_frequent_devices_by_file(self):
-        return unique_frequent_devices_by_file
+        return self.unique_frequent_devices_by_file
     
     def add_variable_names(self, names):
-        global variable_names
         for n in names:   
-            variable_names.append(n)
+            self.variable_names.append(n)
                 

@@ -14,8 +14,9 @@ from pgmpy.models import BayesianModel
 from pgmpy.estimators import ConstraintBasedEstimator
 from pgmpy.inference import VariableElimination
 from pgmpy.estimators.ExhaustiveSearch import ExhaustiveSearch
-
+from graphviz import Digraph
 import json
+import pydot
 from libpgm.nodedata import NodeData
 from libpgm.graphskeleton import GraphSkeleton
 from libpgm.discretebayesiannetwork import DiscreteBayesianNetwork
@@ -51,6 +52,9 @@ class Network_handler:
         self.bn = BayesianNetwork()
         self.data = []
         self.training_instances = ""
+        self.device_considered = "" #works only when a single device is selected - used for graph
+        self.priority_considered = "" #works only when a single priority is selected - used for graph
+        self.method = "" #used for graph
 
 
     def process_files(self, select_priority = [], file_selection = [], log = True):
@@ -71,8 +75,10 @@ class Network_handler:
         
         info = ""
         for num in file_selection:
-            self.extractor.extract(self.file_names[num], self.true_device_names[num], select_priority)
-            info = self.file_names[num] + " " + info
+            self.extractor.extract(self.file_names[num-1], self.true_device_names[num-1], select_priority)
+            info = self.file_names[num-1] + " " + info
+            self.device_considered = self.file_names[num-1] #should only be one -used by graph
+        self.priority_considered = select_priority[0] #should only be one -used by graph
         if log:
             print("File considered: " + info)
             print("Text files data extraction completed.")
@@ -250,16 +256,19 @@ class Network_handler:
             if method == "scoring_approx":
                 if log:
                     print("Search for best approximated structure started...")
+                self.method = "scoring_approx"
                 est = HillClimbSearch(self.data, scores)
                 
             elif method == "scoring_exhaustive":
                 if log:
                     print("Exhaustive search for the best structure started...")
+                self.method = "scoring_exhaustive"
                 est = ExhaustiveSearch(self.data, scores)
                 
             elif method == "constraint":
                 if log:
                     print("Constraint based method for finding the structure started...")
+                self.method = "constraint"
                 est = ConstraintBasedEstimator(self.data)
             
             if prior == "priority":
@@ -303,7 +312,7 @@ class Network_handler:
             self.bn.fit(self.data)
             if log:
                 json_data = self.bn.to_json()
-                with open('../res/pomegranate_cpds', 'w') as outfile:
+                with open('../output/pomegranate_cpds', 'w') as outfile:
                     json.dump(json_data, outfile)
                 #print self.bn.to_json(indent = 4)
         
@@ -366,13 +375,26 @@ class Network_handler:
                 
                 
             elif self.lib == "pgmpy":
+                
+                nice_graph = pydot.Dot(graph_type='digraph')
+                for node in self.best_model.nodes():
+                    node_pydot = pydot.Node(node)
+                    nice_graph.add_node(node_pydot)
+                for edge in self.best_model.edges_iter():
+                    edge_pydot = pydot.Edge(edge[0], edge[1])
+                    nice_graph.add_edge(edge_pydot)
+                nice_graph.write_png('../output/' + self.device_considered 
+                                     + '_' + self.priority_considered + '_' + 
+                                     self.lib + "_" + self.method + '.png')
+
+                '''
                 pos = nx.spring_layout(self.best_model)
                 nx.draw_networkx_nodes(self.best_model, pos, cmap=plt.get_cmap('jet'), node_size = 500)
                 nx.draw_networkx_labels(self.best_model, pos, font_size=9)
-                nx.draw_networkx_edges(self.best_model, pos)
-            
+                nx.draw_networkx_edges(self.best_model, pos, arrow = True)
+                '''
             plt.show()
-        
+            
 
     def data_info(self):
         

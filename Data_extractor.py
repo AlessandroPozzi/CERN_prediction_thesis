@@ -312,7 +312,7 @@ class Data_extractor:
         aliases = ['Node1', 'Node2', 'Node3', 'Node4', 'Node5', 'Node6', 'Node7', 'Node8']
         data.to_csv(path_or_buf="../res/pandas_dataframe.csv", header=aliases)
         '''
-        data.to_csv(path_or_buf="../res/pandas_dataframe.csv")
+        data.to_csv(path_or_buf="../output/pandas_dataframe.csv")
         return data
     
     def build_libpgm_data(self, training_instances='none', priority_node = False):

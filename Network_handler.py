@@ -357,6 +357,7 @@ class Network_handler:
                 nx.draw_networkx_nodes(graph, pos, cmap=plt.get_cmap('jet'), node_size = 500)
                 nx.draw_networkx_labels(graph, pos, font_size=9)
                 nx.draw_networkx_edges(graph, pos)
+                plt.show()
                 
             elif self.lib == "pomegranate":
                 model = BayesianModel()
@@ -372,7 +373,7 @@ class Network_handler:
                 nx.draw_networkx_nodes(model, pos, cmap=plt.get_cmap('jet'), node_size = 500)
                 nx.draw_networkx_labels(model, pos, font_size=9)
                 nx.draw_networkx_edges(model, pos)
-                
+                plt.show()
                 
             elif self.lib == "pgmpy":
                 
@@ -393,7 +394,7 @@ class Network_handler:
                 nx.draw_networkx_labels(self.best_model, pos, font_size=9)
                 nx.draw_networkx_edges(self.best_model, pos, arrow = True)
                 '''
-            plt.show()
+
             
 
     def data_info(self):

@@ -8,7 +8,7 @@ from Network_handler import Network_handler
 network_handler = Network_handler()
 
 # 1) PROCESS FILES
-select_priority = ['L1'] # 'L0', 'L1', 'L2', 'L3'
+select_priority = ['L0'] # 'L0', 'L1', 'L2', 'L3'
 file_selection = [2] # 1 to 6 -->  ("EMC0019", "EHS60BE", "ES115H", "ESS184", "EXS48X", "EXS1062X")
 network_handler.process_files(select_priority, file_selection, log = True)
 

@@ -454,6 +454,19 @@ class Data_extractor:
             device = name.partition("_")[2]
             if key == device:
                 return device
+            
+    def nodata(self):
+        ''' 
+        Checks if there is some data in this priority - file combination. 
+        '''
+        file = self.true_file_names[0]
+        if self.events_by_file[file] == []:
+            return True
+        for row in self.events_by_file[file]:
+            for device in row:
+                if device != file:
+                    return False
+        return True
                 
     def get_variable_names(self):
         return self.variable_names  

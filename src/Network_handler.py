@@ -97,6 +97,11 @@ class Network_handler:
            -> causes    - To add the 6 extra variables corresponding to the 6 file devices.
         log       : "True" if you want to print debug information in the console    
         '''
+        if self.extractor.nodata():
+            print("WARNING! -------------------------------------------------------- ")
+            print("This file - priority combination does not contain any useful data! ")
+            print("-----------------------------------------------------------------")
+            
         if var_type == "all_count":
             ordered_list = self.extractor.count_occurrences_variables()
             if filter == "counting":

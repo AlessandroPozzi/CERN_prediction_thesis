@@ -7,7 +7,8 @@ Created on 23 nov 2017
 import networkx as nx
 import re
 import numpy as np
-
+import json
+import pydot
 from Data_extractor import Data_extractor
 from pgmpy.estimators import HillClimbSearch, BicScore, BayesianEstimator, K2Score
 from pgmpy.models import BayesianModel
@@ -15,8 +16,6 @@ from pgmpy.estimators import ConstraintBasedEstimator
 from pgmpy.inference import VariableElimination
 from pgmpy.estimators.ExhaustiveSearch import ExhaustiveSearch
 from graphviz import Digraph
-import json
-import pydot
 from libpgm.nodedata import NodeData
 from libpgm.graphskeleton import GraphSkeleton
 from libpgm.discretebayesiannetwork import DiscreteBayesianNetwork
@@ -24,10 +23,7 @@ from libpgm.pgmlearner import PGMLearner
 from Data_extractor import Data_extractor
 import warnings
 import matplotlib.pyplot as plt
-
 from pomegranate import *
-#import pomegranate.pomegranate-master.pomegranate.BayesianNetwork
-#from testBN import BayesianNetwork 
 from networkx.classes import ordered
 from numpy.core.defchararray import lower
 
@@ -42,7 +38,7 @@ class Network_handler:
         Constructor
         '''
         self.file_names = ["EMC0019", "EHS60BE", "ES115H","ESS184","EXS48X","EXS1062X"]
-        self.true_device_names = ["EMC0019", 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X']
+        self.true_device_names = ["EMC001*9", 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X']
         self.extractor = Data_extractor()
         self.lib = ""
         self.learner = PGMLearner()
@@ -82,7 +78,7 @@ class Network_handler:
             print("File considered: " + info)
             print("Text files data extraction completed.")
     
-    def select_variables(self, var_type, var_num = 6, extra_var = "none", log = True):
+    def select_variables(self, var_type, var_num = 6, support = 0.33, filter = "support", extra_var = "none", log = True):
         ''' (2)
         Method that selects the variables to be used in the network.
         -----------------
@@ -92,6 +88,10 @@ class Network_handler:
            -> all_frequency   - If we consider the frequency of the devices in the complete event list
            -> file_name - If we consider only the 6 file devices as variables
         var_num   : How many variables to take.
+        support   : Minimum support to consider the device in the final Bayesian Network
+        filter    : Method for filtering variables.
+           -> support
+           -> counting
         extra_var : Adds extra variables.
            -> none      - Default value. No extra variable is taken.
            -> causes    - To add the 6 extra variables corresponding to the 6 file devices.
@@ -99,13 +99,19 @@ class Network_handler:
         '''
         if var_type == "all_count":
             ordered_list = self.extractor.count_occurrences_variables()
-            self.extractor.take_n_variables(var_num)
+            if filter == "counting":
+                self.extractor.take_n_variables_count(var_num)
+            elif filter == "support":
+                self.extractor.take_n_variables_support(var_type, support)
             if log:
                 print(ordered_list)
                 
         elif var_type == "all_frequency":
             ordered_list = self.extractor.frequency_occurences_variables()
-            self.extractor.take_n_variables(var_num)
+            if filter == "counting":
+                self.extractor.take_n_variables_count(var_num)
+            elif filter == "support":
+                self.extractor.take_n_variables_support(var_type, support)
             if log:
                 print(ordered_list)
                 
@@ -251,6 +257,8 @@ class Network_handler:
                 scores = K2Score(self.data)
             elif scoring_method == "bic":
                 scores = BicScore(self.data)
+            elif scoring_method == "bdeu":
+                scores = BdeuScore(self.data)
             
             if method == "scoring_approx":
                 if log:

@@ -44,11 +44,14 @@ class Data_extractor:
         # data_p = [[], [], [], []] this list contains 4 elements, one for each priority. 
         #Each element is a list of tuples of the type: (priority, devices, support). The devices are a list of frequent devices with that particular priority and support
         self.variable_names = [] #to be used as nodes in the network
-        self.file_names = [] #stores the names of the files
+        self.true_file_names = [] #stores the names of the files
+        self.txt_file_names = []
+        self.priority_selected = []
         self.events_by_file = dict() #a dictionary that has filenames as keys, and a list of tuples as values. Each tuple is a couple ([device list], priority)
         self.ranked_devices = [] #list of tuples that show which devices appear more
         self.unique_frequent_devices_by_file = dict() #
         self.skipped_lines = 0
+        self.totalRows = 0
 
     def extract(self, txtfile, true_device_name, select_priority = []):
         '''
@@ -58,10 +61,12 @@ class Data_extractor:
         ----------
         txtfile: the name of the txt file found in the /res folder
         true_device_name : the real name of the device in the events
-        ignore_priority : a list that contain the priority levels (L0,L1,L2,L3) to be completely ignored
+        select_priority : a list that contain the priority levels (L0,L1,L2,L3) to be considered
         '''
         data_p = [[], [], [], []]
-        self.file_names.append(true_device_name)
+        self.true_file_names.append(true_device_name)
+        self.txt_file_names.append(txtfile)
+        self.priority_selected = select_priority
         self.events_by_file[true_device_name] = []
         self.unique_frequent_devices_by_file[true_device_name] = []
         
@@ -126,11 +131,11 @@ class Data_extractor:
         Stores the devices in the given line (which should be found in the "Distinct devices after 5 minutes" set for later use 
         and also stores the priority
         '''
-        global events_by_file
         devices_found = self.find_devices(line)
         if devices_found:
             tupl = (devices_found, p)
             self.events_by_file[file_name].append(tupl)
+            self.totalRows = self.totalRows + 1
             
     def count_occurrences_all_devices(self):
         ''' Finds all the unique devices in all the events '''
@@ -156,9 +161,6 @@ class Data_extractor:
         
     def count_occurrences_variables(self):
         ''' Counts the occurrences of the variable names in all the "Distinct devices after 5 minutes" set '''
-        global variable_names
-        global events_by_file
-        global ranked_devices #A list of tuples (device, occurrences)
         device_occurrences = dict() #this will help storing the # of occurrences
         
         for key in events_by_file:
@@ -170,10 +172,10 @@ class Data_extractor:
                         device_occurrences[d] = device_occurrences[d] + 1
                     
         for key in device_occurrences:
-            ranked_devices.append((key, device_occurrences[key]))
+            self.ranked_devices.append((key, device_occurrences[key]))
         
-        ranked_devices.sort(key = lambda tup: tup[1], reverse=True)
-        return ranked_devices 
+        self.ranked_devices.sort(key = lambda tup: tup[1], reverse=True)
+        return self.ranked_devices 
     
     def frequency_occurences_variables(self):
         ''' Returns the all the devices ordered by their summed individual (in files) frequency '''
@@ -202,23 +204,35 @@ class Data_extractor:
         self.ranked_devices.sort(key = lambda tup: tup[1], reverse=True)
         return self.ranked_devices
     
-    def take_n_variables(self, n):
+    def take_n_variables_counting(self, n):
         ''' choses the n most frequent devices and uses them as new variables '''
         self.variable_names = []
         add_one = False
         i = 0
         while i < n:
             candidate = self.ranked_devices[i][0]
-            if candidate == self.file_names[0]:
+            if candidate == self.true_file_names[0]:
                 add_one = True
             else:
                 self.variable_names.append(self.ranked_devices[i][0])
             i = i + 1
         
         if add_one:
-            print(self.file_names[0] + " device variable skipped")
+            print(self.true_file_names[0] + " device variable skipped")
             self.variable_names.append(self.ranked_devices[i][0])
-                
+        
+    def take_n_variables_support(self, var_type, support):
+        self.variable_names = []
+        if var_type == "all_count":
+            for i in range(len(self.ranked_devices)):
+                if self.ranked_devices[i][1] > support * self.totalRows:
+                    self.variable_names.append(self.ranked_devices[i][0])
+        elif var_type == "all_frequency":
+            for i in range(len(self.ranked_devices)):
+                rank = self.ranked_devices[i][1]
+                device = self.ranked_devices[i][0]
+                if  rank > support and device != self.true_file_names[0]:
+                    self.variable_names.append(device)
     
     def reset_variable_names(self, new_list):
         ''' Replaces the unique devices with a given list '''
@@ -250,7 +264,7 @@ class Data_extractor:
                             if priority_node:
                                 dict_data['priority'].append(freq_set[0])
                             for ud in self.variable_names: # - m iter
-                                if ud in freq_set[1] or ud==self.file_names[i]:
+                                if ud in freq_set[1] or ud==self.true_file_names[i]:
                                     value = 1 #in this set, the device has triggered an event
                                 else:
                                     value = 0 #the device hasn't triggered a event
@@ -323,7 +337,8 @@ class Data_extractor:
         aliases = ['Node1', 'Node2', 'Node3', 'Node4', 'Node5', 'Node6', 'Node7', 'Node8']
         data.to_csv(path_or_buf="../res/pandas_dataframe.csv", header=aliases)
         '''
-        data.to_csv(path_or_buf="../output/pandas_dataframe.csv")
+        data.to_csv(path_or_buf="../output/" + self.txt_file_names[0] + "_" + 
+                    self.priority_selected[0] + "_" + "dataframe.csv")
         return data
     
     def build_libpgm_data(self, training_instances='none', priority_node = False):

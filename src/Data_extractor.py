@@ -205,12 +205,19 @@ class Data_extractor:
     def take_n_variables(self, n):
         ''' choses the n most frequent devices and uses them as new variables '''
         self.variable_names = []
-        for i in range(0, n):
+        add_one = False
+        i = 0
+        while i < n:
             candidate = self.ranked_devices[i][0]
-            if candidate != self.file_names[0]: #file_names should contain only 1 element at this point
-                self.variable_names.append(self.ranked_devices[i][0])
+            if candidate == self.file_names[0]:
+                add_one = True
             else:
-                n = n + 1
+                self.variable_names.append(self.ranked_devices[i][0])
+            i = i + 1
+        
+        if add_one:
+            print(self.file_names[0] + " device variable skipped")
+            self.variable_names.append(self.ranked_devices[i][0])
                 
     
     def reset_variable_names(self, new_list):

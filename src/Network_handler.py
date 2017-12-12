@@ -25,7 +25,6 @@ from Data_extractor import Data_extractor
 import warnings
 import matplotlib.pyplot as plt
 
-import pyBN.learning.structure.score.hill_climbing
 from pomegranate import *
 #import pomegranate.pomegranate-master.pomegranate.BayesianNetwork
 #from testBN import BayesianNetwork 

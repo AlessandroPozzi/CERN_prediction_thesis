@@ -36,7 +36,7 @@ network_handler.learn_structure(method, scoring_method, prior, log = True)
 network_handler.estimate_parameters(log = True)
 
 # 6) INFERENCE
-#network_handler.inference()
+network_handler.inference()
 
 #7 ) DATA INFO
 #network_handler.data_info()

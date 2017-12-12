@@ -26,6 +26,7 @@ import matplotlib.pyplot as plt
 from pomegranate import *
 from networkx.classes import ordered
 from numpy.core.defchararray import lower
+from pgmpy.factors.discrete import CPD
 
 class Network_handler:
     '''
@@ -330,11 +331,18 @@ class Network_handler:
         
         elif self.lib == "pgmpy":
             estimator = BayesianEstimator(self.best_model, self.data)
+            output_file  = open('../output/' + self.device_considered 
+                     + '_' + self.priority_considered + '_' + 
+                     self.lib + "_" + self.method + ".txt","w")
+            output_file.write("Number of nodes: " + str(len(self.extractor.get_variable_names())))
             for node in self.best_model.nodes():
                 cpd = estimator.estimate_cpd(node, prior_type='K2')
                 self.best_model.add_cpds(cpd)
                 if log:
                     print(cpd)
+                output_file.write(cpd.__str__())
+                output_file.write("\n")
+            output_file.close()
         
     def inference(self):
         

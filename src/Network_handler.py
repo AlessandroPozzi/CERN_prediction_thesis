@@ -335,6 +335,7 @@ class Network_handler:
                      + '_' + self.priority_considered + '_' + 
                      self.lib + "_" + self.method + ".txt","w")
             output_file.write("Number of nodes: " + str(len(self.extractor.get_variable_names())))
+            output_file.write("\n")
             for node in self.best_model.nodes():
                 cpd = estimator.estimate_cpd(node, prior_type='K2')
                 self.best_model.add_cpds(cpd)
@@ -344,9 +345,39 @@ class Network_handler:
                 output_file.write("\n")
             output_file.close()
         
-    def inference(self):
+    def inference(self, variables, evidence, mode = "auto"):
         
-        if self.lib == "pomegranate":
+        if self.lib == "pgmpy":
+            
+            inference = VariableElimination(self.best_model)
+            print("------------------- INFERENCE ------------------------")
+            
+            if mode == "auto":
+                print("          (with parents all set to value 1)")
+                for node in self.best_model.nodes():
+                    variables = [node]
+                    parents = self.best_model.get_parents(node)
+                    evidence = dict()
+                    for p in parents:
+                        evidence[p] = 1
+                    phi_query = inference.query(variables, evidence)
+                    for key in phi_query:
+                        print(phi_query[key])
+            
+            elif mode == "manual":
+                phi_query = inference.query(variables, evidence)
+                for key in phi_query:
+                    print(phi_query[key])
+            
+            '''
+            phi_query = inference.max_marginal(variables, evidence)
+            print(phi_query)
+            map_query = inference.map_query(variables, evidence)
+            print(map_query)
+            '''
+                    
+                    
+        elif self.lib == "pomegranate":
             dictionary = dict()
             for var in self.extractor.get_variable_names():
                 dictionary[var] = None
@@ -355,8 +386,7 @@ class Network_handler:
             dictionary['EXS106/2X'] = 1
             numpy_array = np.array([1, 1, 0, None, None, None])
             print(self.bn.predict_proba(numpy_array))
-    
-        
+                                            
     def draw_network(self):
         ''' (6) Draws the network.
         '''
@@ -402,23 +432,30 @@ class Network_handler:
                     node_pydot = pydot.Node(node)
                     nice_graph.add_node(node_pydot)
                 for edge in self.best_model.edges_iter():
+                    
+                    '''
+                    parents = edge[1].get_parents()
+                    inference = VariableElimination(self.best_model)
+                    variables = [edge[0]]
+                    evidence = dict()
+                    for p in parents:
+                        evidence[p] = 1
+                    phi_query = inference.query(variables, evidence)
+                    #if phi_query >= 0.75
+                    '''
+                    
+                    color = 'black'
                     edge_pydot = pydot.Edge(edge[0], edge[1])
                     nice_graph.add_edge(edge_pydot)
-                nice_graph.write_png('../output/' + self.device_considered 
-                                     + '_' + self.priority_considered + '_' + 
-                                     self.lib + "_" + self.method + '.png')
+                    nice_graph.write_png('../output/' + self.device_considered 
+                                         + '_' + self.priority_considered + '_' + 
+                                         self.lib + "_" + self.method + '.png')
 
-                '''
-                pos = nx.spring_layout(self.best_model)
-                nx.draw_networkx_nodes(self.best_model, pos, cmap=plt.get_cmap('jet'), node_size = 500)
-                nx.draw_networkx_labels(self.best_model, pos, font_size=9)
-                nx.draw_networkx_edges(self.best_model, pos, arrow = True)
-                '''
 
-            
 
     def data_info(self):
         
+        '''
         # 1
         print("Showing now the unique devices in frequent itemset, for each file:")
         ufd = self.extractor.get_unique_frequent_devices_by_file()
@@ -436,7 +473,9 @@ class Network_handler:
             i = i + 1
             if i < max: #visualize max "i" elements
                 print "{:<15} {:<90}".format(e[0], e[1])    
-
+        '''
+        # 3
+        
     
     
         

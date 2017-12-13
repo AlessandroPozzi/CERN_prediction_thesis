@@ -36,7 +36,11 @@ network_handler.learn_structure(method, scoring_method, prior, log = True)
 network_handler.estimate_parameters(log = True)
 
 # 6) INFERENCE
-network_handler.inference()
+mode = "auto" #manual, auto    | with "auto" inference is done on all variables by setting the parents to 1
+variables = [] #list of target variables (for manual mode)
+evidence = dict()
+evidence["varname"] = 1 #for manual mode, set the evidence to 1 in the dictionary
+network_handler.inference(variables, evidence, mode)
 
 #7 ) DATA INFO
 #network_handler.data_info()

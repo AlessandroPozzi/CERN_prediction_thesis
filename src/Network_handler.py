@@ -433,19 +433,17 @@ class Network_handler:
                     nice_graph.add_node(node_pydot)
                 for edge in self.best_model.edges_iter():
                     
-                    '''
-                    parents = edge[1].get_parents()
                     inference = VariableElimination(self.best_model)
-                    variables = [edge[0]]
+                    variables = [edge[1]]
                     evidence = dict()
-                    for p in parents:
-                        evidence[p] = 1
+                    evidence[edge[0]] = 1
                     phi_query = inference.query(variables, evidence)
-                    #if phi_query >= 0.75
-                    '''
-                    
-                    color = 'black'
-                    edge_pydot = pydot.Edge(edge[0], edge[1])
+                    test = phi_query[edge[1]].values[1]
+                    if phi_query[edge[1]].values[1] >= 0.75:
+                        edge_pydot = pydot.Edge(edge[0], edge[1], color = "red")
+                    else:
+                        edge_pydot = pydot.Edge(edge[0], edge[1], color = "black")
+
                     nice_graph.add_edge(edge_pydot)
                     nice_graph.write_png('../output/' + self.device_considered 
                                          + '_' + self.priority_considered + '_' + 

@@ -15,7 +15,7 @@ network_handler.process_files(select_priority, file_selection, log = True)
 # 2) SELECT VARIABLES
 var_type = "all_frequency"    #all_count, file_name, all_frequency
 var_num = 6
-support = 0.5
+support = 0.35
 filter = "support" #counting, support
 extra_var = "none"  #none, causes
 network_handler.select_variables(var_type, var_num,  support, filter, extra_var, log = True,)
@@ -37,9 +37,9 @@ network_handler.estimate_parameters(log = True)
 
 # 6) INFERENCE
 mode = "auto" #manual, auto    | with "auto" inference is done on all variables by setting the parents to 1
-variables = [] #list of target variables (for manual mode)
+variables = ["ECE001/BE"] #list of target variables (for manual mode)
 evidence = dict()
-evidence["varname"] = 1 #for manual mode, set the evidence to 1 in the dictionary
+evidence["EBS132/2X"] = 1 #for manual mode, set the evidence to 1 in the dictionary
 network_handler.inference(variables, evidence, mode)
 
 #7 ) DATA INFO

@@ -370,8 +370,6 @@ class Network_handler:
                     print(phi_query[key])
             
             '''
-            phi_query = inference.max_marginal(variables, evidence)
-            print(phi_query)
             map_query = inference.map_query(variables, evidence)
             print(map_query)
             '''
@@ -432,19 +430,21 @@ class Network_handler:
                     node_pydot = pydot.Node(node)
                     nice_graph.add_node(node_pydot)
                 for edge in self.best_model.edges_iter():
-                    
+                    print(edge)
                     inference = VariableElimination(self.best_model)
                     variables = [edge[1]]
                     evidence = dict()
                     evidence[edge[0]] = 1
                     phi_query = inference.query(variables, evidence)
-                    test = phi_query[edge[1]].values[1]
-                    if phi_query[edge[1]].values[1] >= 0.75:
+                    value = phi_query[edge[1]].values[1]
+                    if value >= 0.75:
                         edge_pydot = pydot.Edge(edge[0], edge[1], color = "red")
+                        pydot.Edge
                     else:
                         edge_pydot = pydot.Edge(edge[0], edge[1], color = "black")
 
                     nice_graph.add_edge(edge_pydot)
+                    nice_graph.wr
                     nice_graph.write_png('../output/' + self.device_considered 
                                          + '_' + self.priority_considered + '_' + 
                                          self.lib + "_" + self.method + '.png')

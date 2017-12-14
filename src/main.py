@@ -5,6 +5,8 @@ Created on 24 nov 2017
 '''
 from Network_handler import Network_handler
 
+
+
 network_handler = Network_handler()
 
 # 1) PROCESS FILES

@@ -483,6 +483,9 @@ class Data_extractor:
     def get_variable_names(self):
         return self.variable_names  
     
+    def get_ranked_devices(self):
+        return self.ranked_devices
+    
     def get_unique_frequent_devices_by_file(self):
         return self.unique_frequent_devices_by_file
     

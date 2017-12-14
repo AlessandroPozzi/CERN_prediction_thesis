@@ -335,9 +335,9 @@ class Network_handler:
         elif self.lib == "pgmpy":
             estimator = BayesianEstimator(self.best_model, self.data)
             output_file  = open('../output/' + self.device_considered 
-                     + '_' + self.priority_considered + '_' + 
-                     self.lib + "_" + self.method + ".txt","w")
+                     + '_' + self.priority_considered + ".txt","w")
             output_file.write("Number of nodes: " + str(len(self.extractor.get_variable_names())))
+            output_file.write("Complete list: " + " ".join(self.extractor.get_variable_names()))
             output_file.write("\n")
             for node in self.best_model.nodes():
                 cpd = estimator.estimate_cpd(node, prior_type='K2')
@@ -346,6 +346,11 @@ class Network_handler:
                     print(cpd)
                 output_file.write(cpd.__str__())
                 output_file.write("\n")
+            output_file.write("\n")
+            output_file.write("Device ranking")
+            for dr in self.extractor.get_ranked_devices():
+                output_file.write("\n")
+                output_file.write(dr[0] + "          -  " + str(dr[1]))
             output_file.close()
         
     def inference(self, variables, evidence, mode = "auto"):
@@ -448,8 +453,7 @@ class Network_handler:
 
                     nice_graph.add_edge(edge_pydot)
                     nice_graph.write_png('../output/' + self.device_considered 
-                                         + '_' + self.priority_considered + '_' + 
-                                         self.lib + "_" + self.method + '.png')
+                                         + '_' + self.priority_considered + '.png')
 
 
 

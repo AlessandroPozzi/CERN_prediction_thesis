@@ -90,9 +90,10 @@ class Network_handler:
            -> file_name - If we consider only the 6 file devices as variables
         var_num   : How many variables to take.
         support   : Minimum support to consider the device in the final Bayesian Network
-        filter    : Method for filtering variables.
-           -> support
-           -> counting
+        filter    : Method for filtering variables, i.e. some variables will not be taken according to this filter
+           -> support        - takes only variables above a minimum support
+           -> counting       - just takes the number of variables indicated. Equivalent to "nofilter"
+           -> support_bound  - as "support", but always takes a number of vars above a MIN and below a MAX
         extra_var : Adds extra variables.
            -> none      - Default value. No extra variable is taken.
            -> causes    - To add the 6 extra variables corresponding to the 6 file devices.
@@ -118,6 +119,8 @@ class Network_handler:
                 self.extractor.take_n_variables_count(var_num)
             elif filter == "support":
                 self.extractor.take_n_variables_support(var_type, support)
+            elif filter == "support_bound":
+                self.extractor.take_n_variables_support(var_type, support, filter)
             if log:
                 print(ordered_list)
                 
@@ -437,14 +440,13 @@ class Network_handler:
                     evidence[edge[0]] = 1
                     phi_query = inference.query(variables, evidence)
                     value = phi_query[edge[1]].values[1]
+                    value = round(value, 2)
                     if value >= 0.75:
-                        edge_pydot = pydot.Edge(edge[0], edge[1], color = "red")
-                        pydot.Edge
+                        edge_pydot = pydot.Edge(edge[0], edge[1], color = "red", label = value)
                     else:
-                        edge_pydot = pydot.Edge(edge[0], edge[1], color = "black")
+                        edge_pydot = pydot.Edge(edge[0], edge[1], color = "black", label = value)
 
                     nice_graph.add_edge(edge_pydot)
-                    nice_graph.wr
                     nice_graph.write_png('../output/' + self.device_considered 
                                          + '_' + self.priority_considered + '_' + 
                                          self.lib + "_" + self.method + '.png')

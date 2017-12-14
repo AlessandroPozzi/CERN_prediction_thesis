@@ -8,15 +8,15 @@ from Network_handler import Network_handler
 network_handler = Network_handler()
 
 # 1) PROCESS FILES
-select_priority = ['L1'] # 'L0', 'L1', 'L2', 'L3'
+select_priority = ['L3'] # 'L0', 'L1', 'L2', 'L3'
 file_selection = [1] # 1 to 6 -->  ("EMC0019", "EHS60BE", "ES115H", "ESS184", "EXS48X", "EXS1062X")
 network_handler.process_files(select_priority, file_selection, log = True)
 
 # 2) SELECT VARIABLES
 var_type = "all_frequency"    #all_count, file_name, all_frequency
 var_num = 6
-support = 0.35
-filter = "support" #counting, support
+support = 0.4
+filter = "support_bound" #counting, support, support_bound
 extra_var = "none"  #none, causes
 network_handler.select_variables(var_type, var_num,  support, filter, extra_var, log = True,)
 

@@ -204,7 +204,7 @@ class Data_extractor:
         self.ranked_devices.sort(key = lambda tup: tup[1], reverse=True)
         return self.ranked_devices
     
-    def take_n_variables_counting(self, n):
+    def take_n_variables_count(self, n):
         ''' choses the n most frequent devices and uses them as new variables '''
         self.variable_names = []
         add_one = False
@@ -221,18 +221,30 @@ class Data_extractor:
             print(self.true_file_names[0] + " device variable skipped")
             self.variable_names.append(self.ranked_devices[i][0])
         
-    def take_n_variables_support(self, var_type, support):
+    def take_n_variables_support(self, var_type, support, filter = ""):
         self.variable_names = []
         if var_type == "all_count":
             for i in range(len(self.ranked_devices)):
                 if self.ranked_devices[i][1] > support * self.totalRows:
                     self.variable_names.append(self.ranked_devices[i][0])
         elif var_type == "all_frequency":
+            refused = [] #list of devices not taken because of low support (except device of file)
             for i in range(len(self.ranked_devices)):
                 rank = self.ranked_devices[i][1]
                 device = self.ranked_devices[i][0]
                 if  rank > support and device != self.true_file_names[0]:
                     self.variable_names.append(device)
+                elif rank < support and device != self.true_file_names[0]:
+                    refused.append(device)
+            if filter == "support_bound": # checks that >= MIN and <= MAX vars are taken
+                NUM = len(self.variable_names)
+                MIN = 5
+                MAX = 11
+                if MIN > NUM:
+                    self.variable_names.extend(refused[:(MIN-NUM)])
+                if NUM > MAX:
+                    self.variable_names = self.variable_names[: - (NUM - MAX)]
+                
     
     def reset_variable_names(self, new_list):
         ''' Replaces the unique devices with a given list '''

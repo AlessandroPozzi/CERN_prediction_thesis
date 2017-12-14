@@ -100,9 +100,7 @@ class Network_handler:
         log       : "True" if you want to print debug information in the console    
         '''
         if self.extractor.nodata():
-            print("WARNING! -------------------------------------------------------- ")
-            print("This file - priority combination does not contain any useful data! ")
-            print("-----------------------------------------------------------------")
+            print("WARNING! --- This file - priority combination does not contain any useful data! ")
             
         if var_type == "all_count":
             ordered_list = self.extractor.count_occurrences_variables()
@@ -303,14 +301,16 @@ class Network_handler:
             if method == "scoring":
                 hl = pyBN.learning.structure.score.hill_climbing.hc
                 hl(self.data)    
+                
+        else:
+            print("Error in choosing the library")
+            return
             
         if log:
             print("Training instances skipped: " + str(self.extractor.get_skipped_lines()))
             print("Search terminated")
             
-        else:
-            print("Error in choosing the library")
-            return
+
             
 
         
@@ -336,7 +336,7 @@ class Network_handler:
             estimator = BayesianEstimator(self.best_model, self.data)
             output_file  = open('../output/' + self.device_considered 
                      + '_' + self.priority_considered + ".txt","w")
-            output_file.write("Number of nodes: " + str(len(self.extractor.get_variable_names())))
+            output_file.write("Number of nodes: " + str(len(self.extractor.get_variable_names())) + "\n")
             output_file.write("Complete list: " + " ".join(self.extractor.get_variable_names()))
             output_file.write("\n")
             for node in self.best_model.nodes():
@@ -353,15 +353,23 @@ class Network_handler:
                 output_file.write(dr[0] + "          -  " + str(dr[1]))
             output_file.close()
         
-    def inference(self, variables, evidence, mode = "auto"):
+    def inference(self, variables, evidence, mode = "auto", log = True):
         
         if self.lib == "pgmpy":
             
             inference = VariableElimination(self.best_model)
-            print("------------------- INFERENCE ------------------------")
+            if log:
+                print("------------------- INFERENCE ------------------------")
+            with open ('../output/' + self.device_considered 
+                               + '_' + self.priority_considered +
+                               '.txt', 'a') as in_file:
+                        in_file.write("\n")
+                        in_file.write("------------------- INFERENCE ------------------------")
+                        in_file.write("\n")
             
             if mode == "auto":
-                print("          (with parents all set to value 1)")
+                if log:
+                    print("          (with parents all set to value 1)")
                 for node in self.best_model.nodes():
                     variables = [node]
                     parents = self.best_model.get_parents(node)
@@ -370,12 +378,19 @@ class Network_handler:
                         evidence[p] = 1
                     phi_query = inference.query(variables, evidence)
                     for key in phi_query:
-                        print(phi_query[key])
+                        with open ('../output/' + self.device_considered 
+                                   + '_' + self.priority_considered +
+                                   '.txt', 'a') as in_file:
+                            in_file.write(str(phi_query[key]))
+                            in_file.write("\n")
+                        if log:
+                            print(phi_query[key])
             
             elif mode == "manual":
                 phi_query = inference.query(variables, evidence)
                 for key in phi_query:
-                    print(phi_query[key])
+                    if log:
+                        print(phi_query[key])
             
             '''
             map_query = inference.map_query(variables, evidence)
@@ -438,7 +453,11 @@ class Network_handler:
                     node_pydot = pydot.Node(node)
                     nice_graph.add_node(node_pydot)
                 for edge in self.best_model.edges_iter():
-                    print(edge)
+                    with open ('../output/' + self.device_considered 
+                                         + '_' + self.priority_considered +
+                                         '.txt', 'a') as in_file:
+                        in_file.write(str(edge))
+                        in_file.write("\n")
                     inference = VariableElimination(self.best_model)
                     variables = [edge[1]]
                     evidence = dict()

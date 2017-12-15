@@ -6,10 +6,10 @@ Created on 24 nov 2017
 from Network_handler import Network_handler
 
 priority = ('L0', 'L1', 'L2', 'L3')
-select_priority = ['L3'] # 'L0', 'L1', 'L2', 'L3'
-file_selection = [1] # 1 to 6 -->  ("EMC0019", "EHS60BE", "ES115H", "ESS184", "EXS48X", "EXS1062X")
+select_priority = ['L1'] # 'L0', 'L1', 'L2', 'L3'
+file_selection = [3] # 1 to 6 -->  ("EMC0019", "EHS60BE", "ES115H", "ESS184", "EXS48X", "EXS1062X")
 
-mode = "all" #one, all   | "one" to do the single file-priority above; "all" to do all files and priorities
+mode = "one" #one, all   | "one" to do the single file-priority above; "all" to do all files and priorities
 
 
 def create_network(select_priority, file_selection, log):
@@ -34,19 +34,20 @@ def create_network(select_priority, file_selection, log):
     network_handler.build_data(library, training_instances, priority_node, log)
     
     # 4) LEARN THE STRUCTURE
+    network = "bayesian" #bayesian, markov
     method = "scoring_approx"      #scoring_approx, constraint, scoring_exhaustive
     scoring_method = "K2"  #bic, K2, bdeu
     prior = "none"          #none, priority, trigger
-    network_handler.learn_structure(method, scoring_method, prior, log)
+    network_handler.learn_structure(network, method, scoring_method, prior, log)
     
     # 5) ESTIMATE THE PARAMETERS
     network_handler.estimate_parameters(log)
     
     # 6) INFERENCE
     mode = "auto" #manual, auto    | with "auto" inference is done on all variables by setting the parents to 1
-    variables = ["ECE001/BE"] #list of target variables (for manual mode)
+    variables = ["EMD1A*9"] #list of target variables (for manual mode)
     evidence = dict()
-    evidence["EBS132/2X"] = 1 #for manual mode, set the evidence to 1 in the dictionary
+    evidence["EMD3A*9"] = 1 #for manual mode, set the evidence to 1 in the dictionary
     network_handler.inference(variables, evidence, mode, log)
     
     #7 ) DATA INFO

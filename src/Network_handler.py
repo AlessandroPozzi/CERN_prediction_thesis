@@ -27,6 +27,7 @@ from pomegranate import *
 from networkx.classes import ordered
 from numpy.core.defchararray import lower
 from pgmpy.factors.discrete import CPD
+from pgmpy.models import MarkovModel
 
 class Network_handler:
     '''
@@ -51,6 +52,7 @@ class Network_handler:
         self.device_considered = "" #works only when a single device is selected - used for graph
         self.priority_considered = "" #works only when a single priority is selected - used for graph
         self.method = "" #used for graph
+        self.markov = MarkovModel()
 
 
     def process_files(self, select_priority = [], file_selection = [], log = True):
@@ -178,7 +180,7 @@ class Network_handler:
             print("Wrong library chosen")
         
         
-    def learn_structure(self, method, scoring_method, prior = "none", log = True):
+    def learn_structure(self, network, method, scoring_method, prior = "none", log = True):
         ''' (4)
         Method that builds the structure of the data
         -----------------
@@ -195,12 +197,13 @@ class Network_handler:
             -> trigger  - (for pomegranate) Add trigger in constraint network
         log             - "True" if you want to print debug information in the console    
         '''
+        
         if self.lib == "libpgm":
             self.graph_skeleton = self.learner.discrete_constraint_estimatestruct(self.data, pvalparam=0.9)
             
         elif self.lib == "pomegranate":
             
-            alg="chow-liu" #greedy, chow-liu, exact, exact-dp
+            alg="exact-dp" #greedy, chow-liu, exact, exact-dp
 
             if prior == "trigger" and self.training_instances == "all_events_with_causes": #Use the constraint graph
                 constraints = nx.DiGraph()
@@ -309,11 +312,9 @@ class Network_handler:
         if log:
             print("Training instances skipped: " + str(self.extractor.get_skipped_lines()))
             print("Search terminated")
-            
+    
 
-            
-
-        
+    
     def estimate_parameters(self, log=True):
         ''' (5)
         Estimates the parameters of the found network
@@ -346,12 +347,15 @@ class Network_handler:
                     print(cpd)
                 output_file.write(cpd.__str__())
                 output_file.write("\n")
+                
             output_file.write("\n")
             output_file.write("Device ranking")
             for dr in self.extractor.get_ranked_devices():
                 output_file.write("\n")
                 output_file.write(dr[0] + "          -  " + str(dr[1]))
             output_file.close()
+            
+            self.markov = self.best_model.to_markov_model()
         
     def inference(self, variables, evidence, mode = "auto", log = True):
         
@@ -392,12 +396,12 @@ class Network_handler:
                     if log:
                         print(phi_query[key])
             
-            '''
-            map_query = inference.map_query(variables, evidence)
-            print(map_query)
-            '''
+                '''
+                map_query = inference.map_query(variables, evidence)
+                print(map_query)
+                '''
                     
-                    
+        '''            
         elif self.lib == "pomegranate":
             dictionary = dict()
             for var in self.extractor.get_variable_names():
@@ -407,6 +411,7 @@ class Network_handler:
             dictionary['EXS106/2X'] = 1
             numpy_array = np.array([1, 1, 0, None, None, None])
             print(self.bn.predict_proba(numpy_array))
+        '''
                                             
     def draw_network(self):
         ''' (6) Draws the network.
@@ -465,15 +470,46 @@ class Network_handler:
                     phi_query = inference.query(variables, evidence)
                     value = phi_query[edge[1]].values[1]
                     value = round(value, 2)
+                    
+                    variables = [edge[0]]
+                    evidence = dict()
+                    evidence[edge[1]] = 1
+                    phi_query = inference.query(variables, evidence)
+                    value_inv = phi_query[edge[0]].values[1]
+                    value_inv = round(value_inv, 2)
+                    
+                    big_label = str(value) + "|" + str(value_inv)
                     if value >= 0.75:
-                        edge_pydot = pydot.Edge(edge[0], edge[1], color = "red", label = value)
+                        edge_pydot = pydot.Edge(edge[0], edge[1], color = "red", label = big_label)
                     else:
-                        edge_pydot = pydot.Edge(edge[0], edge[1], color = "black", label = value)
+                        edge_pydot = pydot.Edge(edge[0], edge[1], color = "black", label = big_label)
 
                     nice_graph.add_edge(edge_pydot)
-                    nice_graph.write_png('../output/' + self.device_considered 
+                nice_graph.write_png('../output/' + self.device_considered 
                                          + '_' + self.priority_considered + '.png')
-
+                    
+                #MARKOV
+                nice_graph = pydot.Dot(graph_type='graph')
+                for node in self.markov.nodes():
+                    node_pydot = pydot.Node(node)
+                    nice_graph.add_node(node_pydot)
+                for edge in self.markov.edges():
+                    edge_pydot = pydot.Edge(edge[0], edge[1], color = "black")
+                    nice_graph.add_edge(edge_pydot)
+                nice_graph.write_png('../output/' + self.device_considered 
+                                         + '_' + self.priority_considered + '-markov.png')
+                
+                with open ('../output/' + self.device_considered 
+                     + '_' + self.priority_considered +
+                     '.txt', 'a') as in_file:
+                    in_file.write("MARKOV NETWORK FACTORS:")
+                    in_file.write("\n")
+                    for factor in self.markov.factors:
+                        if log:
+                            print("MARKOV---------------------------------------")
+                            print(factor)
+                        in_file.write(factor.__str__())
+                        in_file.write("\n")
 
 
     def data_info(self):

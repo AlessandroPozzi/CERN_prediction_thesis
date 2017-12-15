@@ -180,7 +180,7 @@ class Network_handler:
             print("Wrong library chosen")
         
         
-    def learn_structure(self, network, method, scoring_method, prior = "none", log = True):
+    def learn_structure(self, method, scoring_method, prior = "none", log = True):
         ''' (4)
         Method that builds the structure of the data
         -----------------

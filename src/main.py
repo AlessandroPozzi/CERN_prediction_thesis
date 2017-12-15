@@ -34,11 +34,10 @@ def create_network(select_priority, file_selection, log):
     network_handler.build_data(library, training_instances, priority_node, log)
     
     # 4) LEARN THE STRUCTURE
-    network = "bayesian" #bayesian, markov
     method = "scoring_approx"      #scoring_approx, constraint, scoring_exhaustive
     scoring_method = "K2"  #bic, K2, bdeu
     prior = "none"          #none, priority, trigger
-    network_handler.learn_structure(network, method, scoring_method, prior, log)
+    network_handler.learn_structure(method, scoring_method, prior, log)
     
     # 5) ESTIMATE THE PARAMETERS
     network_handler.estimate_parameters(log)

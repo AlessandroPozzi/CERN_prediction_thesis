@@ -1,0 +1,46 @@
+\documentclass[a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[italian]{babel}
+\usepackage{amssymb}
+\usepackage[fleqn]{amsmath}
+\usepackage{amsfonts}
+\usepackage{hyperref}
+\usepackage[margin=1.6in]{geometry}
+
+\begin{document}
+
+\section*{Premessa}
+Siamo riusciti a risolvere i problemi tecnici con la libreria \textit{pgmpy}. Abbiamo verificato manualmente le CPD (Conditional Probability Distribution) generate e sembrano corrette [ACCENNARE A LEGGERE DIFFERENZE?]. Ci siamo quindi concentrati su questa libreria. In particolare, per il learning della struttura della rete tra i metodi forniti abbiamo utilizzato la \textit{hill-climb search}, un algoritmo di ricerca locale che esplora lo spazio di tutti i possibili modelli muovendosi ad ogni iterazione verso quelli con un punteggio maggiore (dato da uno \textit{score metric}). Poiché questo algoritmo può incorrere in un massimo locale, un'alternativa sarebbe quella di usare una ricerca esatta, che però può essere applicata in tempi brevi solo per un numero di variabili $ n < 6 $. Per ora abbiamo utilizzato la ricerca locale.\\
+Per quanto riguarda l'inferenza [..]
+
+\section{*Reti generate}
+Abbiamo generato una rete per ogni coppia \textit{ (file, priorità) } a disposizione, selezionando come variabili i device che, all'interno di quella coppia, apparivano con un supporto minimo (attualmente 0.4), ma assicurandoci che ogni rete abbia tra 5 e 11 variabili.\\
+Un esempio di rete generata è la seguente: \\
+
+[MOSTRARE RETE CON TUTTI EDGE NERI E SENZA LABEL]
+
+[FARE DISCORSO SULL'ASSENZA DI CAUSALITA' E CORRELAZIONI 1-0 E 0-1, CHE NON SONO MOLTO UTILI AL NOSTRO CASO (CORRELAZIONI 0-0 DOVREBBERO COMPORTARE FORTI 1-1). LA RETE QUINDI PUò ESSERE UTILE SOLO PER IDENTIFICARE CORRELAZIONI NON CAUSALI E INDIPENDEZE]
+
+[SPIEGARE CHE ABBIAMO VOLUTO PROVARE AD EVIDENZIARE CORRELAZIONI PIU' FORTI DEL TIPO 1-1 COLORANDO GLI EDGE. DIRE CHE è STATA USATA L'INFERENZA PER TROVARE LE PROBABILITA' TRA SOLO DUE DEVICE.]
+
+[MOSTRARE RETE CON EDGE COLORATI E LABEL (SPIEGARE LABEL)]
+
+[MOSTRARE CPD DELLA STESSA RETE]
+
+[MOSTRARE RETE CON DOPPIA LABEL DI INFERENZA E SPIEGARLA]
+
+[EVENTUALMENTE FARE IL DISCORSO SUL LIFT?]
+
+[DISCORSO SULLE MAP QUERY?]
+
+[MARKOV NETWORKS]
+
+
+
+
+
+
+
+\end{document}

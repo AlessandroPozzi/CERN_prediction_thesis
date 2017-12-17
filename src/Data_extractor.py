@@ -262,7 +262,7 @@ class Data_extractor:
         '''
         dict_data = dict()
         if priority_node:
-            print("Priority node will be now added.")    
+            print("Priority node will be now added.")
             dict_data['priority'] = [] #add the "priority" key
         
         if training_instances == "support":
@@ -304,6 +304,9 @@ class Data_extractor:
                             else: #create new key in dictionary
                                 dict_data[ud] = []
                                 dict_data[ud].append(value)
+            for ud in self.variable_names:
+               dict_data[ud].append(0)
+                
                             
         elif training_instances == "all_events_priority":
             for key in self.events_by_file:

@@ -28,6 +28,9 @@ from networkx.classes import ordered
 from numpy.core.defchararray import lower
 from pgmpy.factors.discrete import CPD
 from pgmpy.models import MarkovModel
+from pgmpy.inference import BeliefPropagation
+from pgmpy.factors.discrete import DiscreteFactor
+from pgmpy.inference import Mplp
 
 class Network_handler:
     '''
@@ -349,19 +352,25 @@ class Network_handler:
                 output_file.write("\n")
                 
             output_file.write("\n")
-            output_file.write("Device ranking")
+            output_file.write("Device ranking (max 20 devices are visualized)")
+            i = 1
             for dr in self.extractor.get_ranked_devices():
                 output_file.write("\n")
                 output_file.write(dr[0] + "          -  " + str(dr[1]))
+                i = i + 1
+                if i == 20:
+                    break
             output_file.close()
             
-            self.markov = self.best_model.to_markov_model()
+            #self.markov = self.best_model.to_markov_model()
         
     def inference(self, variables, evidence, mode = "auto", log = True):
         
         if self.lib == "pgmpy":
             
             inference = VariableElimination(self.best_model)
+            #inference = BeliefPropagation(self.markov)
+            #inference = Mplp(self.best_model)
             if log:
                 print("------------------- INFERENCE ------------------------")
             with open ('../output/' + self.device_considered 
@@ -369,6 +378,8 @@ class Network_handler:
                                '.txt', 'a') as in_file:
                         in_file.write("\n")
                         in_file.write("------------------- INFERENCE ------------------------")
+                        in_file.write("\n")
+                        in_file.write("(with parents all set to value 1)")
                         in_file.write("\n")
             
             if mode == "auto":
@@ -396,7 +407,15 @@ class Network_handler:
                     if log:
                         print(phi_query[key])
             
+                
                 '''
+                variables = ["ETZ11/5H"]
+                evidence = dict()
+                evidence["EAS11/8H"] = 1
+                evidence["ECC01/5DX"] = 0
+                evidence["ESS11/6A"] = 0
+                evidence["ESS11/P18"] = 0
+                print("MAP QUERY: " + "\n")
                 map_query = inference.map_query(variables, evidence)
                 print(map_query)
                 '''
@@ -457,6 +476,12 @@ class Network_handler:
                 for node in self.best_model.nodes():
                     node_pydot = pydot.Node(node)
                     nice_graph.add_node(node_pydot)
+                with open ('../output/' + self.device_considered 
+                                         + '_' + self.priority_considered +
+                                         '.txt', 'a') as in_file:
+                    in_file.write("\n")
+                    in_file.write("Edges of the network: ")
+                    in_file.write("\n")
                 for edge in self.best_model.edges_iter():
                     with open ('../output/' + self.device_considered 
                                          + '_' + self.priority_considered +
@@ -478,9 +503,11 @@ class Network_handler:
                     value_inv = phi_query[edge[0]].values[1]
                     value_inv = round(value_inv, 2)
                     
+                    small_label = str(value)
                     big_label = str(value) + "|" + str(value_inv)
+                    #, label = big_label
                     if value >= 0.75:
-                        edge_pydot = pydot.Edge(edge[0], edge[1], color = "red", label = big_label)
+                        edge_pydot = pydot.Edge(edge[0], edge[1], color = "red" , label = big_label)#red
                     else:
                         edge_pydot = pydot.Edge(edge[0], edge[1], color = "black", label = big_label)
 
@@ -489,6 +516,7 @@ class Network_handler:
                                          + '_' + self.priority_considered + '.png')
                     
                 #MARKOV
+                '''
                 nice_graph = pydot.Dot(graph_type='graph')
                 for node in self.markov.nodes():
                     node_pydot = pydot.Node(node)
@@ -510,7 +538,7 @@ class Network_handler:
                             print(factor)
                         in_file.write(factor.__str__())
                         in_file.write("\n")
-
+                '''
 
     def data_info(self):
         

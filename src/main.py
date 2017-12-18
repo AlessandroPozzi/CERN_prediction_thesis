@@ -7,7 +7,7 @@ from Network_handler import Network_handler
 
 priority = ('L0', 'L1', 'L2', 'L3')
 select_priority = ['L1'] # 'L0', 'L1', 'L2', 'L3'
-file_selection = [2] # 1 to 6 -->  ("EMC0019", "EHS60BE", "ES115H", "ESS184", "EXS48X", "EXS1062X")
+file_selection = [4] # 1 to 6 -->  ("EMC0019", "EHS60BE", "ES115H", "ESS184", "EXS48X", "EXS1062X")
 
 mode = "all" #one, all   | "one" to do the single file-priority above; "all" to do all files and priorities
 

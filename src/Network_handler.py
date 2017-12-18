@@ -181,7 +181,16 @@ class Network_handler:
             
         else:
             print("Wrong library chosen")
-        
+
+    def eliminate_isolated_nodes(self):
+        '''
+        If a node doesn't have any incoming or outgoing edge, it is eliminated from the graph
+        '''
+        for nodeX in self.best_model.nodes():
+            tup = [item for item in self.best_model.edges() if nodeX in item]
+            if not tup:
+                self.best_model.remove_node(nodeX)
+
         
     def learn_structure(self, method, scoring_method, prior = "none", log = True):
         ''' (4)
@@ -311,6 +320,8 @@ class Network_handler:
         else:
             print("Error in choosing the library")
             return
+
+        self.eliminate_isolated_nodes()
             
         if log:
             print("Training instances skipped: " + str(self.extractor.get_skipped_lines()))
@@ -362,7 +373,7 @@ class Network_handler:
                     break
             output_file.close()
             
-            #self.markov = self.best_model.to_markov_model()
+            self.markov = self.best_model.to_markov_model()
         
     def inference(self, variables, evidence, mode = "auto", log = True):
         
@@ -516,7 +527,7 @@ class Network_handler:
                                          + '_' + self.priority_considered + '.png')
                     
                 #MARKOV
-                '''
+
                 nice_graph = pydot.Dot(graph_type='graph')
                 for node in self.markov.nodes():
                     node_pydot = pydot.Node(node)
@@ -538,7 +549,7 @@ class Network_handler:
                             print(factor)
                         in_file.write(factor.__str__())
                         in_file.write("\n")
-                '''
+                
 
     def data_info(self):
         

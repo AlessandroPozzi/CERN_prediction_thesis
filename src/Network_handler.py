@@ -549,7 +549,7 @@ class Network_handler:
                             print(factor)
                         in_file.write(factor.__str__())
                         in_file.write("\n")
-                
+
 
     def data_info(self):
         

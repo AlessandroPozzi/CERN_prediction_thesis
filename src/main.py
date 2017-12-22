@@ -7,7 +7,7 @@ from Network_handler import Network_handler
 
 priority = ('L0', 'L1', 'L2', 'L3')
 select_priority = ['L1'] # 'L0', 'L1', 'L2', 'L3'
-file_selection = [4] # 1 to 6 -->  ("EMC0019", "EHS60BE", "ES115H", "ESS184", "EXS48X", "EXS1062X")
+file_selection = [1] # 1 to 6 -->  ("EMC0019", "EHS60BE", "ES115H", "ESS184", "EXS48X", "EXS1062X")
 
 mode = "all" #one, all   | "one" to do the single file-priority above; "all" to do all files and priorities
 
@@ -44,16 +44,16 @@ def create_network(select_priority, file_selection, log):
     
     # 6) INFERENCE
     mode = "auto" #manual, auto    | with "auto" inference is done on all variables by setting the parents to 1
-    variables = ["EHD50/BE"] #list of target variables (for manual mode)
+    variables = ["EMD1A*9"] #list of target variables (for manual mode)
     evidence = dict()
-    #evidence[""] = 1 #for manual mode, set the evidence to 1 in the dictionary
+    evidence["EMC700/1E"] = 1 #for manual mode, set the evidence to 1 in the dictionary
     network_handler.inference(variables, evidence, mode, log)
     
     #7 ) DATA INFO
     #network_handler.data_info()
     
     # 8) DRAW THE NETWORK
-    network_handler.draw_network()
+    network_handler.draw_network(log = False)
     
     
 def run_script(mode):

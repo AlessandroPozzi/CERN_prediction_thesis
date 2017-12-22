@@ -10,7 +10,7 @@ import numpy as np
 import json
 import pydot
 from Data_extractor import Data_extractor
-from pgmpy.estimators import HillClimbSearch, BicScore, BayesianEstimator, K2Score
+from pgmpy.estimators import HillClimbSearch, BicScore, BayesianEstimator, K2Score, BdeuScore
 from pgmpy.models import BayesianModel
 from pgmpy.estimators import ConstraintBasedEstimator
 from pgmpy.inference import VariableElimination
@@ -312,10 +312,6 @@ class Network_handler:
             elif prior == "none":
                 self.best_model = est.estimate()
             
-        elif self.lib == "pyBN":
-            if method == "scoring":
-                hl = pyBN.learning.structure.score.hill_climbing.hc
-                hl(self.data)    
                 
         else:
             print("Error in choosing the library")
@@ -443,7 +439,7 @@ class Network_handler:
             print(self.bn.predict_proba(numpy_array))
         '''
                                             
-    def draw_network(self):
+    def draw_network(self, log = False):
         ''' (6) Draws the network.
         '''
         with warnings.catch_warnings():
@@ -514,11 +510,11 @@ class Network_handler:
                     value_inv = phi_query[edge[0]].values[1]
                     value_inv = round(value_inv, 2)
                     
-                    small_label = str(value)
+                    #small_label = str(value)
                     big_label = str(value) + "|" + str(value_inv)
                     #, label = big_label
                     if value >= 0.75:
-                        edge_pydot = pydot.Edge(edge[0], edge[1], color = "red" , label = big_label)#red
+                        edge_pydot = pydot.Edge(edge[0], edge[1], color = "red", label = big_label)#red
                     else:
                         edge_pydot = pydot.Edge(edge[0], edge[1], color = "black", label = big_label)
 
@@ -549,7 +545,56 @@ class Network_handler:
                             print(factor)
                         in_file.write(factor.__str__())
                         in_file.write("\n")
+                        
+                        
+                # INFERENCE NETWORK
+                nice_graph = pydot.Dot(graph_type='digraph')
+                nodes = self.best_model.nodes()
+                inference = VariableElimination(self.best_model)
+                for node1 in nodes:
+                    pos = nodes.index(node1) + 1
+                    for i in range(pos, len(nodes)):
+                        node2 = nodes[i]
+                        variables = [node2]
+                        evidence = dict()
+                        evidence[node1] = 1
+                        phi_query = inference.query(variables, evidence)
+                        prob1 = phi_query[node2].values[1] #probability of direct activation (inference from node1=1 to node2)
+                        variables = [node1]
+                        evidence = dict()
+                        evidence[node2] = 1
+                        phi_query = inference.query(variables, evidence)
+                        prob2 = phi_query[node1].values[1] #probability of inverse activation (inference from node2=1 to node1)
+                        prob1 = round(prob1, 2)
+                        prob2 = round(prob2, 2)
+                        if prob1 >= 0.90 and prob2 <= 0.50: #add direct arc from node1 to node2
+                            ls = [node1, node2]
+                            self.fix_node_presence(ls, nice_graph)
+                            nice_graph.add_edge(pydot.Edge(node1, node2, color = "red", label = str(prob1)))
+                        elif prob2 >= 0.90 and prob1 <= 0.50:
+                            ls = [node1, node2]
+                            self.fix_node_presence(ls, nice_graph)
+                            nice_graph.add_edge(pydot.Edge(node2, node1, color = "red", label = str(prob2)))
+                        elif prob1 >= 0.75 and prob2 >= 0.75:
+                            ls = [node1, node2]
+                            self.fix_node_presence(ls, nice_graph)
+                            nice_graph.add_edge(pydot.Edge(node2, node1, color = "orange", label = str(prob2)))
+                            nice_graph.add_edge(pydot.Edge(node1, node2, color = "orange", label = str(prob1)))
+                        elif prob1 >= 0.65 and prob2 >= 0.65 and prob1 <= 0.75 and prob2 <= 0.75:
+                            ls = [node1, node2]
+                            self.fix_node_presence(ls, nice_graph)
+                            nice_graph.add_edge(pydot.Edge(node2, node1, color = "black", label = str(prob2)))
+                            nice_graph.add_edge(pydot.Edge(node1, node2, color = "black", label = str(prob1)))
+                        
+                nice_graph.write_png('../output/' + self.device_considered 
+                                         + '_' + self.priority_considered + '-inference_network.png')            
+                    
 
+    def fix_node_presence(self, nodes, pydot_graph):
+        ''' Adds the list of nodes to the graph, if they are not already present '''
+        for node in nodes:
+            if node not in pydot_graph.get_nodes():
+                pydot_graph.add_node(pydot.Node(node))
 
     def data_info(self):
         

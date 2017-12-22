@@ -142,8 +142,8 @@ class Data_extractor:
         self.ranked_devices = []
         self.device_occurrences = dict() #this will help storing the # of occurrences
         
-        for key in events_by_file:
-            for line in events_by_file[key]:
+        for key in self.events_by_file:
+            for line in self.events_by_file[key]:
                 for d in line[0]: #[0] because it's a tuple
                     if d not in self.priority: #we don't want to count the priority
                         if d in self.device_occurrences:
@@ -156,14 +156,14 @@ class Data_extractor:
         
         self.ranked_devices.sort(key = lambda tup: tup[1], reverse=True)
         
-        return ranked_devices 
+        return self.ranked_devices 
         
         
     def count_occurrences_variables(self):
         ''' Counts the occurrences of the variable names in all the "Distinct devices after 5 minutes" set '''
         device_occurrences = dict() #this will help storing the # of occurrences
         
-        for key in events_by_file:
+        for key in self.events_by_file:
             for tupl in self.events_by_file[key]:
                 for d in tupl[0]:
                     if d not in device_occurrences: #create new key
@@ -238,8 +238,8 @@ class Data_extractor:
                     refused.append(device)
             if filter == "support_bound": # checks that >= MIN and <= MAX vars are taken
                 NUM = len(self.variable_names)
-                MIN = 5
-                MAX = 11
+                MIN = 4
+                MAX = 6
                 if MIN > NUM:
                     self.variable_names.extend(refused[:(MIN-NUM)])
                 if NUM > MAX:

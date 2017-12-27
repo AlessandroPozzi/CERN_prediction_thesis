@@ -1,13 +1,9 @@
 '''
 Created on 23 nov 2017
 
-@author: Alessandro Corsair
+@author: Alessandro Pozzi, Lorenzo Costantini
 '''
 
-import networkx as nx
-import re
-import numpy as np
-import json
 import pydot
 from Data_extractor import Data_extractor
 from pgmpy.estimators import HillClimbSearch, BicScore, BayesianEstimator, K2Score, BdeuScore
@@ -16,21 +12,13 @@ from pgmpy.estimators import ConstraintBasedEstimator
 from pgmpy.inference import VariableElimination
 from pgmpy.estimators.ExhaustiveSearch import ExhaustiveSearch
 from graphviz import Digraph
-from libpgm.nodedata import NodeData
-from libpgm.graphskeleton import GraphSkeleton
-from libpgm.discretebayesiannetwork import DiscreteBayesianNetwork
-from libpgm.pgmlearner import PGMLearner
-from Data_extractor import Data_extractor
-import warnings
-import matplotlib.pyplot as plt
-from pomegranate import *
-from networkx.classes import ordered
-from numpy.core.defchararray import lower
+from DataError import DataError
 from pgmpy.factors.discrete import CPD
 from pgmpy.models import MarkovModel
 from pgmpy.inference import BeliefPropagation
 from pgmpy.factors.discrete import DiscreteFactor
 from pgmpy.inference import Mplp
+
 
 class Network_handler:
     '''
@@ -45,11 +33,7 @@ class Network_handler:
         self.file_names = ["EMC0019", "EHS60BE", "ES115H","ESS184","EXS48X","EXS1062X"]
         self.true_device_names = ["EMC001*9", 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X']
         self.extractor = Data_extractor()
-        self.lib = ""
-        self.learner = PGMLearner()
-        self.graph_skeleton = GraphSkeleton()
         self.best_model = BayesianModel()
-        self.bn = BayesianNetwork()
         self.data = []
         self.training_instances = ""
         self.device_considered = "" #works only when a single device is selected - used for graph
@@ -68,8 +52,7 @@ class Network_handler:
         log             -- "True" if you want to print debug information in the console
         '''
         if not select_priority or not file_selection:
-            print("Priority or file not chosen. Exiting now.")
-            return
+            raise DataError("Priority or file not chosen. Exiting now.")
         else:
             if log:
                 print("Priority level considered: " + str(select_priority))
@@ -92,7 +75,6 @@ class Network_handler:
         var_type  : The origin of the variables to be considered. Accepted values:
            -> all_count       - If we consider the devices from the complete event list
            -> all_frequency   - If we consider the frequency of the devices in the complete event list
-           -> file_name - If we consider only the 6 file devices as variables
         var_num   : How many variables to take.
         support   : Minimum support to consider the device in the final Bayesian Network
         filter    : Method for filtering variables, i.e. some variables will not be taken according to this filter
@@ -105,7 +87,7 @@ class Network_handler:
         log       : "True" if you want to print debug information in the console    
         '''
         if self.extractor.nodata():
-            print("WARNING! --- This file - priority combination does not contain any useful data! ")
+            raise DataError("no data in this file - priority")
             
         if var_type == "all_count":
             ordered_list = self.extractor.count_occurrences_variables()
@@ -127,69 +109,34 @@ class Network_handler:
             if log:
                 print(ordered_list)
                 
-        elif var_type == "file_name":
-            self.extractor.reset_variable_names(self.true_device_names) 
-            if log:
-                print("We consider only 6 devices")
-                
         if extra_var == "causes":
             causes = ['trigger_EHS60/BE', 'trigger_EMC001*9', 'trigger_ESS11/5H', 'trigger_ESS1*84', 'trigger_EXS4/8X', 'trigger_EXS106/2X']
             self.extractor.add_variable_names(causes)
   
-    def build_data(self, library, training_instances="all_events",  priority_node = False, log=True):
+    def build_data(self, training_instances="all_events",  priority_node = False, log=True):
         ''' (3)
         Method that builds the data to be used by the graphical model library.
         -----------------
         Parameters:
-        library            : The library for which the data is formatted
-           -> pgmpy 
-           -> libpgm 
-        training_instances : (for pgmpy)
+        training_instances : 
             support                -- to use duplicated training instances based on the support of the frequent sets
             all_events             -- to generate one training instance per event (in "distinct devices after 5 minutes")
             all_events_with_causes -- like all_events, but also considers the 6 causes variables
             all_events_priority    -- like all_event but instead of using [0, 1] as values for variables, uses the priority related to the event: [0, L0, L1, L2, L3]
-        training_instances : (for libpgm)    
-            all_events -- to generate one training instance per event (in "distinct devices after 5 minutes")
         priority_node   : True if you want the prority node, false otherwise.
         log       : "True" if you want to print debug information in the console    
         '''
-        self.lib = library
+        
         variables = self.extractor.get_variable_names()
         self.training_instances = training_instances
+        self.data = self.extractor.build_dataframe(training_instances, priority_node)
+        
         if log:
             print("There are " + str(len(variables)) + " variables in the network: " + " ".join(variables))
-            print("Library used: " + library)
-        
-        if library == "pgmpy":
-            self.data = self.extractor.build_dataframe(training_instances, priority_node)
-            if log:
-                print("There are " + str(len(self.data)) + " 'training' instances in the dataframe.")    
-                
-        elif library == "pomegranate":
-            self.data = self.extractor.build_numpy_data(training_instances, priority_node)
-            if log:
-                print("There are " + str(len(self.data)) + " 'training' instances in the dataset")
-        
-        elif library == "libpgm":
-            self.data = self.extractor.build_libpgm_data(training_instances, priority_node)
-            if log:
-                print("There are " + str(len(self.data)) + " 'training' instances in the dataset")
-            
-        elif library == "pyBN":
-            self.data = self.extractor.build_numpy_data(training_instances, priority_node)
-            
-        else:
-            print("Wrong library chosen")
+            print("Library used: pgmpy")
+            print("There are " + str(len(self.data)) + " 'training' instances in the dataframe.")    
 
-    def eliminate_isolated_nodes(self):
-        '''
-        If a node doesn't have any incoming or outgoing edge, it is eliminated from the graph
-        '''
-        for nodeX in self.best_model.nodes():
-            tup = [item for item in self.best_model.edges() if nodeX in item]
-            if not tup:
-                self.best_model.remove_node(nodeX)
+
 
         
     def learn_structure(self, method, scoring_method, prior = "none", log = True):
@@ -203,120 +150,51 @@ class Network_handler:
         scoring_method  : (only for scoring method)
             -> K2
             -> bic
-        prior           : Initial condition for the structure (only for pgmpy)
+        prior           : Initial condition for the structure
             -> none     - default
-            -> priority - Start with edges between priority and the 6 main devices. In pomegranate, adds trigger in the constraint network.
-            -> trigger  - (for pomegranate) Add trigger in constraint network
+            -> priority - Start with edges between priority and the 6 main devices. 
         log             - "True" if you want to print debug information in the console    
         '''
+        #Select the scoring method for the local search of the structure
+        if scoring_method == "K2":
+            scores = K2Score(self.data)
+        elif scoring_method == "bic":
+            scores = BicScore(self.data)
+        elif scoring_method == "bdeu":
+            scores = BdeuScore(self.data)
         
-        if self.lib == "libpgm":
-            self.graph_skeleton = self.learner.discrete_constraint_estimatestruct(self.data, pvalparam=0.9)
+        if method == "scoring_approx":
+            if log:
+                print("Search for best approximated structure started...")
+            self.method = "scoring_approx"
+            est = HillClimbSearch(self.data, scores)
             
-        elif self.lib == "pomegranate":
+        elif method == "scoring_exhaustive":
+            if log:
+                print("Exhaustive search for the best structure started...")
+            self.method = "scoring_exhaustive"
+            est = ExhaustiveSearch(self.data, scores)
             
-            alg="exact-dp" #greedy, chow-liu, exact, exact-dp
+        elif method == "constraint":
+            if log:
+                print("Constraint based method for finding the structure started...")
+            self.method = "constraint"
+            est = ConstraintBasedEstimator(self.data)
+        
+        if prior == "priority":
+            if log:
+                print("Forcing priority edges...")
+            start_model = BayesianModel()
+            start_model.add_nodes_from(self.extractor.get_variable_names())
+            for d in self.true_device_names:
+                if d in self.extractor.get_variable_names():
+                    start_model.add_edge('priority', d)
+            self.best_model = est.estimate(start=start_model)
+            
+        elif prior == "none":
+            self.best_model = est.estimate()
 
-            if prior == "trigger" and self.training_instances == "all_events_with_causes": #Use the constraint graph
-                constraints = nx.DiGraph()
-                var_names = self.extractor.get_variable_names()
-                upper_layer = tuple()
-                lower_layer = tuple()
-                i = 0
-                for device in var_names:
-                    check = re.compile('trigger').findall(device)
-                    if check:
-                        #upper_layer.append(device) #triggers can only be parents
-                        upper_layer = upper_layer + (i,)
-                    else:
-                        #lower_layer.append(device)
-                        lower_layer = lower_layer + (i,)
-                    i = i + 1
-                
-                constraints.add_edge(upper_layer, lower_layer)
-                constraints.add_edge(lower_layer, lower_layer)
-                self.bn = BayesianNetwork.from_samples(self.data, constraint_graph=constraints, algorithm=alg)
-
-                if log:
-                    
-                    print("There are: " + str(self.bn.node_count()) + " nodes in the network")
-                    print("Constraints added to the network")
-                    print(self.bn.structure)
-                    '''
-                    pos = nx.spring_layout(constraints)
-                    nx.draw_networkx_nodes(constraints, pos, cmap=plt.get_cmap('jet'), node_size = 500)
-                    nx.draw_networkx_labels(constraints, pos, font_size=9)
-                    nx.draw_networkx_edges(constraints, pos)
-                    plt.show() 
-                    '''
-            elif prior == "priority":
-                constraints = nx.DiGraph()
-                var_names = self.extractor.get_variable_names()
-                upper_layer = tuple()
-                lower_layer = tuple()
-                i = 0
-                for device in var_names:
-                    if device == "priority":
-                        upper_layer = upper_layer + (i,)
-                    else:
-                        lower_layer = lower_layer + (i,)
-                    i = i + 1
-                constraints.add_edge(upper_layer, lower_layer)
-                constraints.add_edge(lower_layer, lower_layer)
-                self.bn = BayesianNetwork.from_samples(self.data, constraint_graph=constraints,  algorithm=alg)
-                    
-                if log:
-                    print("There are: " + str(self.bn.node_count()) + "nodes in the network")
-                    print("Constraints added to the network")
-                    print(self.bn.structure)
-                    
-            else:
-                self.bn = BayesianNetwork.from_samples(self.data,  algorithm=alg)
-            
-            
-        elif self.lib == "pgmpy":
-            if scoring_method == "K2":
-                scores = K2Score(self.data)
-            elif scoring_method == "bic":
-                scores = BicScore(self.data)
-            elif scoring_method == "bdeu":
-                scores = BdeuScore(self.data)
-            
-            if method == "scoring_approx":
-                if log:
-                    print("Search for best approximated structure started...")
-                self.method = "scoring_approx"
-                est = HillClimbSearch(self.data, scores)
-                
-            elif method == "scoring_exhaustive":
-                if log:
-                    print("Exhaustive search for the best structure started...")
-                self.method = "scoring_exhaustive"
-                est = ExhaustiveSearch(self.data, scores)
-                
-            elif method == "constraint":
-                if log:
-                    print("Constraint based method for finding the structure started...")
-                self.method = "constraint"
-                est = ConstraintBasedEstimator(self.data)
-            
-            if prior == "priority":
-                if log:
-                    print("Forcing priority edges...")
-                start_model = BayesianModel()
-                start_model.add_nodes_from(self.extractor.get_variable_names())
-                for d in self.true_device_names:
-                    if d in self.extractor.get_variable_names():
-                        start_model.add_edge('priority', d)
-                self.best_model = est.estimate(start=start_model)
-            elif prior == "none":
-                self.best_model = est.estimate()
-            
-                
-        else:
-            print("Error in choosing the library")
-            return
-
+        # REMOVE all nodes not connected to anything else:
         self.eliminate_isolated_nodes()
             
         if log:
@@ -329,51 +207,34 @@ class Network_handler:
         ''' (5)
         Estimates the parameters of the found network
         '''
-        if self.lib == "libpgm":
-            result = self.learner.discrete_mle_estimateparams(self.graph_skeleton, self.data)
+        estimator = BayesianEstimator(self.best_model, self.data)
+        output_file  = open('../output/' + self.device_considered 
+                 + '_' + self.priority_considered + ".txt","w")
+        output_file.write("Number of nodes: " + str(len(self.extractor.get_variable_names())) + "\n")
+        output_file.write("Complete list: " + " ".join(self.extractor.get_variable_names()))
+        output_file.write("\n")
+        for node in self.best_model.nodes():
+            cpd = estimator.estimate_cpd(node, prior_type='K2')
+            self.best_model.add_cpds(cpd)
             if log:
-                print json.dumps(result.E, indent=2)
-                print json.dumps(result.Vdata, indent=2)
+                print(cpd)
+            output_file.write(cpd.__str__())
+            output_file.write("\n")
             
-        elif self.lib == "pomegranate":
-            self.bn.fit(self.data)
-            if log:
-                json_data = self.bn.to_json()
-                with open('../output/pomegranate_cpds', 'w') as outfile:
-                    json.dump(json_data, outfile)
-                #print self.bn.to_json(indent = 4)
+        output_file.write("\n")
+        output_file.write("Device ranking (max 20 devices are visualized)")
+        i = 1
+        for dr in self.extractor.get_ranked_devices():
+            output_file.write("\n")
+            output_file.write(dr[0] + "          -  " + str(dr[1]))
+            i = i + 1
+            if i == 20:
+                break
+        output_file.close()
         
-        elif self.lib == "pgmpy":
-            estimator = BayesianEstimator(self.best_model, self.data)
-            output_file  = open('../output/' + self.device_considered 
-                     + '_' + self.priority_considered + ".txt","w")
-            output_file.write("Number of nodes: " + str(len(self.extractor.get_variable_names())) + "\n")
-            output_file.write("Complete list: " + " ".join(self.extractor.get_variable_names()))
-            output_file.write("\n")
-            for node in self.best_model.nodes():
-                cpd = estimator.estimate_cpd(node, prior_type='K2')
-                self.best_model.add_cpds(cpd)
-                if log:
-                    print(cpd)
-                output_file.write(cpd.__str__())
-                output_file.write("\n")
-                
-            output_file.write("\n")
-            output_file.write("Device ranking (max 20 devices are visualized)")
-            i = 1
-            for dr in self.extractor.get_ranked_devices():
-                output_file.write("\n")
-                output_file.write(dr[0] + "          -  " + str(dr[1]))
-                i = i + 1
-                if i == 20:
-                    break
-            output_file.close()
-            
-            self.markov = self.best_model.to_markov_model()
+        self.markov = self.best_model.to_markov_model()
         
     def inference(self, variables, evidence, mode = "auto", log = True):
-        
-        if self.lib == "pgmpy":
             
             inference = VariableElimination(self.best_model)
             #inference = BeliefPropagation(self.markov)
@@ -426,168 +287,122 @@ class Network_handler:
                 map_query = inference.map_query(variables, evidence)
                 print(map_query)
                 '''
-                    
-        '''            
-        elif self.lib == "pomegranate":
-            dictionary = dict()
-            for var in self.extractor.get_variable_names():
-                dictionary[var] = None
-            #add manually evidence
-            dictionary['ECE001/BE'] = 1
-            dictionary['EXS106/2X'] = 1
-            numpy_array = np.array([1, 1, 0, None, None, None])
-            print(self.bn.predict_proba(numpy_array))
-        '''
+                        
                                             
     def draw_network(self, log = False):
         ''' (6) Draws the network.
         '''
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore") #suppress warnings
-            
-            fig = plt.figure()
-            fig.canvas.set_window_title("Library: " + self.lib) 
         
-            if self.lib == "libpgm":
-                graph = BayesianModel()
-                for v in self.graph_skeleton.V:
-                    graph.add_node(v)
-                for e in self.graph_skeleton.E:
-                    graph.add_edge(e[0], e[1])
-                #pos = nx.spring_layout(model)
-                pos = nx.fruchterman_reingold_layout(graph)
-                nx.draw_networkx_nodes(graph, pos, cmap=plt.get_cmap('jet'), node_size = 500)
-                nx.draw_networkx_labels(graph, pos, font_size=9)
-                nx.draw_networkx_edges(graph, pos)
-                plt.show()
                 
-            elif self.lib == "pomegranate":
-                model = BayesianModel()
-                var_names = self.extractor.get_variable_names()
-                for name in var_names:
-                    model.add_node(name)
-                structure = self.bn.structure
-                for parent_tuple, device_name in zip(structure, var_names):
-                    for parent in parent_tuple:
-                        model.add_edge(var_names[parent], device_name)
-                #pos = nx.spring_layout(model)
-                pos = nx.fruchterman_reingold_layout(model)
-                nx.draw_networkx_nodes(model, pos, cmap=plt.get_cmap('jet'), node_size = 500)
-                nx.draw_networkx_labels(model, pos, font_size=9)
-                nx.draw_networkx_edges(model, pos)
-                plt.show()
-                
-            elif self.lib == "pgmpy":
-                
-                nice_graph = pydot.Dot(graph_type='digraph')
-                for node in self.best_model.nodes():
-                    node_pydot = pydot.Node(node)
-                    nice_graph.add_node(node_pydot)
-                with open ('../output/' + self.device_considered 
-                                         + '_' + self.priority_considered +
-                                         '.txt', 'a') as in_file:
-                    in_file.write("\n")
-                    in_file.write("Edges of the network: ")
-                    in_file.write("\n")
-                for edge in self.best_model.edges_iter():
-                    with open ('../output/' + self.device_considered 
-                                         + '_' + self.priority_considered +
-                                         '.txt', 'a') as in_file:
-                        in_file.write(str(edge))
-                        in_file.write("\n")
-                    inference = VariableElimination(self.best_model)
-                    variables = [edge[1]]
-                    evidence = dict()
-                    evidence[edge[0]] = 1
-                    phi_query = inference.query(variables, evidence)
-                    value = phi_query[edge[1]].values[1]
-                    value = round(value, 2)
-                    
-                    variables = [edge[0]]
-                    evidence = dict()
-                    evidence[edge[1]] = 1
-                    phi_query = inference.query(variables, evidence)
-                    value_inv = phi_query[edge[0]].values[1]
-                    value_inv = round(value_inv, 2)
-                    
-                    #small_label = str(value)
-                    big_label = str(value) + "|" + str(value_inv)
-                    #, label = big_label
-                    if value >= 0.75:
-                        edge_pydot = pydot.Edge(edge[0], edge[1], color = "red", label = big_label)#red
-                    else:
-                        edge_pydot = pydot.Edge(edge[0], edge[1], color = "black", label = big_label)
+        nice_graph = pydot.Dot(graph_type='digraph')
+        for node in self.best_model.nodes():
+            node_pydot = pydot.Node(node)
+            nice_graph.add_node(node_pydot)
+        with open ('../output/' + self.device_considered 
+                                 + '_' + self.priority_considered +
+                                 '.txt', 'a') as in_file:
+            in_file.write("\n")
+            in_file.write("Edges of the network: ")
+            in_file.write("\n")
+        for edge in self.best_model.edges_iter():
+            with open ('../output/' + self.device_considered 
+                                 + '_' + self.priority_considered +
+                                 '.txt', 'a') as in_file:
+                in_file.write(str(edge))
+                in_file.write("\n")
+            inference = VariableElimination(self.best_model)
+            variables = [edge[1]]
+            evidence = dict()
+            evidence[edge[0]] = 1
+            phi_query = inference.query(variables, evidence)
+            value = phi_query[edge[1]].values[1]
+            value = round(value, 2)
+            
+            variables = [edge[0]]
+            evidence = dict()
+            evidence[edge[1]] = 1
+            phi_query = inference.query(variables, evidence)
+            value_inv = phi_query[edge[0]].values[1]
+            value_inv = round(value_inv, 2)
+            
+            #small_label = str(value)
+            big_label = str(value) + "|" + str(value_inv)
+            #, label = big_label
+            if value >= 0.75:
+                edge_pydot = pydot.Edge(edge[0], edge[1], color = "red", label = big_label)#red
+            else:
+                edge_pydot = pydot.Edge(edge[0], edge[1], color = "black", label = big_label)
 
-                    nice_graph.add_edge(edge_pydot)
-                nice_graph.write_png('../output/' + self.device_considered 
-                                         + '_' + self.priority_considered + '.png')
-                    
-                #MARKOV
+            nice_graph.add_edge(edge_pydot)
+        nice_graph.write_png('../output/' + self.device_considered 
+                                 + '_' + self.priority_considered + '.png')
+            
+        #MARKOV
 
-                nice_graph = pydot.Dot(graph_type='graph')
-                for node in self.markov.nodes():
-                    node_pydot = pydot.Node(node)
-                    nice_graph.add_node(node_pydot)
-                for edge in self.markov.edges():
-                    edge_pydot = pydot.Edge(edge[0], edge[1], color = "black")
-                    nice_graph.add_edge(edge_pydot)
-                nice_graph.write_png('../output/' + self.device_considered 
-                                         + '_' + self.priority_considered + '-markov.png')
+        nice_graph = pydot.Dot(graph_type='graph')
+        for node in self.markov.nodes():
+            node_pydot = pydot.Node(node)
+            nice_graph.add_node(node_pydot)
+        for edge in self.markov.edges():
+            edge_pydot = pydot.Edge(edge[0], edge[1], color = "black")
+            nice_graph.add_edge(edge_pydot)
+        nice_graph.write_png('../output/' + self.device_considered 
+                                 + '_' + self.priority_considered + '-markov.png')
+        
+        with open ('../output/' + self.device_considered 
+             + '_' + self.priority_considered +
+             '.txt', 'a') as in_file:
+            in_file.write("MARKOV NETWORK FACTORS:")
+            in_file.write("\n")
+            for factor in self.markov.factors:
+                if log:
+                    print("MARKOV---------------------------------------")
+                    print(factor)
+                in_file.write(factor.__str__())
+                in_file.write("\n")
                 
-                with open ('../output/' + self.device_considered 
-                     + '_' + self.priority_considered +
-                     '.txt', 'a') as in_file:
-                    in_file.write("MARKOV NETWORK FACTORS:")
-                    in_file.write("\n")
-                    for factor in self.markov.factors:
-                        if log:
-                            print("MARKOV---------------------------------------")
-                            print(factor)
-                        in_file.write(factor.__str__())
-                        in_file.write("\n")
-                        
-                        
-                # INFERENCE NETWORK
-                nice_graph = pydot.Dot(graph_type='digraph')
-                nodes = self.best_model.nodes()
-                inference = VariableElimination(self.best_model)
-                for node1 in nodes:
-                    pos = nodes.index(node1) + 1
-                    for i in range(pos, len(nodes)):
-                        node2 = nodes[i]
-                        variables = [node2]
-                        evidence = dict()
-                        evidence[node1] = 1
-                        phi_query = inference.query(variables, evidence)
-                        prob1 = phi_query[node2].values[1] #probability of direct activation (inference from node1=1 to node2)
-                        variables = [node1]
-                        evidence = dict()
-                        evidence[node2] = 1
-                        phi_query = inference.query(variables, evidence)
-                        prob2 = phi_query[node1].values[1] #probability of inverse activation (inference from node2=1 to node1)
-                        prob1 = round(prob1, 2)
-                        prob2 = round(prob2, 2)
-                        if prob1 >= 0.90 and prob2 <= 0.50: #add direct arc from node1 to node2
-                            ls = [node1, node2]
-                            self.fix_node_presence(ls, nice_graph)
-                            nice_graph.add_edge(pydot.Edge(node1, node2, color = "red", label = str(prob1)))
-                        elif prob2 >= 0.90 and prob1 <= 0.50:
-                            ls = [node1, node2]
-                            self.fix_node_presence(ls, nice_graph)
-                            nice_graph.add_edge(pydot.Edge(node2, node1, color = "red", label = str(prob2)))
-                        elif prob1 >= 0.75 and prob2 >= 0.75:
-                            ls = [node1, node2]
-                            self.fix_node_presence(ls, nice_graph)
-                            nice_graph.add_edge(pydot.Edge(node2, node1, color = "orange", label = str(prob2)))
-                            nice_graph.add_edge(pydot.Edge(node1, node2, color = "orange", label = str(prob1)))
-                        elif prob1 >= 0.65 and prob2 >= 0.65 and prob1 <= 0.75 and prob2 <= 0.75:
-                            ls = [node1, node2]
-                            self.fix_node_presence(ls, nice_graph)
-                            nice_graph.add_edge(pydot.Edge(node2, node1, color = "black", label = str(prob2)))
-                            nice_graph.add_edge(pydot.Edge(node1, node2, color = "black", label = str(prob1)))
-                        
-                nice_graph.write_png('../output/' + self.device_considered 
-                                         + '_' + self.priority_considered + '-inference_network.png')            
+                
+        # INFERENCE NETWORK
+        nice_graph = pydot.Dot(graph_type='digraph')
+        nodes = self.best_model.nodes()
+        inference = VariableElimination(self.best_model)
+        for node1 in nodes:
+            pos = nodes.index(node1) + 1
+            for i in range(pos, len(nodes)):
+                node2 = nodes[i]
+                variables = [node2]
+                evidence = dict()
+                evidence[node1] = 1
+                phi_query = inference.query(variables, evidence)
+                prob1 = phi_query[node2].values[1] #probability of direct activation (inference from node1=1 to node2)
+                variables = [node1]
+                evidence = dict()
+                evidence[node2] = 1
+                phi_query = inference.query(variables, evidence)
+                prob2 = phi_query[node1].values[1] #probability of inverse activation (inference from node2=1 to node1)
+                prob1 = round(prob1, 2)
+                prob2 = round(prob2, 2)
+                if prob1 >= 0.90 and prob2 <= 0.50: #add direct arc from node1 to node2
+                    ls = [node1, node2]
+                    self.fix_node_presence(ls, nice_graph)
+                    nice_graph.add_edge(pydot.Edge(node1, node2, color = "red", label = str(prob1)))
+                elif prob2 >= 0.90 and prob1 <= 0.50:
+                    ls = [node1, node2]
+                    self.fix_node_presence(ls, nice_graph)
+                    nice_graph.add_edge(pydot.Edge(node2, node1, color = "red", label = str(prob2)))
+                elif prob1 >= 0.75 and prob2 >= 0.75:
+                    ls = [node1, node2]
+                    self.fix_node_presence(ls, nice_graph)
+                    nice_graph.add_edge(pydot.Edge(node2, node1, color = "orange", label = str(prob2)))
+                    nice_graph.add_edge(pydot.Edge(node1, node2, color = "orange", label = str(prob1)))
+                elif prob1 >= 0.65 and prob2 >= 0.65 and prob1 <= 0.75 and prob2 <= 0.75:
+                    ls = [node1, node2]
+                    self.fix_node_presence(ls, nice_graph)
+                    nice_graph.add_edge(pydot.Edge(node2, node1, color = "black", label = str(prob2)))
+                    nice_graph.add_edge(pydot.Edge(node1, node2, color = "black", label = str(prob1)))
+                
+        nice_graph.write_png('../output/' + self.device_considered 
+                                 + '_' + self.priority_considered + '-inference_network.png')            
                     
 
     def fix_node_presence(self, nodes, pydot_graph):
@@ -595,6 +410,15 @@ class Network_handler:
         for node in nodes:
             if node not in pydot_graph.get_nodes():
                 pydot_graph.add_node(pydot.Node(node))
+                
+    def eliminate_isolated_nodes(self):
+        '''
+        If a node doesn't have any incoming or outgoing edge, it is eliminated from the graph
+        '''
+        for nodeX in self.best_model.nodes():
+            tup = [item for item in self.best_model.edges() if nodeX in item]
+            if not tup:
+                self.best_model.remove_node(nodeX)
 
     def data_info(self):
         

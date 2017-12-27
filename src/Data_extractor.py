@@ -1,14 +1,12 @@
 '''
 Created on 15 nov 2017
 
-@author: Alessandro Corsair
+@author: Alessandro Pozzi, Lorenzo Costantini
 '''
 
 import re
 import pandas as pd
 import numpy as np
-
-
 
 class Data_extractor:
     '''
@@ -40,15 +38,12 @@ class Data_extractor:
         Constructor
         '''
         self.priority = ('L0', 'L1', 'L2', 'L3')
-        self.data_txt = [] #This list will contain "data_p" elements, one per txt file
-        # data_p = [[], [], [], []] this list contains 4 elements, one for each priority. 
-        #Each element is a list of tuples of the type: (priority, devices, support). The devices are a list of frequent devices with that particular priority and support
         self.variable_names = [] #to be used as nodes in the network
         self.true_file_names = [] #stores the names of the files
         self.txt_file_names = []
         self.priority_selected = []
         self.events_by_file = dict() #a dictionary that has filenames as keys, and a list of tuples as values. Each tuple is a couple ([device list], priority)
-        self.ranked_devices = [] #list of tuples that show which devices appear more
+        self.ranked_devices = [] #list of tuples: (device, frequency, occurrences)
         self.unique_frequent_devices_by_file = dict() #
         self.skipped_lines = 0
         self.totalRows = 0
@@ -63,7 +58,6 @@ class Data_extractor:
         true_device_name : the real name of the device in the events
         select_priority : a list that contain the priority levels (L0,L1,L2,L3) to be considered
         '''
-        data_p = [[], [], [], []]
         self.true_file_names.append(true_device_name)
         self.txt_file_names.append(txtfile)
         self.priority_selected = select_priority
@@ -73,58 +67,21 @@ class Data_extractor:
         with open ('../res/' + txtfile +'.txt', 'r') as in_file:
             all_events = 1
             p = 0
-            min_support = 0
             
             for line in in_file.readlines():
                 #NOTE: the order of IF conditions IS RELEVANT
                 
-                if all_events==1 and self.priority[p-1] in select_priority: # here we are in the "Distinct devices after 5 min"
+                if all_events==1 and self.priority[p-1] in select_priority: # Here we are in "Distinct devices after 5 min"
                     self.store_line(line, true_device_name, self.priority[p-1])
                 
-                if re.search(r"PRIORITY", line): #Here we are in the "PRIORITY level" line
-                    p+=1 #priority level
+                if re.search(r"PRIORITY", line): # Here we are in the "PRIORITY level" line
+                    p+=1 # priority level increase
                     all_events = 1
                 
-                if all_events==0 and self.priority[p-1] in select_priority:
-                    match = self.find_devices(line)
-                    support = self.find_support(line)
-                    if match and support:
-                        content = (self.priority[p-1], match, support[0], min_support)
-                        data_p[p-1].append(content)
-                        self.unique_frequent_devices(match, true_device_name)
                         
-                if re.search(r"==>", line):
-                    all_events = 0 #i.e. we'll now see the processed frequent itemsets
-                    min_support = self.find_min_support(line)
-        
-        self.data_txt.append(data_p)
+                if re.search(r"==>", line): #here we are in the FREQUENT ITEMSETS
+                    all_events = 0
             
-    def find_devices(self, line):
-        ''' Finds all the devices ID in the given line '''
-        findings = re.compile('\'\S+\'').findall(line)
-        processed_findings = []
-        for f in findings:
-            processed_findings.append(f.replace("'", ""))
-        return processed_findings
-    
-    def find_support(self, line):
-        ''' Finds the support value in the given line '''
-        support = line.partition(":")[2]
-        return re.compile('\d+').findall(support)
-    
-    def find_min_support(self, line):
-        ''' Finds the lowest value that the "support" can assume. This is also called "threshold" in the txt file ''' 
-        min_support = line.partition("threshold is ")[2]
-        return int(re.compile('\d+').findall(min_support)[0])
-    
-    def unique_frequent_devices(self, devices, file_name):
-        ''' Updates a list that contains the IDs of all the unique devices met until this point - to be used as variables in the BN '''
-        for dev in devices:
-            if dev not in self.variable_names:
-                self.variable_names.append(dev)
-            if dev not in self.unique_frequent_devices_by_file[file_name]:
-                self.unique_frequent_devices_by_file[file_name].append(dev)
-                
 
     def store_line(self, line, file_name, p):
         ''' 
@@ -136,6 +93,14 @@ class Data_extractor:
             tupl = (devices_found, p)
             self.events_by_file[file_name].append(tupl)
             self.totalRows = self.totalRows + 1
+            
+    def find_devices(self, line):
+        ''' Finds all the devices ID in the given line '''
+        findings = re.compile('\'\S+\'').findall(line)
+        processed_findings = []
+        for f in findings:
+            processed_findings.append(f.replace("'", ""))
+        return processed_findings
             
     def count_occurrences_all_devices(self):
         ''' Finds all the unique devices in all the events '''
@@ -205,9 +170,9 @@ class Data_extractor:
         return self.ranked_devices
     
     def take_n_variables_count(self, n):
-        ''' choses the n most frequent devices and uses them as new variables '''
+        ''' Choses the n devices with more occurrences and uses them as new variables '''
         self.variable_names = []
-        add_one = False
+        add_one = False #used to skip the device name variable and add a new one
         i = 0
         while i < n:
             candidate = self.ranked_devices[i][0]
@@ -218,7 +183,6 @@ class Data_extractor:
             i = i + 1
         
         if add_one:
-            print(self.true_file_names[0] + " device variable skipped")
             self.variable_names.append(self.ranked_devices[i][0])
         
     def take_n_variables_support(self, var_type, support, filter = ""):

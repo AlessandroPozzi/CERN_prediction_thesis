@@ -617,7 +617,7 @@ class Network_handler:
             if i < max: #visualize max "i" elements
                 print "{:<15} {:<90}".format(e[0], e[1])    
         '''
-        
+        # 3) 
     
     
         

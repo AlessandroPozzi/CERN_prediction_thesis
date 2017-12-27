@@ -41,7 +41,6 @@ class Network_handler:
         self.method = "" #used for graph
         self.markov = MarkovModel()
 
-
     def process_files(self, select_priority = [], file_selection = [], log = True):
         '''  (1)
         Method that extracts data from the text files.
@@ -67,53 +66,31 @@ class Network_handler:
             print("File considered: " + info)
             print("Text files data extraction completed.")
     
-    def select_variables(self, var_type, var_num = 6, support = 0.33, filter = "support", extra_var = "none", log = True):
+    def select_variables(self, var_type, support = 0.33, MIN = 0, MAX = 10, log = True):
         ''' (2)
         Method that selects the variables to be used in the network.
         -----------------
         Parameters:
         var_type  : The origin of the variables to be considered. Accepted values:
-           -> all_count       - If we consider the devices from the complete event list
-           -> all_frequency   - If we consider the frequency of the devices in the complete event list
-        var_num   : How many variables to take.
+           -> occurrences       - If we consider the devices 
+           -> frequency   - If we consider the frequency of the devices
+        MIN: Minimum number of variables to take
+        MAX: Maximum number of variables to take
         support   : Minimum support to consider the device in the final Bayesian Network
-        filter    : Method for filtering variables, i.e. some variables will not be taken according to this filter
-           -> support        - takes only variables above a minimum support
-           -> counting       - just takes the number of variables indicated. Equivalent to "nofilter"
-           -> support_bound  - as "support", but always takes a number of vars above a MIN and below a MAX
-        extra_var : Adds extra variables.
-           -> none      - Default value. No extra variable is taken.
-           -> causes    - To add the 6 extra variables corresponding to the 6 file devices.
         log       : "True" if you want to print debug information in the console    
         '''
         if self.extractor.nodata():
             raise DataError("no data in this file - priority")
             
-        if var_type == "all_count":
-            ordered_list = self.extractor.count_occurrences_variables()
-            if filter == "counting":
-                self.extractor.take_n_variables_count(var_num)
-            elif filter == "support":
-                self.extractor.take_n_variables_support(var_type, support)
-            if log:
-                print(ordered_list)
-                
-        elif var_type == "all_frequency":
-            ordered_list = self.extractor.frequency_occurences_variables()
-            if filter == "counting":
-                self.extractor.take_n_variables_count(var_num)
-            elif filter == "support":
-                self.extractor.take_n_variables_support(var_type, support)
-            elif filter == "support_bound":
-                self.extractor.take_n_variables_support(var_type, support, filter)
-            if log:
-                print(ordered_list)
-                
-        if extra_var == "causes":
-            causes = ['trigger_EHS60/BE', 'trigger_EMC001*9', 'trigger_ESS11/5H', 'trigger_ESS1*84', 'trigger_EXS4/8X', 'trigger_EXS106/2X']
-            self.extractor.add_variable_names(causes)
+        self.extractor.prepare_candidates() #computes occurrences and frequency of the devices
+        self.extractor.select_candidates(var_type, support, MIN, MAX)
+        
+        if log:
+            ordered_list = self.extractor.get_ranked_devices()
+            print(ordered_list)
+
   
-    def build_data(self, training_instances="all_events",  priority_node = False, log=True):
+    def build_data(self, training_instances="all_events", log=True):
         ''' (3)
         Method that builds the data to be used by the graphical model library.
         -----------------
@@ -129,7 +106,7 @@ class Network_handler:
         
         variables = self.extractor.get_variable_names()
         self.training_instances = training_instances
-        self.data = self.extractor.build_dataframe(training_instances, priority_node)
+        self.data = self.extractor.build_dataframe(training_instances)
         
         if log:
             print("There are " + str(len(variables)) + " variables in the network: " + " ".join(variables))
@@ -139,22 +116,19 @@ class Network_handler:
 
 
         
-    def learn_structure(self, method, scoring_method, prior = "none", log = True):
+    def learn_structure(self, method, scoring_method, log = True):
         ''' (4)
         Method that builds the structure of the data
         -----------------
-        Parameters: (only for pgmpy)
+        Parameters:
         method          : The technique used to search for the structure
-            -> scoring    - To use a scoring method
-            -> constraint - To use the constraint based technique
-        scoring_method  : (only for scoring method)
-            -> K2
-            -> bic
-        prior           : Initial condition for the structure
-            -> none     - default
-            -> priority - Start with edges between priority and the 6 main devices. 
+            -> scoring_approx     - To use an approximated search with scoring method
+            -> scoring_exhaustive - To use an exhaustive search with scoring method
+            -> constraint         - To use the constraint based technique
+        scoring_method : K2, bic, bdeu
         log             - "True" if you want to print debug information in the console    
         '''
+        
         #Select the scoring method for the local search of the structure
         if scoring_method == "K2":
             scores = K2Score(self.data)
@@ -164,44 +138,23 @@ class Network_handler:
             scores = BdeuScore(self.data)
         
         if method == "scoring_approx":
-            if log:
-                print("Search for best approximated structure started...")
             self.method = "scoring_approx"
             est = HillClimbSearch(self.data, scores)
-            
         elif method == "scoring_exhaustive":
-            if log:
-                print("Exhaustive search for the best structure started...")
             self.method = "scoring_exhaustive"
             est = ExhaustiveSearch(self.data, scores)
-            
         elif method == "constraint":
-            if log:
-                print("Constraint based method for finding the structure started...")
             self.method = "constraint"
             est = ConstraintBasedEstimator(self.data)
         
-        if prior == "priority":
-            if log:
-                print("Forcing priority edges...")
-            start_model = BayesianModel()
-            start_model.add_nodes_from(self.extractor.get_variable_names())
-            for d in self.true_device_names:
-                if d in self.extractor.get_variable_names():
-                    start_model.add_edge('priority', d)
-            self.best_model = est.estimate(start=start_model)
-            
-        elif prior == "none":
-            self.best_model = est.estimate()
-
-        # REMOVE all nodes not connected to anything else:
-        self.eliminate_isolated_nodes()
+        self.best_model = est.estimate()
+        self.eliminate_isolated_nodes() # REMOVE all nodes not connected to anything else
             
         if log:
+            print("Method used for structural learning: " + method)
             print("Training instances skipped: " + str(self.extractor.get_skipped_lines()))
             print("Search terminated")
     
-
     
     def estimate_parameters(self, log=True):
         ''' (5)
@@ -226,7 +179,8 @@ class Network_handler:
         i = 1
         for dr in self.extractor.get_ranked_devices():
             output_file.write("\n")
-            output_file.write(dr[0] + "          -  " + str(dr[1]))
+            output_file.write(dr[0] + "\t\t" + str(dr[1]) + 
+                              "\t" + str(dr[2]))
             i = i + 1
             if i == 20:
                 break

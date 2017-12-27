@@ -26,23 +26,20 @@ def create_network(select_priority, file_selection, log):
     network_handler.process_files(select_priority, file_selection, log)
     
     # 2) SELECT VARIABLES
-    var_type = "all_frequency"    #all_count, all_frequency
-    var_num = 6
+    var_type = "frequency" #occurrences, frequency
     support = 0.4
-    filter = "support_bound" #counting, support, support_bound
-    extra_var = "none"  #none, causes
-    network_handler.select_variables(var_type, var_num,  support, filter, extra_var, log)
+    MIN = 4
+    MAX = 8
+    network_handler.select_variables(var_type, support, MIN, MAX, log)
     
     # 3) BUILD DATA
-    training_instances="all_events" #all_events, all_events_with_causes, all_events_priority, support
-    priority_node = False
-    network_handler.build_data(training_instances, priority_node, log)
+    training_instances="all_events" #all_events, all_events_priority
+    network_handler.build_data(training_instances, log)
     
     # 4) LEARN THE STRUCTURE
     method = "scoring_approx"      #scoring_approx, constraint, scoring_exhaustive
     scoring_method = "K2"  #bic, K2, bdeu
-    prior = "none"          #none, priority
-    network_handler.learn_structure(method, scoring_method, prior, log)
+    network_handler.learn_structure(method, scoring_method, log)
     
     # 5) ESTIMATE THE PARAMETERS
     network_handler.estimate_parameters(log)

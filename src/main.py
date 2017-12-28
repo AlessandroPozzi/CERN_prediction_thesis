@@ -51,11 +51,18 @@ def create_network(select_priority, file_selection, log):
     evidence[""] = 1 #for manual mode, set the evidence to 1 in the dictionary
     network_handler.inference(variables, evidence, mode, log)
     
-    #7 ) DATA INFO
-    #network_handler.data_info()
+    # 7) DRAW THE NETWORK
+    network_handler.draw_network()
     
-    # 8) DRAW THE NETWORK
-    network_handler.draw_network(log = False)
+    # 8 ) DATA INFO
+    selection = [1, 2, 3] #Put in the list what you want to show
+    # 1: Device frequency and occurrences
+    # 2: Edges of the network
+    # 3: Markov Network
+    # 4: Inference network
+    network_handler.data_info(selection, log)
+    
+
     
     
 def run_script(mode):

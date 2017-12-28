@@ -18,6 +18,7 @@ from pgmpy.models import MarkovModel
 from pgmpy.inference import BeliefPropagation
 from pgmpy.factors.discrete import DiscreteFactor
 from pgmpy.inference import Mplp
+from File_writer import File_writer
 
 
 class Network_handler:
@@ -52,19 +53,17 @@ class Network_handler:
         '''
         if not select_priority or not file_selection:
             raise DataError("Priority or file not chosen. Exiting now.")
-        else:
-            if log:
-                print("Priority level considered: " + str(select_priority))
-        
+
         info = ""
         for num in file_selection:
             self.extractor.extract(self.file_names[num-1], self.true_device_names[num-1], select_priority)
             info = self.file_names[num-1] + " " + info
             self.device_considered = self.file_names[num-1] #should only be one -used by graph
         self.priority_considered = select_priority[0] #should only be one -used by graph
-        if log:
-            print("File considered: " + info)
-            print("Text files data extraction completed.")
+        self.file_writer = File_writer(self.device_considered, self.priority_considered)
+        self.log("Priority level considered: " + str(select_priority), log)
+        self.log("File considered: " + info, log)
+        self.log("Text files data extraction completed.", log)
     
     def select_variables(self, var_type, support = 0.33, MIN = 0, MAX = 10, log = True):
         ''' (2)
@@ -85,10 +84,7 @@ class Network_handler:
         self.extractor.prepare_candidates() #computes occurrences and frequency of the devices
         self.extractor.select_candidates(var_type, support, MIN, MAX)
         
-        if log:
-            ordered_list = self.extractor.get_ranked_devices()
-            print(ordered_list)
-
+        self.log(self.extractor.get_ranked_devices(), log)
   
     def build_data(self, training_instances="all_events", log=True):
         ''' (3)
@@ -108,10 +104,9 @@ class Network_handler:
         self.training_instances = training_instances
         self.data = self.extractor.build_dataframe(training_instances)
         
-        if log:
-            print("There are " + str(len(variables)) + " variables in the network: " + " ".join(variables))
-            print("Library used: pgmpy")
-            print("There are " + str(len(self.data)) + " 'training' instances in the dataframe.")    
+        self.log("There are " + str(len(variables)) + " variables in the network: " + " ".join(variables), log)
+        self.log("Library used: pgmpy", log)
+        self.log("There are " + str(len(self.data)) + " 'training' instances in the dataframe.", log)    
 
 
 
@@ -150,10 +145,9 @@ class Network_handler:
         self.best_model = est.estimate()
         self.eliminate_isolated_nodes() # REMOVE all nodes not connected to anything else
             
-        if log:
-            print("Method used for structural learning: " + method)
-            print("Training instances skipped: " + str(self.extractor.get_skipped_lines()))
-            print("Search terminated")
+        self.log("Method used for structural learning: " + method, log)
+        self.log("Training instances skipped: " + str(self.extractor.get_skipped_lines()), log)
+        self.log("Search terminated", log)
     
     
     def estimate_parameters(self, log=True):
@@ -161,109 +155,65 @@ class Network_handler:
         Estimates the parameters of the found network
         '''
         estimator = BayesianEstimator(self.best_model, self.data)
-        output_file  = open('../output/' + self.device_considered 
-                 + '_' + self.priority_considered + ".txt","w")
-        output_file.write("Number of nodes: " + str(len(self.extractor.get_variable_names())) + "\n")
-        output_file.write("Complete list: " + " ".join(self.extractor.get_variable_names()))
-        output_file.write("\n")
+        self.file_writer.write_txt("Number of nodes: " + str(len(self.extractor.get_variable_names())))
+        self.file_writer.write_txt("Complete list: " + " ".join(self.extractor.get_variable_names()))
+        
         for node in self.best_model.nodes():
             cpd = estimator.estimate_cpd(node, prior_type='K2')
             self.best_model.add_cpds(cpd)
-            if log:
-                print(cpd)
-            output_file.write(cpd.__str__())
-            output_file.write("\n")
+            self.log(cpd, log)
+            self.file_writer.write_txt(cpd.__str__())
             
-        output_file.write("\n")
-        output_file.write("Device ranking (max 20 devices are visualized)")
-        i = 1
-        for dr in self.extractor.get_ranked_devices():
-            output_file.write("\n")
-            output_file.write(dr[0] + "\t\t" + str(dr[1]) + 
-                              "\t" + str(dr[2]))
-            i = i + 1
-            if i == 20:
-                break
-        output_file.close()
-        
-        self.markov = self.best_model.to_markov_model()
+        self.markov = self.best_model.to_markov_model()    
+
         
     def inference(self, variables, evidence, mode = "auto", log = True):
+        ''' (6)
+        Computes the inference over some variables of the network (given some evidence)
+        '''
             
-            inference = VariableElimination(self.best_model)
-            #inference = BeliefPropagation(self.markov)
-            #inference = Mplp(self.best_model)
-            if log:
-                print("------------------- INFERENCE ------------------------")
-            with open ('../output/' + self.device_considered 
-                               + '_' + self.priority_considered +
-                               '.txt', 'a') as in_file:
-                        in_file.write("\n")
-                        in_file.write("------------------- INFERENCE ------------------------")
-                        in_file.write("\n")
-                        in_file.write("(with parents all set to value 1)")
-                        in_file.write("\n")
-            
-            if mode == "auto":
-                if log:
-                    print("          (with parents all set to value 1)")
-                for node in self.best_model.nodes():
-                    variables = [node]
-                    parents = self.best_model.get_parents(node)
-                    evidence = dict()
-                    for p in parents:
-                        evidence[p] = 1
-                    phi_query = inference.query(variables, evidence)
-                    for key in phi_query:
-                        with open ('../output/' + self.device_considered 
-                                   + '_' + self.priority_considered +
-                                   '.txt', 'a') as in_file:
-                            in_file.write(str(phi_query[key]))
-                            in_file.write("\n")
-                        if log:
-                            print(phi_query[key])
-            
-            elif mode == "manual":
+        inference = VariableElimination(self.best_model)
+        #inference = BeliefPropagation(self.markov)
+        #inference = Mplp(self.best_model)
+        header = "------------------- INFERENCE ------------------------"
+        self.log(header, log)
+        self.file_writer.write_txt(header, newline = True)
+        self.file_writer.write_txt("(With parents all set to value 1)")
+
+        if mode == "auto":
+            self.log("          (with parents all set to value 1)", log)
+            for node in self.best_model.nodes():
+                variables = [node]
+                parents = self.best_model.get_parents(node)
+                evidence = dict()
+                for p in parents:
+                    evidence[p] = 1
                 phi_query = inference.query(variables, evidence)
                 for key in phi_query:
-                    if log:
-                        print(phi_query[key])
-            
-                
-                '''
-                variables = ["ETZ11/5H"]
-                evidence = dict()
-                evidence["EAS11/8H"] = 1
-                evidence["ECC01/5DX"] = 0
-                evidence["ESS11/6A"] = 0
-                evidence["ESS11/P18"] = 0
-                print("MAP QUERY: " + "\n")
-                map_query = inference.map_query(variables, evidence)
-                print(map_query)
-                '''
+                    self.file_writer.write_txt(str(phi_query[key]))
+                    self.log(phi_query[key], log)
+        
+        elif mode == "manual":
+            phi_query = inference.query(variables, evidence)
+            for key in phi_query:
+                self.log(phi_query[key], log)
+        
+            '''
+            map_query = inference.map_query(variables, evidence)
+            print(map_query)
+            '''
                         
                                             
-    def draw_network(self, log = False):
-        ''' (6) Draws the network.
+    def draw_network(self):
+        ''' (7) 
+        Draws the network.
         '''
-        
-                
+          
         nice_graph = pydot.Dot(graph_type='digraph')
         for node in self.best_model.nodes():
             node_pydot = pydot.Node(node)
             nice_graph.add_node(node_pydot)
-        with open ('../output/' + self.device_considered 
-                                 + '_' + self.priority_considered +
-                                 '.txt', 'a') as in_file:
-            in_file.write("\n")
-            in_file.write("Edges of the network: ")
-            in_file.write("\n")
         for edge in self.best_model.edges_iter():
-            with open ('../output/' + self.device_considered 
-                                 + '_' + self.priority_considered +
-                                 '.txt', 'a') as in_file:
-                in_file.write(str(edge))
-                in_file.write("\n")
             inference = VariableElimination(self.best_model)
             variables = [edge[1]]
             evidence = dict()
@@ -281,9 +231,8 @@ class Network_handler:
             
             #small_label = str(value)
             big_label = str(value) + "|" + str(value_inv)
-            #, label = big_label
             if value >= 0.75:
-                edge_pydot = pydot.Edge(edge[0], edge[1], color = "red", label = big_label)#red
+                edge_pydot = pydot.Edge(edge[0], edge[1], color = "red", label = big_label)
             else:
                 edge_pydot = pydot.Edge(edge[0], edge[1], color = "black", label = big_label)
 
@@ -291,73 +240,99 @@ class Network_handler:
         nice_graph.write_png('../output/' + self.device_considered 
                                  + '_' + self.priority_considered + '.png')
             
-        #MARKOV
+    
 
-        nice_graph = pydot.Dot(graph_type='graph')
-        for node in self.markov.nodes():
-            node_pydot = pydot.Node(node)
-            nice_graph.add_node(node_pydot)
-        for edge in self.markov.edges():
-            edge_pydot = pydot.Edge(edge[0], edge[1], color = "black")
-            nice_graph.add_edge(edge_pydot)
-        nice_graph.write_png('../output/' + self.device_considered 
-                                 + '_' + self.priority_considered + '-markov.png')
+    def data_info(self, selection, log):
+        ''' (9) Prints or logs some extra information about the data or the newtork
+        '''
+        # 1 - DEVICE FREQUENCY AND OCCURRENCES
+        if 1 in selection:
+            self.file_writer.write_txt("Device ranking (max 20 devices are visualized)", newline = True)
+            i = 1
+            for dr in self.extractor.get_ranked_devices():
+                self.file_writer.write_txt(dr[0] + "\t\t" + str(dr[1]) + 
+                                  "\t" + str(dr[2]))
+                i = i + 1
+                if i == 20:
+                    break                    
         
-        with open ('../output/' + self.device_considered 
-             + '_' + self.priority_considered +
-             '.txt', 'a') as in_file:
-            in_file.write("MARKOV NETWORK FACTORS:")
-            in_file.write("\n")
+        # 2 - EDGES OF THE NETWORK
+        if 2 in selection:
+            self.file_writer.write_txt("Edges of the network:", newline = True)
+            for edge in self.best_model.edges_iter():
+                self.file_writer.write_txt(str(edge))
+            
+        # 3 - MARKOV NETWORK
+        if 3 in selection:
+            nice_graph = pydot.Dot(graph_type='graph')
+            for node in self.markov.nodes():
+                node_pydot = pydot.Node(node)
+                nice_graph.add_node(node_pydot)
+            for edge in self.markov.edges():
+                edge_pydot = pydot.Edge(edge[0], edge[1], color = "black")
+                nice_graph.add_edge(edge_pydot)
+            nice_graph.write_png('../output/' + self.device_considered 
+                                     + '_' + self.priority_considered + '-markov.png')
+            
+            self.file_writer.write_txt("MARKOV NETWORK FACTORS:", newline = True)
             for factor in self.markov.factors:
-                if log:
-                    print("MARKOV---------------------------------------")
-                    print(factor)
-                in_file.write(factor.__str__())
-                in_file.write("\n")
-                
-                
-        # INFERENCE NETWORK
-        nice_graph = pydot.Dot(graph_type='digraph')
-        nodes = self.best_model.nodes()
-        inference = VariableElimination(self.best_model)
-        for node1 in nodes:
-            pos = nodes.index(node1) + 1
-            for i in range(pos, len(nodes)):
-                node2 = nodes[i]
-                variables = [node2]
-                evidence = dict()
-                evidence[node1] = 1
-                phi_query = inference.query(variables, evidence)
-                prob1 = phi_query[node2].values[1] #probability of direct activation (inference from node1=1 to node2)
-                variables = [node1]
-                evidence = dict()
-                evidence[node2] = 1
-                phi_query = inference.query(variables, evidence)
-                prob2 = phi_query[node1].values[1] #probability of inverse activation (inference from node2=1 to node1)
-                prob1 = round(prob1, 2)
-                prob2 = round(prob2, 2)
-                if prob1 >= 0.90 and prob2 <= 0.50: #add direct arc from node1 to node2
-                    ls = [node1, node2]
-                    self.fix_node_presence(ls, nice_graph)
-                    nice_graph.add_edge(pydot.Edge(node1, node2, color = "red", label = str(prob1)))
-                elif prob2 >= 0.90 and prob1 <= 0.50:
-                    ls = [node1, node2]
-                    self.fix_node_presence(ls, nice_graph)
-                    nice_graph.add_edge(pydot.Edge(node2, node1, color = "red", label = str(prob2)))
-                elif prob1 >= 0.75 and prob2 >= 0.75:
-                    ls = [node1, node2]
-                    self.fix_node_presence(ls, nice_graph)
-                    nice_graph.add_edge(pydot.Edge(node2, node1, color = "orange", label = str(prob2)))
-                    nice_graph.add_edge(pydot.Edge(node1, node2, color = "orange", label = str(prob1)))
-                elif prob1 >= 0.65 and prob2 >= 0.65 and prob1 <= 0.75 and prob2 <= 0.75:
-                    ls = [node1, node2]
-                    self.fix_node_presence(ls, nice_graph)
-                    nice_graph.add_edge(pydot.Edge(node2, node1, color = "black", label = str(prob2)))
-                    nice_graph.add_edge(pydot.Edge(node1, node2, color = "black", label = str(prob1)))
-                
-        nice_graph.write_png('../output/' + self.device_considered 
-                                 + '_' + self.priority_considered + '-inference_network.png')            
+                self.log("MARKOV---------------------------------------", log)
+                self.log(factor, log)
+                self.file_writer.write_txt(factor.__str__())
+            
+        # 4 - INFERENCE NETWORK
+        if 4 in selection:
+            nice_graph = pydot.Dot(graph_type='digraph')
+            nodes = self.best_model.nodes()
+            inference = VariableElimination(self.best_model)
+            for node1 in nodes:
+                pos = nodes.index(node1) + 1
+                for i in range(pos, len(nodes)):
+                    node2 = nodes[i]
+                    variables = [node2]
+                    evidence = dict()
+                    evidence[node1] = 1
+                    phi_query = inference.query(variables, evidence)
+                    prob1 = phi_query[node2].values[1] #probability of direct activation (inference from node1=1 to node2)
+                    variables = [node1]
+                    evidence = dict()
+                    evidence[node2] = 1
+                    phi_query = inference.query(variables, evidence)
+                    prob2 = phi_query[node1].values[1] #probability of inverse activation (inference from node2=1 to node1)
+                    prob1 = round(prob1, 2)
+                    prob2 = round(prob2, 2)
+                    if prob1 >= 0.75 and (prob1 - prob2) <= 0.25: #add direct arc from node1 to node2
+                        ls = [node1, node2]
+                        self.fix_node_presence(ls, nice_graph)
+                        double_label = str(prob1) + "|" + str(prob2)
+                        nice_graph.add_edge(pydot.Edge(node1, node2, color = "red", label = double_label))
+                    elif prob2 >= 0.75 and (prob2 - prob1) <= 0.25:
+                        ls = [node1, node2]
+                        self.fix_node_presence(ls, nice_graph)
+                        double_label = str(prob2) + "|" + str(prob1)
+                        nice_graph.add_edge(pydot.Edge(node2, node1, color = "red", label = double_label))
+                    elif prob1 >= 0.75 and prob2 >= 0.75:
+                        ls = [node1, node2]
+                        self.fix_node_presence(ls, nice_graph)
+                        if prob1 >= prob2:
+                            double_label = str(prob1) + "|" + str(prob2)
+                            nice_graph.add_edge(pydot.Edge(node1, node2, color = "orange", label = double_label))
+                        else:
+                            double_label = str(prob2) + "|" + str(prob1)
+                            nice_graph.add_edge(pydot.Edge(node2, node1, color = "orange", label = double_label))
+                    elif prob1 >= 0.55 and prob2 >= 0.55:
+                        ls = [node1, node2]
+                        self.fix_node_presence(ls, nice_graph)
+                        if prob1 >= prob2:
+                            double_label = str(prob1) + "|" + str(prob2)
+                            nice_graph.add_edge(pydot.Edge(node1, node2, color = "black", label = double_label))
+                        else:
+                            double_label = str(prob2) + "|" + str(prob1)
+                            nice_graph.add_edge(pydot.Edge(node2, node1, color = "black", label = double_label))
                     
+            nice_graph.write_png('../output/' + self.device_considered 
+                                     + '_' + self.priority_considered + '-inference_network.png')       
+        
 
     def fix_node_presence(self, nodes, pydot_graph):
         ''' Adds the list of nodes to the graph, if they are not already present '''
@@ -374,28 +349,10 @@ class Network_handler:
             if not tup:
                 self.best_model.remove_node(nodeX)
 
-    def data_info(self):
-        
-        '''
-        # 1
-        print("Showing now the unique devices in frequent itemset, for each file:")
-        ufd = self.extractor.get_unique_frequent_devices_by_file()
-        print "{:<15} {:<90}".format('File name','Unique devices in frequent itemsets')
-        for k, v in ufd.iteritems():
-            print "{:<15} {:<90}".format(k, v)
-        
-        # 2
-        max = 36
-        print("Showing now the " + str(max) + " absolutely more frequent devices (based on the relative appearance in each file)")
-        fov = self.extractor.frequency_occurences_variables()
-        print "{:<15} {:<90}".format('Device name','Frequency')
-        i = 0 
-        for e in fov: 
-            i = i + 1
-            if i < max: #visualize max "i" elements
-                print "{:<15} {:<90}".format(e[0], e[1])    
-        '''
-        
+    def log(self, text, log):
+        ''' Prints the text in the console, if the "log" condition is True. '''
+        if log:
+            print(text)
     
     
         

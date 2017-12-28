@@ -3,28 +3,22 @@ Created on 23 nov 2017
 
 @author: Alessandro Pozzi, Lorenzo Costantini
 '''
-
-import pydot
-from Data_extractor import Data_extractor
 from pgmpy.estimators import HillClimbSearch, BicScore, BayesianEstimator, K2Score, BdeuScore
 from pgmpy.models import BayesianModel
 from pgmpy.estimators import ConstraintBasedEstimator
 from pgmpy.inference import VariableElimination
 from pgmpy.estimators.ExhaustiveSearch import ExhaustiveSearch
-from graphviz import Digraph
-from DataError import DataError
-from pgmpy.factors.discrete import CPD
 from pgmpy.models import MarkovModel
-from pgmpy.inference import BeliefPropagation
-from pgmpy.factors.discrete import DiscreteFactor
-from pgmpy.inference import Mplp
+from Data_extractor import Data_extractor
+from DataError import DataError
 from File_writer import File_writer
+import pydot
 
 
 class Network_handler:
     '''
     Handles creation and usage of the probabilistic network over CERN's data.
-    Note that the method of this class have numbers and must be called in order.
+    Note that the methods of this class have numbers and must be called in order.
     '''
 
     def __init__(self):
@@ -37,35 +31,33 @@ class Network_handler:
         self.best_model = BayesianModel()
         self.data = []
         self.training_instances = ""
-        self.device_considered = "" #works only when a single device is selected - used for graph
-        self.priority_considered = "" #works only when a single priority is selected - used for graph
-        self.method = "" #used for graph
+        self.device_considered = "" 
+        self.priority_considered = "" 
         self.markov = MarkovModel()
 
-    def process_files(self, select_priority = [], file_selection = [], log = True):
+    def process_files(self, select_priority, file_selection, log = True):
         '''  (1)
         Method that extracts data from the text files.
         -----------------
         Parameters:
-        select_priority -- list of the priority levels to be considered
-        files_used      -- the number of files to be used (min 1, max 6)
+        select_priority -- A string with the priority level to be considered
+        files_used      -- The number of the file to be used
         log             -- "True" if you want to print debug information in the console
         '''
         if not select_priority or not file_selection:
             raise DataError("Priority or file not chosen. Exiting now.")
 
-        info = ""
-        for num in file_selection:
-            self.extractor.extract(self.file_names[num-1], self.true_device_names[num-1], select_priority)
-            info = self.file_names[num-1] + " " + info
-            self.device_considered = self.file_names[num-1] #should only be one -used by graph
-        self.priority_considered = select_priority[0] #should only be one -used by graph
+        num = file_selection
+        self.extractor.extract(self.file_names[num-1], self.true_device_names[num-1], select_priority)
+        self.device_considered = self.file_names[num-1]
+        self.priority_considered = select_priority
+        
         self.file_writer = File_writer(self.device_considered, self.priority_considered)
-        self.log("Priority level considered: " + str(select_priority), log)
-        self.log("File considered: " + info, log)
+        self.log("Priority level considered: " + select_priority, log)
+        self.log("File considered: " + str(self.file_names[num-1]), log)
         self.log("Text files data extraction completed.", log)
     
-    def select_variables(self, var_type, support = 0.33, MIN = 0, MAX = 10, log = True):
+    def select_variables(self, var_type, MIN, MAX, support, log = True):
         ''' (2)
         Method that selects the variables to be used in the network.
         -----------------
@@ -132,14 +124,12 @@ class Network_handler:
         elif scoring_method == "bdeu":
             scores = BdeuScore(self.data)
         
+        #Select the actual method
         if method == "scoring_approx":
-            self.method = "scoring_approx"
             est = HillClimbSearch(self.data, scores)
         elif method == "scoring_exhaustive":
-            self.method = "scoring_exhaustive"
             est = ExhaustiveSearch(self.data, scores)
         elif method == "constraint":
-            self.method = "constraint"
             est = ConstraintBasedEstimator(self.data)
         
         self.best_model = est.estimate()
@@ -164,8 +154,6 @@ class Network_handler:
             self.log(cpd, log)
             self.file_writer.write_txt(cpd.__str__())
             
-        self.markov = self.best_model.to_markov_model()    
-
         
     def inference(self, variables, evidence, mode = "auto", log = True):
         ''' (6)
@@ -243,14 +231,14 @@ class Network_handler:
     
 
     def data_info(self, selection, log):
-        ''' (9) Prints or logs some extra information about the data or the newtork
+        ''' (9) Prints or logs some extra information about the data or the network
         '''
         # 1 - DEVICE FREQUENCY AND OCCURRENCES
         if 1 in selection:
             self.file_writer.write_txt("Device ranking (max 20 devices are visualized)", newline = True)
             i = 1
             for dr in self.extractor.get_ranked_devices():
-                self.file_writer.write_txt(dr[0] + "\t\t" + str(dr[1]) + 
+                self.file_writer.write_txt(dr[0] + "             \t" + str(dr[1]) + 
                                   "\t" + str(dr[2]))
                 i = i + 1
                 if i == 20:
@@ -264,6 +252,7 @@ class Network_handler:
             
         # 3 - MARKOV NETWORK
         if 3 in selection:
+            self.markov = self.best_model.to_markov_model() #create the markov model from the BN
             nice_graph = pydot.Dot(graph_type='graph')
             for node in self.markov.nodes():
                 node_pydot = pydot.Node(node)

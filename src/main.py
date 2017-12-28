@@ -11,8 +11,8 @@ from Network_handler import Network_handler
 from DataError import DataError
 
 priority = ('L0', 'L1', 'L2', 'L3') # Hard coded priority, do NOT change
-select_priority = ['L1'] # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE"
-file_selection = [1] # 1 to 6 -->  ("EMC0019", "EHS60BE", "ES115H", "ESS184", "EXS48X", "EXS1062X")
+select_priority = 'L1' # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE"
+file_selection = 1 # 1 to 6 -->  ("EMC0019", "EHS60BE", "ES115H", "ESS184", "EXS48X", "EXS1062X")
 
 mode = "all" #one, all  | "one" to do the single file-priority selected above; 
                         # "all" to do all the possible files and priorities
@@ -30,7 +30,7 @@ def create_network(select_priority, file_selection, log):
     support = 0.4
     MIN = 4
     MAX = 8
-    network_handler.select_variables(var_type, support, MIN, MAX, log)
+    network_handler.select_variables(var_type, MIN, MAX, support, log)
     
     # 3) BUILD DATA
     training_instances="all_events" #all_events, all_events_priority
@@ -76,7 +76,7 @@ def run_script(mode):
             for p in priority:
                 print("File " + str(i) + " with priority " + p + " started...")
                 try:
-                    create_network([p], [i], log = False)
+                    create_network(p, i, log = False)
                 except DataError as e:
                     print("File skipped: " + e.args[0])
                 else:

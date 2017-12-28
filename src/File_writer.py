@@ -28,5 +28,5 @@ class File_writer(object):
         if newline:
             self.txt.write("\n")
         self.txt.write(text)
-        self.txt.write('\n')
+        self.txt.write('\n') #newline after the text
         self.txt.close()

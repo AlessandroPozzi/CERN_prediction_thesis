@@ -5,7 +5,6 @@ Created on 15 nov 2017
 
 import re
 import pandas as pd
-from DataError import DataError
 
 class Data_extractor:
     '''
@@ -40,13 +39,13 @@ class Data_extractor:
         self.variable_names = [] #to be used as nodes in the network
         self.true_file_names = [] #stores the names of the files
         self.txt_file_names = []
-        self.priority_selected = []
+        self.priority_selected = ""
         self.events_by_file = dict() #a dictionary that has filenames as keys, and a list of tuples as values. Each tuple is a couple ([device list], priority)
         self.ranked_devices = [] #list of tuples: (device, frequency, occurrences)
         self.skipped_lines = 0
         self.totalRows = 0
 
-    def extract(self, txtfile, true_device_name, select_priority = []):
+    def extract(self, txtfile, true_device_name, select_priority):
         '''
         Extracts data from the txt file
         
@@ -54,7 +53,7 @@ class Data_extractor:
         ----------
         txtfile: the name of the txt file found in the /res folder
         true_device_name : the real name of the device in the events
-        select_priority : a list that contain the priority levels (L0,L1,L2,L3) to be considered
+        select_priority : a string that contain the priority level (L0,L1,L2 or L3) to be considered
         '''
         self.true_file_names.append(true_device_name)
         self.txt_file_names.append(txtfile)
@@ -68,7 +67,7 @@ class Data_extractor:
             for line in in_file.readlines():
                 #NOTE: the order of IF conditions IS RELEVANT
                 
-                if all_events==1 and self.priority[p-1] in select_priority: # Here we are in "Distinct devices after 5 min"
+                if all_events==1 and self.priority[p-1] == select_priority: # Here we are in "Distinct devices after 5 min"
                     self.store_line(line, true_device_name, self.priority[p-1])
                 
                 if re.search(r"PRIORITY", line): # Here we are in the "PRIORITY level" line

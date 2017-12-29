@@ -11,9 +11,6 @@ class File_writer(object):
     '''
 
     def __init__(self, device, priority):
-        '''
-        Constructor
-        '''
         self.device = device
         self.priority = priority
         self.path = '../output/' + self.device + "_" + self.priority

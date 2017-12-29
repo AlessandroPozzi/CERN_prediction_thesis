@@ -90,7 +90,7 @@ class Network_handler:
             all_events             -- to generate one training instance per event (in "distinct devices after 5 minutes")
             all_events_with_causes -- like all_events, but also considers the 6 causes variables
             all_events_priority    -- like all_event but instead of using [0, 1] as values for variables, uses the priority related to the event: [0, L0, L1, L2, L3]
-        priority_node   : True if you want the prority node, false otherwise.
+        priority_node   : True if you want the priority node, false otherwise.
         log       : "True" if you want to print debug information in the console    
         '''
         

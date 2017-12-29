@@ -3,6 +3,7 @@ Created on 27 dic 2017
 
 @author: Alessandro Corsair
 '''
+from __builtin__ import str
 
 class File_writer(object):
     '''
@@ -24,6 +25,8 @@ class File_writer(object):
         ''' Appends the text given. "Newline" creates a new line BEFORE the text, if True. 
         Newline AFTER the text is ALWAYS created. '''
         
+        if not isinstance(text, str):
+            text = str(text)
         self.txt = open(self.path + ".txt", "a")
         if newline:
             self.txt.write("\n")

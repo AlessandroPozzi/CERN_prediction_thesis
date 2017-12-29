@@ -2,10 +2,10 @@
 Created on 24 nov 2017
 @author: Alessandro Pozzi, Lorenzo Costantini
 
-This is the main file of the project. 
-Running this file will start the processing of one - or all - the file/priority combinations.
+This is the main module of the project. 
+Running this module will start the processing of one - or all - the file/priority combinations.
 You can change some the parameters in this module in order to see how the output varies.
-Parameters that can be change usually have a comment that shows which values can be selected.
+Parameters that can be changed usually have a comment that shows which values can be selected.
 '''
 from Network_handler import Network_handler
 from DataError import DataError
@@ -14,7 +14,7 @@ priority = ('L0', 'L1', 'L2', 'L3') # Hard coded priority, do NOT change
 select_priority = 'L1' # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE"
 file_selection = 1 # 1 to 6 -->  ("EMC0019", "EHS60BE", "ES115H", "ESS184", "EXS48X", "EXS1062X")
 
-mode = "all" #one, all  | "one" to do the single file-priority selected above; 
+mode = "one" #one, all  | "one" to do the single file-priority selected above; 
                         # "all" to do all the possible files and priorities
 
 
@@ -52,10 +52,13 @@ def create_network(select_priority, file_selection, log):
     network_handler.inference(variables, evidence, mode, log)
     
     # 7) DRAW THE NETWORK
-    network_handler.draw_network()
+    label = "double" # none, single, double
+    location_color = True # True, False
+    location = "H0" # H0, H1, H2
+    network_handler.draw_network(label, location_color, location, log)
     
     # 8 ) DATA INFO
-    selection = [1, 2, 3] #Put in the list what you want to show
+    selection = [1, 2] #Put in the list what you want to show
     # 1: Device frequency and occurrences
     # 2: Edges of the network
     # 3: Markov Network

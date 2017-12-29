@@ -12,12 +12,14 @@ from pgmpy.models import MarkovModel
 from Data_extractor import Data_extractor
 from DataError import DataError
 from File_writer import File_writer
+from Log_extractor import Log_extractor
 import pydot
 
 
 class Network_handler:
     '''
     Handles creation and usage of the probabilistic network over CERN's data.
+    Can deal only with a SINGLE file-priority combination.
     Note that the methods of this class have numbers and must be called in order.
     '''
 
@@ -192,39 +194,70 @@ class Network_handler:
             '''
                         
                                             
-    def draw_network(self):
+    def draw_network(self, label_choice, color_choice, location, log):
         ''' (7) 
-        Draws the network.
+        Draws the bayesian network.
         '''
-          
         nice_graph = pydot.Dot(graph_type='digraph')
+        args = []
+        
+        # Extract color based on the building
+        if color_choice:
+            log_extractor = Log_extractor()
+            self.log("Searching for location of devices...", log)
+            devices = self.extractor.get_variable_names()
+            device_location = log_extractor.find_location(devices, location)
+            self.log("Locations found.", log)
+            location_color = self.assign_color(device_location)
+            # Logging and saving info
+            self.log(device_location, log)
+            self.log(location_color, log)
+            self.file_writer.write_txt(device_location, newline = True)
+            self.file_writer.write_txt(location_color, newline = True)
+        
+        # Create nodes
         for node in self.best_model.nodes():
-            node_pydot = pydot.Node(node)
+            if color_choice:
+                color = location_color[device_location[node]]
+                node_pydot = pydot.Node(node, style="filled", fillcolor=color)
+            else:
+                node_pydot = pydot.Node(node)
             nice_graph.add_node(node_pydot)
+        
+        # Create and color edges
         for edge in self.best_model.edges_iter():
             inference = VariableElimination(self.best_model)
+            label = ""
+            
+            # Inference for first label and color of edges
             variables = [edge[1]]
             evidence = dict()
             evidence[edge[0]] = 1
             phi_query = inference.query(variables, evidence)
             value = phi_query[edge[1]].values[1]
             value = round(value, 2)
+                
+            if label_choice == "single":
+                label = str(value)
             
-            variables = [edge[0]]
-            evidence = dict()
-            evidence[edge[1]] = 1
-            phi_query = inference.query(variables, evidence)
-            value_inv = phi_query[edge[0]].values[1]
-            value_inv = round(value_inv, 2)
+            if label_choice == "double":
+                # Inference for second label
+                variables = [edge[0]]
+                evidence = dict()
+                evidence[edge[1]] = 1
+                phi_query = inference.query(variables, evidence)
+                value_inv = phi_query[edge[0]].values[1]
+                value_inv = round(value_inv, 2)
+                label = str(value) + "|" + str(value_inv)
             
-            #small_label = str(value)
-            big_label = str(value) + "|" + str(value_inv)
             if value >= 0.75:
-                edge_pydot = pydot.Edge(edge[0], edge[1], color = "red", label = big_label)
+                edge_pydot = pydot.Edge(edge[0], edge[1], color = "red", label = label)
             else:
-                edge_pydot = pydot.Edge(edge[0], edge[1], color = "black", label = big_label)
+                edge_pydot = pydot.Edge(edge[0], edge[1], color = "black", label = label)
 
             nice_graph.add_edge(edge_pydot)
+        
+        # Save the .png graph    
         nice_graph.write_png('../output/' + self.device_considered 
                                  + '_' + self.priority_considered + '.png')
             
@@ -337,6 +370,19 @@ class Network_handler:
             tup = [item for item in self.best_model.edges() if nodeX in item]
             if not tup:
                 self.best_model.remove_node(nodeX)
+                
+    def assign_color(self, device_location):
+        '''
+        Returns a dictionary with the location as key and the assigned colour as value (WORKS WITH MAX 10 DIFFERENT LOCATIONS)
+        '''
+        system_color = ['Blue', 'Green', 'Red', 'Purple', 'Yellow', 'Red', 'Grey', 'Light Red', 'Light Blue', 'Light Green']
+        location_color = dict() # key = location; value = color
+        for dev, loc in device_location.items():
+            if loc not in location_color:
+                color = system_color[0]
+                system_color.remove(color)
+                location_color[loc] = color
+        return location_color
 
     def log(self, text, log):
         ''' Prints the text in the console, if the "log" condition is True. '''

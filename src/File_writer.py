@@ -30,3 +30,12 @@ class File_writer(object):
         self.txt.write(text)
         self.txt.write('\n') #newline after the text
         self.txt.close()
+
+    def write_list(self, lst, newline = False):
+        self.txt = open(self.path + ".txt", "a")
+        if newline:
+            self.txt.write("\n")
+        for e in lst:
+            self.txt.write(str(e))
+            self.txt.write("\n")
+        

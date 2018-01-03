@@ -9,18 +9,19 @@ Parameters that can be changed usually have a comment that shows which values ca
 '''
 from Network_handler import Network_handler
 from DataError import DataError
+from General_handler import General_handler
 
 priority = ('L0', 'L1', 'L2', 'L3') # Hard coded priority, do NOT change
 select_priority = 'L1' # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE"
 file_selection = 1 # 1 to 6 -->  ("EMC0019", "EHS60BE", "ES115H", "ESS184", "EXS48X", "EXS1062X")
 
-mode = "one" #one, all  | "one" to do the single file-priority selected above; 
+mode = "all" #one, all  | "one" to do the single file-priority selected above; 
                         # "all" to do all the possible files and priorities
 
 
-def create_network(select_priority, file_selection, log):
+def create_network(select_priority, file_selection, gh, log):
 
-    network_handler = Network_handler()
+    network_handler = Network_handler(gh)
     
     # 1) PROCESS FILES
     network_handler.process_files(select_priority, file_selection, log)
@@ -71,21 +72,23 @@ def create_network(select_priority, file_selection, log):
 def run_script(mode):
     
     if mode == "one":
-        create_network(select_priority, file_selection, log = True)
+        create_network(select_priority, file_selection, None, log = True)
     elif mode == "all":
         print("RUN started...")
+        gh = General_handler()
         i = 1
         while i <= 6:
             for p in priority:
                 print("File " + str(i) + " with priority " + p + " started...")
                 try:
-                    create_network(p, i, log = False)
+                    create_network(p, i, gh, log = False)
                 except DataError as e:
                     print("File skipped: " + e.args[0])
                 else:
                     print("Processing completed...")
             i = i + 1
-                
+        
+        gh.save_to_file()        
     print("RUN completed")
     
     

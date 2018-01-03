@@ -13,6 +13,7 @@ from Data_extractor import Data_extractor
 from DataError import DataError
 from File_writer import File_writer
 from Log_extractor import Log_extractor
+from General_handler import General_handler
 import pydot
 
 
@@ -23,7 +24,7 @@ class Network_handler:
     Note that the methods of this class have numbers and must be called in order.
     '''
 
-    def __init__(self):
+    def __init__(self, gh):
         '''
         Constructor
         '''
@@ -36,6 +37,7 @@ class Network_handler:
         self.device_considered = "" 
         self.priority_considered = "" 
         self.markov = MarkovModel()
+        self.general_handler = gh
 
     def process_files(self, select_priority, file_selection, log = True):
         '''  (1)
@@ -78,6 +80,8 @@ class Network_handler:
         self.extractor.prepare_candidates() #computes occurrences and frequency of the devices
         self.extractor.select_candidates(var_type, support, MIN, MAX)
         
+        if self.general_handler:
+            self.general_handler.add_devices(self.extractor.get_variable_names())
         self.log(self.extractor.get_ranked_devices(), log)
   
     def build_data(self, training_instances="all_events", log=True):

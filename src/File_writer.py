@@ -10,10 +10,8 @@ class File_writer(object):
     Class used to write in files 
     '''
 
-    def __init__(self, device, priority):
-        self.device = device
-        self.priority = priority
-        self.path = '../output/' + self.device + "_" + self.priority
+    def __init__(self, *args):
+        self.path = '../output/' + "_".join(args)
         self.txt = open(self.path + ".txt", "w")
         self.txt.close()
         

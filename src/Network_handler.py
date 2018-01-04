@@ -15,6 +15,7 @@ from File_writer import File_writer
 from Log_extractor import Log_extractor
 from General_handler import General_handler
 import pydot
+from bokeh.core.enums import Location
 
 
 class Network_handler:
@@ -203,7 +204,6 @@ class Network_handler:
         Draws the bayesian network.
         '''
         nice_graph = pydot.Dot(graph_type='digraph')
-        args = []
         
         # Extract color based on the building
         if color_choice:
@@ -261,9 +261,14 @@ class Network_handler:
 
             nice_graph.add_edge(edge_pydot)
         
-        # Save the .png graph    
+        # Save the .png graph
+        if location_color:
+            loc = "_" + location
+        else:
+            loc = ""        
         nice_graph.write_png('../output/' + self.device_considered 
-                                 + '_' + self.priority_considered + '.png')
+                                 + '_' + self.priority_considered 
+                                 + loc + '.png')
             
     
 

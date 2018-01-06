@@ -15,7 +15,7 @@ from File_writer import File_writer
 from Log_extractor import Log_extractor
 from General_handler import General_handler
 import pydot
-from bokeh.core.enums import Location
+import graphviz as gv
 
 
 class Network_handler:
@@ -199,34 +199,45 @@ class Network_handler:
             '''
                         
                                             
-    def draw_network(self, label_choice, color_choice, location, log):
+    def draw_network(self, label_choice, location_choice, location, log):
         ''' (7) 
         Draws the bayesian network.
+        ----
+        location_choice = True iff we want to show the location of devices in the graph.
         '''
-        nice_graph = pydot.Dot(graph_type='digraph')
+        bn_graph = gv.Digraph(format='png')
         
         # Extract color based on the building
-        if color_choice:
+        if location_choice:
             log_extractor = Log_extractor()
             self.log("Searching for location of devices...", log)
             devices = self.extractor.get_variable_names()
             device_location = log_extractor.find_location(devices, location)
             self.log("Locations found.", log)
-            location_color = self.assign_color(device_location)
+            location_color = self.assign_color(device_location) #REMOVE COLOR
             # Logging and saving info
             self.log(device_location, log)
             self.log(location_color, log)
             self.file_writer.write_txt(device_location, newline = True)
             self.file_writer.write_txt(location_color, newline = True)
-        
+            # Creating the subgraphs, one for each location:
+            loc_subgraphs = dict()
+            for loc in location_color:
+                name = "cluster_" + loc
+                loc_subgraphs[loc] = gv.Digraph(name) 
+                loc_subgraphs[loc].graph_attr['label'] = loc #Label with name to be visualized in the image
+                        
         # Create nodes
         for node in self.best_model.nodes():
-            if color_choice:
-                color = location_color[device_location[node]]
-                node_pydot = pydot.Node(node, style="filled", fillcolor=color)
+            if location_choice:
+                loc_subgraphs[device_location[node]].node(node) #add the node to the right subgraph
             else:
-                node_pydot = pydot.Node(node)
-            nice_graph.add_node(node_pydot)
+                bn_graph.node(node)
+            
+        # Add all subgraphs in the final graph:
+        if location_choice:
+            for loc in loc_subgraphs:
+                bn_graph.subgraph(loc_subgraphs[loc])
         
         # Create and color edges
         for edge in self.best_model.edges_iter():
@@ -255,20 +266,18 @@ class Network_handler:
                 label = str(value) + "|" + str(value_inv)
             
             if value >= 0.75:
-                edge_pydot = pydot.Edge(edge[0], edge[1], color = "red", label = label)
+                bn_graph.edge(edge[0], edge[1], color = "red", label = label)
             else:
-                edge_pydot = pydot.Edge(edge[0], edge[1], color = "black", label = label)
-
-            nice_graph.add_edge(edge_pydot)
+                bn_graph.edge(edge[0], edge[1], color = "black", label = label)
         
         # Save the .png graph
         if location_color:
-            loc = "_" + location
+            locat = "_" + location
         else:
-            loc = ""        
-        nice_graph.write_png('../output/' + self.device_considered 
+            locat = ""        
+        bn_graph.render('../output/' + self.device_considered 
                                  + '_' + self.priority_considered 
-                                 + loc + '.png')
+                                 + locat)
             
     
 

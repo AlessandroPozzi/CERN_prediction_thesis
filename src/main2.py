@@ -2,12 +2,33 @@
 Created on 28 dic 2017
 @author: Alessandro Corsair
 
-This is a (probably only temporary) module that will use the Log_extractor class to deal with CERN's log raw data.
+This is a (probably only temporary) module that can be used to do some tests.
 '''
-import csv
 from Log_extractor import Log_extractor
-from File_writer import File_writer
+import graphviz as gv
 
+g = gv.Digraph(format='png')
+
+    
+
+
+g1 = gv.Digraph(name = "cluster_1")
+g1.node("nodeA")
+g1.node("nodeB")
+g1.graph_attr['label']="nome"
+
+g2 = gv.Digraph(name = "cluster_2")
+g2.node("node1", label="a fantastic label", xlabel = "an external label")
+g2.node("node2")
+g2.node("node3")
+g2.edge("node1", "node2", color= "red")
+
+g.subgraph(g1)
+g.subgraph(g2)
+g.edge("nodeA", "node2")
+
+
+g.render("test_graphviz", "../output/")
 
 log_extractor = Log_extractor()
 
@@ -16,7 +37,7 @@ file_devices = ["EMC001*9", 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS10
 
 #d = log_extractor.count_occurrences(file_devices)
 #print(d)
-
+'''
 device_occurrences = log_extractor.findtop_occurrences()
 with open('../output/alldevices_occurrences.csv', 'w') as f:
     writer = csv.writer(f)
@@ -25,4 +46,4 @@ with open('../output/alldevices_occurrences.csv', 'w') as f:
         writer.writerow([devocc[0], devocc[1]])
     
 print(device_occurrences)
-
+'''

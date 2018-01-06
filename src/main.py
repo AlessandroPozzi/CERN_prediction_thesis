@@ -12,7 +12,7 @@ from DataError import DataError
 from General_handler import General_handler
 
 priority = ('L0', 'L1', 'L2', 'L3') # Hard coded priority, do NOT change
-select_priority = 'L2' # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE"
+select_priority = 'L3' # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE"
 file_selection = 1 # 1 to 6 -->  ("EMC0019", "EHS60BE", "ES115H", "ESS184", "EXS48X", "EXS1062X")
 
 mode = "one" #one, all  | "one" to do the single file-priority selected above; 
@@ -53,9 +53,9 @@ def create_network(select_priority, file_selection, gh, log):
     
     # 7) DRAW THE NETWORK
     label = "double" # none, single, double
-    location_color = True # True, False
-    location = "H0" # H0, H1, H2
-    network_handler.draw_network(label, location_color, location, log)
+    location_choice = True # True, False
+    location = "H2" # H0, H1, H2
+    network_handler.draw_network(label, location_choice, location, log)
     
     # 8 ) DATA INFO
     selection = [1, 2] #Put in the list what you want to show

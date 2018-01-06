@@ -12,7 +12,7 @@ from DataError import DataError
 from General_handler import General_handler
 
 priority = ('L0', 'L1', 'L2', 'L3') # Hard coded priority, do NOT change
-select_priority = 'L3' # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE"
+select_priority = 'L2' # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE"
 file_selection = 1 # 1 to 6 -->  ("EMC0019", "EHS60BE", "ES115H", "ESS184", "EXS48X", "EXS1062X")
 
 mode = "one" #one, all  | "one" to do the single file-priority selected above; 

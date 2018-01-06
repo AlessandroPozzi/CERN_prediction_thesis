@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 '''
 Created on 28 dic 2017
 
@@ -34,6 +36,7 @@ class Log_extractor(object):
         d = dict() 
         for index, row in df.iterrows():
             HX = df.loc[index, zone]
+            HX = unicode(HX, 'mbcs')
             device = df.loc[index, 'Device']
             if device in devices:
                 d[device] = HX

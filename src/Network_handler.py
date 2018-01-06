@@ -1,3 +1,4 @@
+
 '''
 Created on 23 nov 2017
 
@@ -13,10 +14,8 @@ from Data_extractor import Data_extractor
 from DataError import DataError
 from File_writer import File_writer
 from Log_extractor import Log_extractor
-from General_handler import General_handler
 import pydot
 import graphviz as gv
-
 
 class Network_handler:
     '''
@@ -39,6 +38,7 @@ class Network_handler:
         self.priority_considered = "" 
         self.markov = MarkovModel()
         self.general_handler = gh
+
 
     def process_files(self, select_priority, file_selection, log = True):
         '''  (1)
@@ -205,7 +205,7 @@ class Network_handler:
         ----
         location_choice = True iff we want to show the location of devices in the graph.
         '''
-        bn_graph = gv.Digraph(format='png')
+        bn_graph = gv.Digraph(format = "png")
         
         # Extract color based on the building
         if location_choice:
@@ -278,8 +278,8 @@ class Network_handler:
         bn_graph.render('../output/' + self.device_considered 
                                  + '_' + self.priority_considered 
                                  + locat)
-            
-    
+        
+
 
     def data_info(self, selection, log):
         ''' (9) Prints or logs some extra information about the data or the network

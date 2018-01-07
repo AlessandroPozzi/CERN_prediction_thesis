@@ -15,7 +15,7 @@ priority = ('L0', 'L1', 'L2', 'L3') # Hard coded priority, do NOT change
 select_priority = 'L2' # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE"
 file_selection = 1 # 1 to 6 -->  ("EMC0019", "EHS60BE", "ES115H", "ESS184", "EXS48X", "EXS1062X")
 
-mode = "one" #one, all  | "one" to do the single file-priority selected above; 
+mode = "one" #one, all  | "one" to do the single file-priority selected above;
                         # "all" to do all the possible files and priorities
 
 def create_network(select_priority, file_selection, gh, log):
@@ -34,15 +34,19 @@ def create_network(select_priority, file_selection, gh, log):
     
     # 3) BUILD DATA
     training_instances="all_events" #all_events, all_events_priority
-    network_handler.build_data(training_instances, log)
+    train, test = network_handler.build_data(training_instances, log)
     
     # 4) LEARN THE STRUCTURE
     method = "scoring_approx"      #scoring_approx, constraint, scoring_exhaustive
     scoring_method = "K2"  #bic, K2, bdeu
     network_handler.learn_structure(method, scoring_method, log)
+    train_model = network_handler.learn_structure_train_test(method, train, scoring_method, log)
+    test_model = network_handler.learn_structure_train_test(method, test, scoring_method, log)
     
     # 5) ESTIMATE THE PARAMETERS
     network_handler.estimate_parameters(log)
+    network_handler.estimate_parameters_train_test(train_model, log)
+    network_handler.estimate_parameters_train_test(test_model, log)
     
     # 6) INFERENCE
     mode = "auto" #manual, auto    | with "auto" inference is done on all variables by setting the parents to 1
@@ -50,12 +54,16 @@ def create_network(select_priority, file_selection, gh, log):
     evidence = dict()
     evidence[""] = 1 #for manual mode, set the evidence to 1 in the dictionary
     network_handler.inference(variables, evidence, mode, log)
+    network_handler.inference_train_test(train_model, variables, evidence, mode, log)
+    network_handler.inference_train_test(test_model, variables, evidence, mode, log)
     
     # 7) DRAW THE NETWORK
     label = "double" # none, single, double
     location_color = True # True, False
-    location = "H0" # H0, H1, H2
+    location = "H1" # H0, H1, H2
     network_handler.draw_network(label, location_color, location, log)
+    network_handler.draw_network_train_test(train_model, label, location_color, location, log)
+    network_handler.draw_network_train_test(test_model, label, location_color, location, log)
     
     # 8 ) DATA INFO
     selection = [1, 2] #Put in the list what you want to show

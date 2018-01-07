@@ -182,7 +182,9 @@ class Data_extractor:
         data = pd.DataFrame(dict_data)
         data.to_csv(path_or_buf="../output/dataframes/" + self.txt_file_names[0] + "_" + 
                     self.priority_selected[0] + "_" + "dataframe.csv")
-        return data
+        train = data.sample(frac=0.8, random_state=200)
+        test = data.drop(train.index)
+        return data, train, test
 
         
     def not_empty_check(self, device_list):

@@ -24,12 +24,13 @@ class Log_extractor(object):
             df.to_csv('../res/2016_data.csv')
             print len(df)
             
-    def find_location(self, devices, zone):
+    def find_location(self, devices_orig, zone):
         ''' 
         Finds the area of each of the devices in the list.
         Zone = H0 or H1 or H2
         Returns a dictionary with key = device and value = zone
         '''
+        devices = devices_orig
         df = pd.read_csv('../res/2016_data.csv')
         d = dict() 
         for index, row in df.iterrows():

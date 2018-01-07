@@ -101,11 +101,13 @@ class Network_handler:
         
         variables = self.extractor.get_variable_names()
         self.training_instances = training_instances
-        self.data = self.extractor.build_dataframe(training_instances)
-        
+        self.data, train, test = self.extractor.build_dataframe(training_instances)
+
         self.log("There are " + str(len(variables)) + " variables in the network: " + " ".join(variables), log)
         self.log("Library used: pgmpy", log)
-        self.log("There are " + str(len(self.data)) + " 'training' instances in the dataframe.", log)    
+        self.log("There are " + str(len(self.data)) + " 'training' instances in the dataframe.", log)
+
+        return train, test
 
 
 
@@ -145,8 +147,48 @@ class Network_handler:
         self.log("Method used for structural learning: " + method, log)
         self.log("Training instances skipped: " + str(self.extractor.get_skipped_lines()), log)
         self.log("Search terminated", log)
-    
-    
+
+
+    def learn_structure_train_test(self, method, dataset, scoring_method, log=True):
+        ''' (4)
+        Method that builds the structure of the data
+        -----------------
+        Parameters:
+        method          : The technique used to search for the structure
+            -> scoring_approx     - To use an approximated search with scoring method
+            -> scoring_exhaustive - To use an exhaustive search with scoring method
+            -> constraint         - To use the constraint based technique
+        scoring_method : K2, bic, bdeu
+        log             - "True" if you want to print debug information in the console
+        '''
+
+        # Select the scoring method for the local search of the structure
+        if scoring_method == "K2":
+            scores = K2Score(dataset)
+        elif scoring_method == "bic":
+            scores = BicScore(dataset)
+        elif scoring_method == "bdeu":
+            scores = BdeuScore(dataset)
+
+        # Select the actual method
+        if method == "scoring_approx":
+            est = HillClimbSearch(dataset, scores)
+        elif method == "scoring_exhaustive":
+            est = ExhaustiveSearch(dataset, scores)
+        elif method == "constraint":
+            est = ConstraintBasedEstimator(dataset)
+
+        best_model_from_dataset = BayesianModel()
+        best_model_from_dataset = est.estimate()
+        self.eliminate_isolated_nodes_train_test(best_model_from_dataset)  # REMOVE all nodes not connected to anything else
+
+        self.log("Method used for structural learning: " + method, log)
+        self.log("Training instances skipped: " + str(self.extractor.get_skipped_lines()), log)
+        self.log("Search terminated", log)
+
+        return best_model_from_dataset
+
+
     def estimate_parameters(self, log=True):
         ''' (5)
         Estimates the parameters of the found network
@@ -154,12 +196,28 @@ class Network_handler:
         estimator = BayesianEstimator(self.best_model, self.data)
         self.file_writer.write_txt("Number of nodes: " + str(len(self.extractor.get_variable_names())))
         self.file_writer.write_txt("Complete list: " + " ".join(self.extractor.get_variable_names()))
-        
+
         for node in self.best_model.nodes():
             cpd = estimator.estimate_cpd(node, prior_type='K2')
             self.best_model.add_cpds(cpd)
             self.log(cpd, log)
             self.file_writer.write_txt(cpd.__str__())
+
+
+    def estimate_parameters_train_test(self, model, log=True):
+        ''' (5)
+        Estimates the parameters of the found network
+        '''
+        estimator = BayesianEstimator(model, self.data)
+        self.file_writer.write_txt("Number of nodes: " + str(len(self.extractor.get_variable_names())))
+        self.file_writer.write_txt("Complete list: " + " ".join(self.extractor.get_variable_names()))
+
+        for node in model.nodes():
+            cpd = estimator.estimate_cpd(node, prior_type='K2')
+            model.add_cpds(cpd)
+            self.log(cpd, log)
+            self.file_writer.write_txt(cpd.__str__())
+
             
         
     def inference(self, variables, evidence, mode = "auto", log = True):
@@ -197,8 +255,43 @@ class Network_handler:
             map_query = inference.map_query(variables, evidence)
             print(map_query)
             '''
-                        
-                                            
+
+
+    def inference_train_test(self, model, variables, evidence, mode="auto", log=True):
+        ''' (6)
+        Computes the inference over some variables of the network (given some evidence)
+        '''
+        inference = VariableElimination(model)
+        # inference = BeliefPropagation(self.markov)
+        # inference = Mplp(self.best_model)
+        header = "------------------- INFERENCE ------------------------"
+        self.log(header, log)
+        self.file_writer.write_txt(header, newline=True)
+        self.file_writer.write_txt("(With parents all set to value 1)")
+
+        if mode == "auto":
+            self.log("          (with parents all set to value 1)", log)
+            for node in model.nodes():
+                variables = [node]
+                parents = model.get_parents(node)
+                evidence = dict()
+                for p in parents:
+                    evidence[p] = 1
+                phi_query = inference.query(variables, evidence)
+                for key in phi_query:
+                    self.file_writer.write_txt(str(phi_query[key]))
+                    self.log(phi_query[key], log)
+
+        elif mode == "manual":
+            phi_query = inference.query(variables, evidence)
+            for key in phi_query:
+                self.log(phi_query[key], log)
+
+            '''
+            map_query = inference.map_query(variables, evidence)
+            print(map_query)
+            '''
+
     def draw_network(self, label_choice, color_choice, location, log):
         ''' (7) 
         Draws the bayesian network.
@@ -269,8 +362,82 @@ class Network_handler:
         nice_graph.write_png('../output/' + self.device_considered 
                                  + '_' + self.priority_considered 
                                  + loc + '.png')
-            
-    
+
+
+    def write_file_train_test(self, model, nice_graph, loc):
+        nice_graph.write_png('../output/' + self.device_considered
+                             + '_' + self.priority_considered
+                             + loc + '_' + model + '.png')
+
+    def draw_network_train_test(self, model, label_choice, color_choice, location, log):
+        ''' (7)
+        Draws the bayesian network.
+        '''
+        nice_graph = pydot.Dot(graph_type='digraph')
+
+        # Extract color based on the building
+        if color_choice:
+            log_extractor = Log_extractor()
+            self.log("Searching for location of devices...", log)
+            devices = self.extractor.get_variable_names()
+            device_location = log_extractor.find_location(devices, location)
+            self.log("Locations found.", log)
+            location_color = self.assign_color(device_location)
+            # Logging and saving info
+            self.log(device_location, log)
+            self.log(location_color, log)
+            self.file_writer.write_txt(device_location, newline=True)
+            self.file_writer.write_txt(location_color, newline=True)
+
+        # Create nodes
+        for node in model.nodes():
+            if color_choice:
+                color = location_color[device_location[node]]
+                node_pydot = pydot.Node(node, style="filled", fillcolor=color)
+            else:
+                node_pydot = pydot.Node(node)
+            nice_graph.add_node(node_pydot)
+
+        # Create and color edges
+        for edge in model.edges_iter():
+            inference = VariableElimination(model)
+            label = ""
+
+            # Inference for first label and color of edges
+            variables = [edge[1]]
+            evidence = dict()
+            evidence[edge[0]] = 1
+            phi_query = inference.query(variables, evidence)
+            value = phi_query[edge[1]].values[1]
+            value = round(value, 2)
+
+            if label_choice == "single":
+                label = str(value)
+
+            if label_choice == "double":
+                # Inference for second label
+                variables = [edge[0]]
+                evidence = dict()
+                evidence[edge[1]] = 1
+                phi_query = inference.query(variables, evidence)
+                value_inv = phi_query[edge[0]].values[1]
+                value_inv = round(value_inv, 2)
+                label = str(value) + "|" + str(value_inv)
+
+            if value >= 0.75:
+                edge_pydot = pydot.Edge(edge[0], edge[1], color="red", label=label)
+            else:
+                edge_pydot = pydot.Edge(edge[0], edge[1], color="black", label=label)
+
+            nice_graph.add_edge(edge_pydot)
+
+        # Save the .png graph
+        if location_color:
+            loc = "_" + location
+        else:
+            loc = ""
+        self.write_file_train_test(model, nice_graph, loc)
+
 
     def data_info(self, selection, log):
         ''' (9) Prints or logs some extra information about the data or the network
@@ -379,6 +546,13 @@ class Network_handler:
             tup = [item for item in self.best_model.edges() if nodeX in item]
             if not tup:
                 self.best_model.remove_node(nodeX)
+
+    def eliminate_isolated_nodes_train_test(self, model):
+        for nodeX in model.nodes():
+            tup = [item for item in model.edges() if nodeX in item]
+            if not tup:
+                model.remove_node(nodeX)
+
                 
     def assign_color(self, device_location):
         '''

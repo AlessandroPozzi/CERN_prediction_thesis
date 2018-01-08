@@ -1,5 +1,5 @@
 import mysql.connector  # pip install mysql-connector-python
-from pymining import itemmining # pip install pymining
+from pymining import itemmining # pip install pymining  
 
 support = 0.5
 

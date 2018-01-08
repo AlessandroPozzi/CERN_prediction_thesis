@@ -134,7 +134,7 @@ typeDictionaryHV = {
 # for each device the function derives five more attributes related to the device and obtained
 # by following the naming convention provided by CERN
 def expandDeviceMeaning(cursor):
-    f = open("/Users/mirjana/Dropbox/CERN/CERNdevices.txt", 'r')
+    f = open("..res/CERNdevices.txt", 'r')
     male=1
     for line in f:
         print male

@@ -223,9 +223,9 @@ def compareChosenDevicesByAlarmPriority(cursor):
             #query = ("select * from electric E1 where device=%s and livellopriorita=%s and not exists (select * from electric E2 where E2.id<>E1.id and (livellopriorita='L1' or livellopriorita='L2') and E2.time<=E1.time and E2.time>=(E1.time - interval %s minute));")
             cursor.execute(query, (d,l))
             events = cursor.fetchall()
-            afterSeq = []
+            afterSeq = [] # Conterrà le liste dei device che vediamo in ogni riga nei file di testo
             beforeSeq = []
-            afterSequence = []
+            afterSequence = [] #contiene tutte le liste di deviceAfter (con duplicati)
             beforeSequence = []
             intersectionDevicesBeforeAndAfter = []
 
@@ -234,9 +234,9 @@ def compareChosenDevicesByAlarmPriority(cursor):
                 query = ("select * from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
                 cursor.execute(query, (e[0], e[0], 5))
                 eventsAfter = cursor.fetchall()
-                devicesAfter = []
+                devicesAfter = [] 
                 for ea in eventsAfter:
-                    devicesAfter.append(ea[4])
+                    devicesAfter.append(ea[4]) #ea[4] = nome del device
                 afterSequence.append(devicesAfter)
                 devicesAfter=list(set(devicesAfter))
                 afterSeq.append(devicesAfter)

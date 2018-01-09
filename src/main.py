@@ -15,7 +15,7 @@ priority = ('L0', 'L1', 'L2', 'L3') # Hard coded priority, do NOT change
 select_priority = 'L2' # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE"
 file_selection = 1 # 1 to 6 -->  ("EMC0019", "EHS60BE", "ES115H", "ESS184", "EXS48X", "EXS1062X")
 
-mode = "one" #one, all  | "one" to do the single file-priority selected above; 
+mode = "all" #one, all  | "one" to do the single file-priority selected above; 
                         # "all" to do all the possible files and priorities
 
 def create_network(select_priority, file_selection, gh, log):
@@ -54,7 +54,7 @@ def create_network(select_priority, file_selection, gh, log):
     # 7) DRAW THE NETWORK
     label = "double" # none, single, double
     location_choice = True # True, False
-    location = "H2" # H0, H1, H2
+    location = "H0" # H0, H1, H2
     network_handler.draw_network(label, location_choice, location, log)
     
     # 8 ) DATA INFO

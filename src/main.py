@@ -8,33 +8,40 @@ You can change some the parameters in this module in order to see how the output
 Parameters that can be changed usually have a comment that shows which values can be selected.
 '''
 from Network_handler import Network_handler
+from Pre_network_handler import Pre_network_handler
 from DataError import DataError
 from General_handler import General_handler
 
 priority = ('L0', 'L1', 'L2', 'L3') # Hard coded priority, do NOT change
-select_priority = 'L2' # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE"
+select_priority = 'L1' # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE"
 file_selection = 1 # 1 to 6 -->  ("EMC0019", "EHS60BE", "ES115H", "ESS184", "EXS48X", "EXS1062X")
-
-mode = "all" #one, all  | "one" to do the single file-priority selected above; 
+mode = "one" #one, all  | "one" to do the single file-priority selected above; 
                         # "all" to do all the possible files and priorities
 
-def create_network(select_priority, file_selection, gh, log):
-
-    network_handler = Network_handler(gh)
+def preprocess_network(select_priority, file_selection, gh, log):
+    
+    pre_network_handler = Pre_network_handler(gh)
     
     # 1) PROCESS FILES
-    network_handler.process_files(select_priority, file_selection, log)
+    pre_network_handler.process_files(select_priority, file_selection, log)
     
     # 2) SELECT VARIABLES
     var_type = "frequency" #occurrences, frequency
     support = 0.4
     MIN = 4
     MAX = 8
-    network_handler.select_variables(var_type, MIN, MAX, support, log)
+    pre_network_handler.select_variables(var_type, MIN, MAX, support, log)
     
     # 3) BUILD DATA
     training_instances="all_events" #all_events, all_events_priority
-    network_handler.build_data(training_instances, log)
+    pre_network_handler.build_data(training_instances, log)
+    
+    # RETURN the pre_network_handler object
+    return pre_network_handler
+
+def create_network(vNames, rankedDevices, data, gh, fw, log):
+
+    network_handler = Network_handler(vNames, rankedDevices, data, gh, fw)
     
     # 4) LEARN THE STRUCTURE
     method = "scoring_approx"      #scoring_approx, constraint, scoring_exhaustive
@@ -54,7 +61,7 @@ def create_network(select_priority, file_selection, gh, log):
     # 7) DRAW THE NETWORK
     label = "double" # none, single, double
     location_choice = True # True, False
-    location = "H0" # H0, H1, H2
+    location = 1 # 0, 1, 2 (i.e. H0, H1, H2)
     network_handler.draw_network(label, location_choice, location, log)
     
     # 8 ) DATA INFO
@@ -67,25 +74,51 @@ def create_network(select_priority, file_selection, gh, log):
     
 
     
-    
+''' The main script to create the BNs '''
 def run_script(mode):
     
     if mode == "one":
-        create_network(select_priority, file_selection, None, log = True)
+        gh = General_handler()
+        pnh = preprocess_network(select_priority, file_selection, gh, log = True)
+        data = pnh.get_dataframe()
+        extractor = pnh.get_data_extractor()
+        vNames = extractor.get_variable_names()
+        rankedDevices = extractor.get_ranked_devices()
+        fw = pnh.get_file_writer()
+        print("Location search started...")
+        gh.getLocations() # LOCATION SEARCH
+        print("Location search completed.") 
+        create_network(vNames, rankedDevices, data, gh, fw, log = False)
     elif mode == "all":
         print("RUN started...")
         gh = General_handler()
+        pnhs = [] # LIST OF THE PRE-NETWORK HANDLERS
         i = 1
         while i <= 6:
             for p in priority:
-                print("File " + str(i) + " with priority " + p + " started...")
+                print("File " + str(i) + " with priority " + p + " opened...")
                 try:
-                    create_network(p, i, gh, log = False)
+                    pnh = preprocess_network(p, i, gh, log = False)
+                    pnhs.append(pnh)
                 except DataError as e:
-                    print("File skipped: " + e.args[0])
+                    print(e.args[0])
                 else:
-                    print("Processing completed...")
+                    print("Preprocessing completed.")
             i = i + 1
+        print("Location search started...")
+        gh.getLocations() # LOCATION SEARCH
+        print("Location search completed.") 
+        
+        for pnh in pnhs:
+            print("Network creation for file " + pnh.get_device() + 
+                  " and priority " + pnh.get_priority() + " started")
+            data = pnh.get_dataframe()
+            fw = pnh.get_file_writer()
+            extractor = pnh.get_data_extractor()
+            vNames = extractor.get_variable_names()
+            rankedDevices = extractor.get_ranked_devices()
+            create_network(vNames, rankedDevices, data, gh, fw, log = False)
+            print("Network creation completed.")
         
         gh.save_to_file()        
     print("RUN completed")

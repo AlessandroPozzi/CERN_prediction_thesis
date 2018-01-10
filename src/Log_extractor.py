@@ -26,7 +26,7 @@ class Log_extractor(object):
             df.to_csv('../res/2016_data.csv')
             print len(df)
             
-    def find_location(self, devices, zone):
+    def find_location(self, devices):
         ''' 
         Finds the area of each of the devices in the list.
         Zone = H0 or H1 or H2
@@ -35,11 +35,15 @@ class Log_extractor(object):
         df = pd.read_csv('../res/2016_data.csv')
         d = dict() 
         for index, row in df.iterrows():
-            HX = df.loc[index, zone]
-            HX = unicode(HX, 'mbcs')
+            H0 = df.loc[index, 'H0']
+            H1 = df.loc[index, 'H1']
+            H2 = df.loc[index, 'H2']
+            H0 = unicode(H0, 'mbcs')
+            H1 = unicode(H1, 'mbcs')
+            H2 = unicode(H2, 'mbcs')
             device = df.loc[index, 'Device']
             if device in devices:
-                d[device] = HX
+                d[device] = (H0, H1, H2)
                 devices.remove(device)
             if not devices:
                 return d

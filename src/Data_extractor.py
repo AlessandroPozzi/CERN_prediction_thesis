@@ -182,6 +182,7 @@ class Data_extractor:
         data = pd.DataFrame(dict_data)
         data.to_csv(path_or_buf="../output/dataframes/" + self.txt_file_names[0] + "_" + 
                     self.priority_selected[0] + "_" + "dataframe.csv")
+        
         return data
 
         

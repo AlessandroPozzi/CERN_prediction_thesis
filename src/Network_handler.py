@@ -24,90 +24,20 @@ class Network_handler:
     Note that the methods of this class have numbers and must be called in order.
     '''
 
-    def __init__(self, gh):
+    def __init__(self, vNames, rankedDevices, data, gh, fw):
         '''
         Constructor
         '''
-        self.file_names = ["EMC0019", "EHS60BE", "ES115H","ESS184","EXS48X","EXS1062X"]
-        self.true_device_names = ["EMC001*9", 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X']
-        self.extractor = Data_extractor()
         self.best_model = BayesianModel()
-        self.data = []
         self.training_instances = ""
         self.device_considered = "" 
         self.priority_considered = "" 
         self.markov = MarkovModel()
         self.general_handler = gh
-
-
-    def process_files(self, select_priority, file_selection, log = True):
-        '''  (1)
-        Method that extracts data from the text files.
-        -----------------
-        Parameters:
-        select_priority -- A string with the priority level to be considered
-        files_used      -- The number of the file to be used
-        log             -- "True" if you want to print debug information in the console
-        '''
-        if not select_priority or not file_selection:
-            raise DataError("Priority or file not chosen. Exiting now.")
-
-        num = file_selection
-        self.extractor.extract(self.file_names[num-1], self.true_device_names[num-1], select_priority)
-        self.device_considered = self.file_names[num-1]
-        self.priority_considered = select_priority
-        
-        self.file_writer = File_writer(self.device_considered, self.priority_considered)
-        self.log("Priority level considered: " + select_priority, log)
-        self.log("File considered: " + str(self.file_names[num-1]), log)
-        self.log("Text files data extraction completed.", log)
-    
-    def select_variables(self, var_type, MIN, MAX, support, log = True):
-        ''' (2)
-        Method that selects the variables to be used in the network.
-        -----------------
-        Parameters:
-        var_type  : The origin of the variables to be considered. Accepted values:
-           -> occurrences       - If we consider the devices 
-           -> frequency   - If we consider the frequency of the devices
-        MIN: Minimum number of variables to take
-        MAX: Maximum number of variables to take
-        support   : Minimum support to consider the device in the final Bayesian Network
-        log       : "True" if you want to print debug information in the console    
-        '''
-        if self.extractor.nodata():
-            raise DataError("no data in this file - priority")
-            
-        self.extractor.prepare_candidates() #computes occurrences and frequency of the devices
-        self.extractor.select_candidates(var_type, support, MIN, MAX)
-        
-        if self.general_handler:
-            self.general_handler.add_devices(self.extractor.get_variable_names())
-        self.log(self.extractor.get_ranked_devices(), log)
-  
-    def build_data(self, training_instances="all_events", log=True):
-        ''' (3)
-        Method that builds the data to be used by the graphical model library.
-        -----------------
-        Parameters:
-        training_instances : 
-            support                -- to use duplicated training instances based on the support of the frequent sets
-            all_events             -- to generate one training instance per event (in "distinct devices after 5 minutes")
-            all_events_with_causes -- like all_events, but also considers the 6 causes variables
-            all_events_priority    -- like all_event but instead of using [0, 1] as values for variables, uses the priority related to the event: [0, L0, L1, L2, L3]
-        priority_node   : True if you want the priority node, false otherwise.
-        log       : "True" if you want to print debug information in the console    
-        '''
-        
-        variables = self.extractor.get_variable_names()
-        self.training_instances = training_instances
-        self.data = self.extractor.build_dataframe(training_instances)
-        
-        self.log("There are " + str(len(variables)) + " variables in the network: " + " ".join(variables), log)
-        self.log("Library used: pgmpy", log)
-        self.log("There are " + str(len(self.data)) + " 'training' instances in the dataframe.", log)    
-
-
+        self.variables_names = vNames
+        self.rankedDevices = rankedDevices
+        self.data = data
+        self.file_writer = fw
 
         
     def learn_structure(self, method, scoring_method, log = True):
@@ -143,7 +73,7 @@ class Network_handler:
         self.eliminate_isolated_nodes() # REMOVE all nodes not connected to anything else
             
         self.log("Method used for structural learning: " + method, log)
-        self.log("Training instances skipped: " + str(self.extractor.get_skipped_lines()), log)
+        #self.log("Training instances skipped: " + str(self.extractor.get_skipped_lines()), log)
         self.log("Search terminated", log)
     
     
@@ -152,8 +82,8 @@ class Network_handler:
         Estimates the parameters of the found network
         '''
         estimator = BayesianEstimator(self.best_model, self.data)
-        self.file_writer.write_txt("Number of nodes: " + str(len(self.extractor.get_variable_names())))
-        self.file_writer.write_txt("Complete list: " + " ".join(self.extractor.get_variable_names()))
+        self.file_writer.write_txt("Number of nodes: " + str(len(self.variables_names)))
+        self.file_writer.write_txt("Complete list: " + " ".join(self.variables_names))
         
         for node in self.best_model.nodes():
             cpd = estimator.estimate_cpd(node, prior_type='K2')
@@ -204,22 +134,29 @@ class Network_handler:
         Draws the bayesian network.
         ----
         location_choice = True iff we want to show the location of devices in the graph.
+        label_choice = "single" if we want to show single label, "double" for double label of arcs
+        location = 0,1,2 depending by the location (H0, H1, H2)
         '''
         bn_graph = gv.Digraph(format = "png")
         
         # Extract color based on the building
         if location_choice:
-            log_extractor = Log_extractor()
-            self.log("Searching for location of devices...", log)
-            devices = self.extractor.get_variable_names()
-            device_location = log_extractor.find_location(devices, location)
-            self.log("Locations found.", log)
+            
+            devices = self.variables_names
+            device_location = dict()
+            
+            for d in devices:
+                allDevicesLocations = self.general_handler.get_device_locations()
+                device_location[d] = allDevicesLocations[d][location]
             location_color = self.assign_color(device_location) #REMOVE COLOR
+            '''
             # Logging and saving info
             self.log(device_location, log)
             self.log(location_color, log)
             self.file_writer.write_txt(device_location, newline = True)
             self.file_writer.write_txt(location_color, newline = True)
+            '''
+            
             # Creating the subgraphs, one for each location:
             loc_subgraphs = dict()
             for loc in location_color:
@@ -272,7 +209,7 @@ class Network_handler:
         
         # Save the .png graph
         if location_color:
-            locat = "_" + location
+            locat = "_H" + str(location)
         else:
             locat = ""        
         bn_graph.render('../output/' + self.device_considered 
@@ -288,7 +225,7 @@ class Network_handler:
         if 1 in selection:
             self.file_writer.write_txt("Device ranking (max 20 devices are visualized)", newline = True)
             i = 1
-            for dr in self.extractor.get_ranked_devices():
+            for dr in self.rankedDevices:
                 self.file_writer.write_txt(dr[0] + "             \t" + str(dr[1]) + 
                                   "\t" + str(dr[2]))
                 i = i + 1

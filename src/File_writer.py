@@ -14,6 +14,7 @@ class File_writer(object):
         with a "_" and will compose the name of the file '''
         self.file_name =  "_".join(args)
         self.file_name = self.file_name.replace("/", "")
+        self.file_name = self.file_name.replace("*", "")
         self.created = False
 
     def create_txt(self, dir = "../output/"):

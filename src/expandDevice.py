@@ -213,12 +213,14 @@ def SequenceLengthPriorityByMinutes(cursor):
 def compareChosenDevicesByAlarmPriority(cursor):
     #chosenDevices = ['EHS60/BE', 'EXS4/8X', 'EMC001*9', 'EXS106/2X', 'ESS1*84',
     #                 'ESS11/5H', 'ESS406/E91', 'ESS407/E91', 'ESS520/E91', 'ESS11*84']
-    chosenDevices = ['ESS11/5H']
+    # our devices: ['EMC001*9', 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X']
+    chosenDevices = ['EMC001*9', 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X']
     levelsOfPriority = ['L0', 'L1', 'L2', 'L3']
-    fw = File_writer(chosenDevices[0], "ba")
-    fw.create_txt("../res/newres/")
+
 
     for d in chosenDevices:
+        fw = File_writer(d, "ba")
+        fw.create_txt("../res/newres/")
         print '\nDEVICE '+ str(d) + ': '
         fw.write_txt('\nDEVICE '+ str(d) + ': ')
         for l in levelsOfPriority:
@@ -241,8 +243,6 @@ def compareChosenDevicesByAlarmPriority(cursor):
                 eventsAfter = cursor.fetchall()
                 devicesAfter = []  # all events that happened 5 min after the event "e"
                 for ea in eventsAfter:
-                    if ea[4] == 'EUC114/7E':
-                        print("EUREKA")
                     devicesAfter.append(ea[4]) #ea[4] = nome del device
                 afterSequence.append(devicesAfter) # Contiene tutte le liste di deviceAfter (con duplicati). E' una lista di liste
                 devicesAfter=list(set(devicesAfter)) #Lista non ordinata di distinct devices
@@ -303,7 +303,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
             for xx in afterSeq:
                 print '\t\t[ ',
                 for yy in xx:
-                    print "'" + str(yy) + "',",
+                    print "'" + str(yy) + "', ",
                 print '], '
             print ']'
             
@@ -312,7 +312,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
             for xx in afterSeq:
                 fw.write_inline( '\t\t[ ', )
                 for yy in xx:
-                    fw.write_inline( "'" + str(yy) + "'," )
+                    fw.write_inline( "'" + str(yy) + "', " )
                 fw.write_txt('], ')
             fw.write_txt(']')
 
@@ -333,7 +333,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
             for xx in beforeSequence:
                 print '\t\t[ ',
                 for yy in xx:
-                    print "'" + str(yy) + "',",
+                    print "'" + str(yy) + "', ",
                 print '], '
             print ']'
             
@@ -343,17 +343,18 @@ def compareChosenDevicesByAlarmPriority(cursor):
             for xx in beforeSequence:
                 fw.write_inline( '\t\t[ ' )
                 for yy in xx:
-                    fw.write_inline( "'" + str(yy) + "'," )
+                    fw.write_inline( "'" + str(yy) + "', " )
                 fw.write_txt( '], ' )
             fw.write_txt( ']' )
             '''
-                
+            
+            '''
             #CONSOLE
             print '\t\tDistinct devices before: [ '
             for xx in beforeSeq:
                 print '\t\t[ ',
                 for yy in xx:
-                    print "'" + str(yy) + "',",
+                    print "'" + str(yy) + "', ",
                 print '], '
             print ']'
             
@@ -362,9 +363,10 @@ def compareChosenDevicesByAlarmPriority(cursor):
             for xx in beforeSeq:
                 fw.write_inline( '\t\t[ ' )
                 for yy in xx:
-                    fw.write_inline( "'" + str(yy) + "'," )
+                    fw.write_inline( "'" + str(yy) + "', " )
                 fw.write_txt( '], ' ) 
             fw.write_txt( ']' )
+            '''
 
             #relim_input = itemmining.get_relim_input(beforeSeq)
             #report = itemmining.relim(relim_input, min_support=int(beforeSeq.__len__() * support))

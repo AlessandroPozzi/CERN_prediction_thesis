@@ -60,7 +60,7 @@ class Data_extractor:
         self.priority_selected = select_priority
         self.events_by_file[true_device_name] = []
         
-        with open ('../res/' + txtfile +'.txt', 'r') as in_file:
+        with open ('../res/' + txtfile +'_ba.txt', 'r') as in_file:
             all_events = 1
             p = 0
             

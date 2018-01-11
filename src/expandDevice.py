@@ -213,7 +213,7 @@ def SequenceLengthPriorityByMinutes(cursor):
 def compareChosenDevicesByAlarmPriority(cursor):
     #chosenDevices = ['EHS60/BE', 'EXS4/8X', 'EMC001*9', 'EXS106/2X', 'ESS1*84',
     #                 'ESS11/5H', 'ESS406/E91', 'ESS407/E91', 'ESS520/E91', 'ESS11*84']
-    chosenDevices = ['EHS60/BE']
+    chosenDevices = ['ESS11/5H']
     levelsOfPriority = ['L0', 'L1', 'L2', 'L3']
     fw = File_writer(chosenDevices[0], "ba")
     fw.create_txt("../res/newres/")
@@ -230,7 +230,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
             events = cursor.fetchall()
             afterSeq = [] # Contiene le liste dei device che vediamo in ogni riga nei file di testo
             beforeSeq = []
-            afterSequence = [] #contiene tutte le liste di deviceAfter (con duplicati)
+            afterSequence = [] # Contiene tutte le liste di deviceAfter (con duplicati). E' una lista di liste
             beforeSequence = []
             intersectionDevicesBeforeAndAfter = []
 
@@ -239,15 +239,17 @@ def compareChosenDevicesByAlarmPriority(cursor):
                 query = ("select * from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
                 cursor.execute(query, (e[0], e[0], 5))
                 eventsAfter = cursor.fetchall()
-                devicesAfter = [] 
+                devicesAfter = []  # all events that happened 5 min after the event "e"
                 for ea in eventsAfter:
+                    if ea[4] == 'EUC114/7E':
+                        print("EUREKA")
                     devicesAfter.append(ea[4]) #ea[4] = nome del device
-                afterSequence.append(devicesAfter)
-                devicesAfter=list(set(devicesAfter))
-                afterSeq.append(devicesAfter)
+                afterSequence.append(devicesAfter) # Contiene tutte le liste di deviceAfter (con duplicati). E' una lista di liste
+                devicesAfter=list(set(devicesAfter)) #Lista non ordinata di distinct devices
+                afterSeq.append(devicesAfter) #Lista di liste (i.e. tutti quello dopo "distinct device after 5 min")
 
                 #print '--- Devices after: ' + str(devicesAfter.__len__()) + ': ' + str(devicesAfter)
-
+                
                 query = ("select * from electric where time<=(%s) and time >= (%s - interval %s minute) and action='Alarm CAME';")
                 cursor.execute(query, (e[0], e[0], 5))
                 eventsBefore = cursor.fetchall()
@@ -274,6 +276,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
             #    print ': ',
             #    print values
 
+            '''
             # CONSOLE
             print '========= AFTER ========='
             print '\t\tSequences After: [ '
@@ -293,7 +296,8 @@ def compareChosenDevicesByAlarmPriority(cursor):
                     fw.write_inline( "'" + str(yy) + "'," )
                 fw.write_txt( '], ' )
             fw.write_txt( ']' ) 
-
+            '''
+                
             #CONSOLE
             print '\n\t\tDistinct devices after 5 minutes: [ '
             for xx in afterSeq:
@@ -322,6 +326,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
                 print ': ',
                 print values
             '''
+            '''
             #CONSOLE
             print '========= BEFORE ========='
             print '\t\tSequences Before: [ '
@@ -341,7 +346,8 @@ def compareChosenDevicesByAlarmPriority(cursor):
                     fw.write_inline( "'" + str(yy) + "'," )
                 fw.write_txt( '], ' )
             fw.write_txt( ']' )
-
+            '''
+                
             #CONSOLE
             print '\t\tDistinct devices before: [ '
             for xx in beforeSeq:

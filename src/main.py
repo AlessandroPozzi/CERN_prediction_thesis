@@ -15,7 +15,7 @@ from General_handler import General_handler
 priority = ('L0', 'L1', 'L2', 'L3') # Hard coded priority, do NOT change
 select_priority = 'L1' # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE"
 file_selection = 1 # 1 to 6 -->  ("EMC0019", "EHS60BE", "ES115H", "ESS184", "EXS48X", "EXS1062X")
-mode = "one" #one, all  | "one" to do the single file-priority selected above; 
+mode = "all" #one, all  | "one" to do the single file-priority selected above; 
                         # "all" to do all the possible files and priorities
 
 def preprocess_network(select_priority, file_selection, gh, log):
@@ -39,9 +39,9 @@ def preprocess_network(select_priority, file_selection, gh, log):
     # RETURN the pre_network_handler object
     return pre_network_handler
 
-def create_network(vNames, rankedDevices, data, gh, fw, log):
+def create_network(pnh, gh, log):
 
-    network_handler = Network_handler(vNames, rankedDevices, data, gh, fw)
+    network_handler = Network_handler(pnh, gh)
     
     # 4) LEARN THE STRUCTURE
     method = "scoring_approx"      #scoring_approx, constraint, scoring_exhaustive
@@ -65,7 +65,7 @@ def create_network(vNames, rankedDevices, data, gh, fw, log):
     network_handler.draw_network(label, location_choice, location, log)
     
     # 8 ) DATA INFO
-    selection = [1, 2] #Put in the list what you want to show
+    selection = [1] #Put in the list what you want to show
     # 1: Device frequency and occurrences
     # 2: Edges of the network
     # 3: Markov Network
@@ -80,15 +80,11 @@ def run_script(mode):
     if mode == "one":
         gh = General_handler()
         pnh = preprocess_network(select_priority, file_selection, gh, log = True)
-        data = pnh.get_dataframe()
-        extractor = pnh.get_data_extractor()
-        vNames = extractor.get_variable_names()
-        rankedDevices = extractor.get_ranked_devices()
-        fw = pnh.get_file_writer()
         print("Location search started...")
         gh.getLocations() # LOCATION SEARCH
-        print("Location search completed.") 
-        create_network(vNames, rankedDevices, data, gh, fw, log = False)
+        print("Location search completed.")
+        create_network(pnh, gh, log = False)
+        #create_network(vNames, rankedDevices, data, gh, fw, log = False)
     elif mode == "all":
         print("RUN started...")
         gh = General_handler()
@@ -111,13 +107,8 @@ def run_script(mode):
         
         for pnh in pnhs:
             print("Network creation for file " + pnh.get_device() + 
-                  " and priority " + pnh.get_priority() + " started")
-            data = pnh.get_dataframe()
-            fw = pnh.get_file_writer()
-            extractor = pnh.get_data_extractor()
-            vNames = extractor.get_variable_names()
-            rankedDevices = extractor.get_ranked_devices()
-            create_network(vNames, rankedDevices, data, gh, fw, log = False)
+                  " and priority " + pnh.get_priority() + " started...")
+            create_network(pnh, gh, log = False)
             print("Network creation completed.")
         
         gh.save_to_file()        

@@ -59,7 +59,7 @@ class Pre_network_handler(object):
         log       : "True" if you want to print debug information in the console    
         '''
         if self.extractor.nodata():
-            raise DataError("no data in this file - priority")
+            raise DataError("No data in this file - priority")
             
         self.extractor.prepare_candidates() #computes occurrences and frequency of the devices
         self.extractor.select_candidates(var_type, support, MIN, MAX)

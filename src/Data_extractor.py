@@ -60,7 +60,7 @@ class Data_extractor:
         self.priority_selected = select_priority
         self.events_by_file[true_device_name] = []
         
-        with open ('../res/' + txtfile +'_ba.txt', 'r') as in_file:
+        with open ('../res/' + txtfile +'_after.txt', 'r') as in_file:
             all_events = 1
             p = 0
             
@@ -213,7 +213,8 @@ class Data_extractor:
         fl = self.true_file_names[0]
         if self.events_by_file[fl] == []:
             return True
-        for row in self.events_by_file[fl]:
+        for tpl in self.events_by_file[fl]:
+            row = tpl[0]
             for device in row:
                 if device != fl:
                     return False

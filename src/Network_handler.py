@@ -73,7 +73,7 @@ class Network_handler:
         
         self.best_model = est.estimate()
         self.eliminate_isolated_nodes() # REMOVE all nodes not connected to anything else
-            
+        
         self.log("Method used for structural learning: " + method, log)
         #self.log("Training instances skipped: " + str(self.extractor.get_skipped_lines()), log)
         self.log("Search terminated", log)
@@ -326,6 +326,8 @@ class Network_handler:
             tup = [item for item in self.best_model.edges() if nodeX in item]
             if not tup:
                 self.best_model.remove_node(nodeX)
+        if self.best_model.nodes() == []:
+            raise DataError("No nodes left in this file-priority combination.")
                 
     def assign_color(self, device_location):
         '''

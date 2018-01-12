@@ -219,7 +219,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
 
 
     for d in chosenDevices:
-        fw = File_writer(d, "ba")
+        fw = File_writer(d, "before")
         fw.create_txt("../res/newres/")
         print '\nDEVICE '+ str(d) + ': '
         fw.write_txt('\nDEVICE '+ str(d) + ': ')
@@ -297,7 +297,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
                 fw.write_txt( '], ' )
             fw.write_txt( ']' ) 
             '''
-                
+            '''
             #CONSOLE
             print '\n\t\tDistinct devices after 5 minutes: [ '
             for xx in afterSeq:
@@ -315,7 +315,10 @@ def compareChosenDevicesByAlarmPriority(cursor):
                     fw.write_inline( "'" + str(yy) + "', " )
                 fw.write_txt('], ')
             fw.write_txt(']')
-
+            
+            print("==>")
+            fw.write_txt('==>', newline = True) #KEEP THIS ONLY IF YOU ARE NOT GENERATING THE FREQUENT SETS
+            '''
             '''
             relim_input = itemmining.get_relim_input(afterSeq)
             report = itemmining.relim(relim_input, min_support=int(afterSeq.__len__() * support))
@@ -348,7 +351,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
             fw.write_txt( ']' )
             '''
             
-            '''
+            
             #CONSOLE
             print '\t\tDistinct devices before: [ '
             for xx in beforeSeq:
@@ -366,7 +369,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
                     fw.write_inline( "'" + str(yy) + "', " )
                 fw.write_txt( '], ' ) 
             fw.write_txt( ']' )
-            '''
+            
 
             #relim_input = itemmining.get_relim_input(beforeSeq)
             #report = itemmining.relim(relim_input, min_support=int(beforeSeq.__len__() * support))

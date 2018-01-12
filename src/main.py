@@ -13,9 +13,9 @@ from DataError import DataError
 from General_handler import General_handler
 
 priority = ('L0', 'L1', 'L2', 'L3') # Hard coded priority, do NOT change
-select_priority = 'L2' # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE"
+select_priority = 'L0' # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE"
 file_selection = 2 # 1 to 6 -->  ("EMC0019", "EHS60BE", "ES115H", "ESS184", "EXS48X", "EXS1062X")
-mode = "one" #one, all  | "one" to do the single file-priority selected above; 
+mode = "all" #one, all  | "one" to do the single file-priority selected above; 
                         # "all" to do all the possible files and priorities
 
 def preprocess_network(select_priority, file_selection, gh, log):
@@ -78,13 +78,15 @@ def create_network(pnh, gh, log):
 def run_script(mode):
     
     if mode == "one":
-        gh = General_handler()
-        pnh = preprocess_network(select_priority, file_selection, gh, log = True)
-        print("Location search started...")
-        gh.getLocations() # LOCATION SEARCH
-        print("Location search completed.")
-        create_network(pnh, gh, log = False)
-        #create_network(vNames, rankedDevices, data, gh, fw, log = False)
+        try:
+            gh = General_handler()
+            pnh = preprocess_network(select_priority, file_selection, gh, log = True)
+            print("Location search started...")
+            gh.getLocations() # LOCATION SEARCH
+            print("Location search completed.")
+            create_network(pnh, gh, log = False)
+        except DataError as e:
+            print(e.args[0])
     elif mode == "all":
         print("RUN started...")
         gh = General_handler()
@@ -92,7 +94,7 @@ def run_script(mode):
         i = 1
         while i <= 6:
             for p in priority:
-                print("File " + str(i) + " with priority " + p + " opened...")
+                print("File " + str(i) + " with priority " + p + ":")
                 try:
                     pnh = preprocess_network(p, i, gh, log = False)
                     pnhs.append(pnh)
@@ -108,8 +110,12 @@ def run_script(mode):
         for pnh in pnhs:
             print("Network creation for file " + pnh.get_device() + 
                   " and priority " + pnh.get_priority() + " started...")
-            create_network(pnh, gh, log = False)
-            print("Network creation completed.")
+            try:
+                create_network(pnh, gh, log = False)
+            except DataError as e:
+                print(e.args[0])
+            else:
+                print("Network creation completed.")
         
         gh.save_to_file()        
     print("RUN completed")

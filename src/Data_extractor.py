@@ -45,7 +45,7 @@ class Data_extractor:
         self.skipped_lines = 0
         self.totalRows = 0
 
-    def extract(self, txtfile, true_device_name, select_priority):
+    def extract(self, txtfile, true_device_name, select_priority, file_suffix):
         '''
         Extracts data from the txt file
         
@@ -60,7 +60,7 @@ class Data_extractor:
         self.priority_selected = select_priority
         self.events_by_file[true_device_name] = []
         
-        with open ('../res/' + txtfile +'_after.txt', 'r') as in_file:
+        with open ('../res/' + txtfile + file_suffix + '.txt', 'r') as in_file:
             all_events = 1
             p = 0
             

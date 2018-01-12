@@ -22,7 +22,7 @@ class Pre_network_handler(object):
         self.general_handler = gh
         self.data = []
         
-    def process_files(self, select_priority, file_selection, log = True):
+    def process_files(self, select_priority, file_selection, file_suffix, log = True):
         '''  (1)
         Method that extracts data from the text files.
         -----------------
@@ -35,7 +35,7 @@ class Pre_network_handler(object):
             raise DataError("Priority or file not chosen. Exiting now.")
 
         num = file_selection
-        self.extractor.extract(self.file_names[num-1], self.true_device_names[num-1], select_priority)
+        self.extractor.extract(self.file_names[num-1], self.true_device_names[num-1], select_priority, file_suffix)
         self.device_considered = self.file_names[num-1]
         self.priority_considered = select_priority
         

@@ -23,7 +23,8 @@ def preprocess_network(select_priority, file_selection, gh, log):
     pre_network_handler = Pre_network_handler(gh)
     
     # 1) PROCESS FILES
-    pre_network_handler.process_files(select_priority, file_selection, log)
+    file_suffix = "_after"
+    pre_network_handler.process_files(select_priority, file_selection, file_suffix, log)
     
     # 2) SELECT VARIABLES
     var_type = "frequency" #occurrences, frequency

@@ -13,9 +13,9 @@ from DataError import DataError
 from General_handler import General_handler
 
 priority = ('L0', 'L1', 'L2', 'L3') # Hard coded priority, do NOT change
-select_priority = 'L0' # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE"
-file_selection = 2 # 1 to 6 -->  ("EMC0019", "EHS60BE", "ES115H", "ESS184", "EXS48X", "EXS1062X")
-mode = "all" #one, all  | "one" to do the single file-priority selected above; 
+select_priority = 'L1' # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE"
+file_selection = 1 # 1 to 6 -->  ("EMC0019", "EHS60BE", "ES115H", "ESS184", "EXS48X", "EXS1062X")
+mode = "one" #one, all  | "one" to do the single file-priority selected above; 
                         # "all" to do all the possible files and priorities
 
 def preprocess_network(select_priority, file_selection, gh, log):
@@ -23,7 +23,7 @@ def preprocess_network(select_priority, file_selection, gh, log):
     pre_network_handler = Pre_network_handler(gh)
     
     # 1) PROCESS FILES
-    file_suffix = "_after"
+    file_suffix = ""
     pre_network_handler.process_files(select_priority, file_selection, file_suffix, log)
     
     # 2) SELECT VARIABLES

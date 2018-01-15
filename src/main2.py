@@ -6,7 +6,26 @@ This is a (probably only temporary) module that can be used to do some tests.
 '''
 from Log_extractor import Log_extractor
 import graphviz as gv
+from datetime import datetime
+from datetime import timedelta
 
+mydate = "2016-01-10 23:49:21.678"
+mydate2 = "2016-01-10 23:43:59.741"
+
+
+date1 = datetime.strptime(mydate, '%Y-%m-%d %H:%M:%S.%f')
+date2 = datetime.strptime(mydate2, '%Y-%m-%d %H:%M:%S.%f')
+time5min = timedelta(minutes = 5)
+print(date1 - date2)
+if (date1-date2) < time5min:
+    print("less than 5 min")
+else:
+    print("more than 5 min")
+
+
+
+
+'''
 g = gv.Digraph(format='png')
 
     
@@ -37,6 +56,7 @@ file_devices = ["EMC001*9", 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS10
 
 #d = log_extractor.count_occurrences(file_devices)
 #print(d)
+'''
 '''
 device_occurrences = log_extractor.findtop_occurrences()
 with open('../output/alldevices_occurrences.csv', 'w') as f:

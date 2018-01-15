@@ -219,7 +219,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
 
 
     for d in chosenDevices:
-        fw = File_writer(d, "before")
+        fw = File_writer(d, "before2min")
         fw.create_txt("../res/newres/")
         print '\nDEVICE '+ str(d) + ': '
         fw.write_txt('\nDEVICE '+ str(d) + ': ')
@@ -251,7 +251,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
                 #print '--- Devices after: ' + str(devicesAfter.__len__()) + ': ' + str(devicesAfter)
                 
                 query = ("select * from electric where time<=(%s) and time >= (%s - interval %s minute) and action='Alarm CAME';")
-                cursor.execute(query, (e[0], e[0], 5))
+                cursor.execute(query, (e[0], e[0], 2))
                 eventsBefore = cursor.fetchall()
                 devicesBefore=[]
                 for eb in eventsBefore:

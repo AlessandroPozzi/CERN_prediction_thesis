@@ -1,6 +1,7 @@
 import mysql.connector  # pip install mysql-connector-python
 from pymining import itemmining # pip install pymining  
 from File_writer import File_writer
+from StateOfDevices import StateHandler
 
 support = 0.5
 
@@ -9,12 +10,14 @@ def compareChosenDevicesByAlarmPriority(cursor):
     #chosenDevices = ['EHS60/BE', 'EXS4/8X', 'EMC001*9', 'EXS106/2X', 'ESS1*84',
     #                 'ESS11/5H', 'ESS406/E91', 'ESS407/E91', 'ESS520/E91', 'ESS11*84']
     # our devices: ['EMC001*9', 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X']
-    chosenDevices = ["AUTO-TRANSFERT", "ECC01/5DX", "EMD1A*9", "EMD2A*9", "EMD3A*9", "EMC700/1E"]
+    chosenDevices = ["AUTO-TRANSFERT", "ECC01/5DX", "EMD1A*9", "EMD2A*9", "EMD3A*9", "EMC700/1E", "EMC001*9"]
     levelsOfPriority = ['L0', 'L1', 'L2', 'L3']
 
 
-    fw = File_writer("nocauses")
+    fw = File_writer("nocauses_noduplicates")
+    fw2 = File_writer("SQL_query_results")
     fw.create_txt("../res/newres/")
+    fw2.create_txt("../res/newres/")
     print '\nDEVICE '+ str(chosenDevices) + ': '
     fw.write_txt('\nDEVICE '+ str(chosenDevices) + ': ')
     
@@ -35,20 +38,35 @@ def compareChosenDevicesByAlarmPriority(cursor):
     beforeSequence = []
     intersectionDevicesBeforeAndAfter = []
 
+    stateOfDevices = StateHandler()
     for e in events:
         #print '\n' + str(e)
         query = ("select * from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
         cursor.execute(query, (e[0], e[0], 5))
         eventsAfter = cursor.fetchall()
         devicesAfter = []  # all events that happened 5 min after the event "e"
+        if not stateOfDevices.addActivatedDevice(e[4], e[0]): #i.e. sequence is ready
+            sequence = stateOfDevices.getSequence()
+            afterSeq.append(sequence)
+            stateOfDevices = StateHandler() #create new StateHandler
+            stateOfDevices.addActivatedDevice(e[4], e[0])
+            
         for ea in eventsAfter:
             if ea[4] in chosenDevices:
                 devicesAfter.append(ea[4]) #ea[4] = nome del device
-
-        afterSequence.append(devicesAfter) # Contiene tutte le liste di deviceAfter (con duplicati). E' una lista di liste
-        devicesAfter=list(set(devicesAfter)) #Lista non ordinata di distinct devices
-        afterSeq.append(devicesAfter) #Lista di liste (i.e. tutti quello dopo "distinct device after 5 min")
+                if not stateOfDevices.addActivatedDevice(ea[4], ea[0]):
+                    sequence = stateOfDevices.getSequence()
+                    afterSeq.append(sequence)
+                    stateOfDevices = StateHandler() #create new StateHandler
+                    stateOfDevices.addActivatedDevice(ea[4], ea[0])
+        
+        #if devicesAfter != []:
+        #    devicesAfter.append(e[4])
+        #afterSequence.append(devicesAfter) # Contiene tutte le liste di deviceAfter (con duplicati). E' una lista di liste
+        #devicesAfter=list(set(devicesAfter)) #Lista non ordinata di distinct devices
+        #afterSeq.append(devicesAfter) #Lista di liste (i.e. tutti quello dopo "distinct device after 5 min")
         print(e[4] + str(devicesAfter) + " - ID " + str(e[21]))
+        fw2.write_txt(e[4] + str(devicesAfter) + " - ID " + str(e[21]))
 
     '''
     # CONSOLE

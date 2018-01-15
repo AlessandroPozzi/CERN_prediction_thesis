@@ -146,11 +146,16 @@ class Network_handler:
             
             devices = self.variables_names
             device_location = dict()
+            device_locationH1 = dict()
             
+            #For H0
             for d in devices:
                 allDevicesLocations = self.general_handler.get_device_locations()
-                device_location[d] = allDevicesLocations[d][location]
-            location_color = self.assign_color(device_location) #REMOVE COLOR
+                device_location[d] = allDevicesLocations[d][0]
+                device_locationH1[d] = allDevicesLocations[d][1] #temp for H1
+            location_color = self.assign_color(device_location)
+            location_colorH1 = self.assign_color(device_locationH1)
+        
             '''
             # Logging and saving info
             self.log(device_location, log)
@@ -169,7 +174,9 @@ class Network_handler:
         # Create nodes
         for node in self.best_model.nodes():
             if location_choice:
-                loc_subgraphs[device_location[node]].node(node) #add the node to the right subgraph
+                location = device_location[node]
+                locationH1 = device_locationH1[node]
+                loc_subgraphs[location].node(node, style='filled',fillcolor=location_colorH1[locationH1]) #add the node to the right subgraph
             else:
                 bn_graph.node(node)
             
@@ -279,12 +286,12 @@ class Network_handler:
                     prob2 = phi_query[node1].values[1] #probability of inverse activation (inference from node2=1 to node1)
                     prob1 = round(prob1, 2)
                     prob2 = round(prob2, 2)
-                    if prob1 >= 0.75 and (prob1 - prob2) <= 0.25: #add direct arc from node1 to node2
+                    if prob1 >= 0.75 and (prob1 - prob2) <= 0.40: #add direct arc from node1 to node2
                         ls = [node1, node2]
                         self.fix_node_presence(ls, nice_graph)
                         double_label = str(prob1) + "|" + str(prob2)
                         nice_graph.add_edge(pydot.Edge(node1, node2, color = "red", label = double_label))
-                    elif prob2 >= 0.75 and (prob2 - prob1) <= 0.25:
+                    elif prob2 >= 0.75 and (prob2 - prob1) <= 0.40:
                         ls = [node1, node2]
                         self.fix_node_presence(ls, nice_graph)
                         double_label = str(prob2) + "|" + str(prob1)

@@ -14,8 +14,8 @@ def compareChosenDevicesByAlarmPriority(cursor):
     levelsOfPriority = ['L0', 'L1', 'L2', 'L3']
 
 
-    fw = File_writer("nocauses_noduplicates")
-    fw2 = File_writer("SQL_query_results")
+    fw = File_writer("CUSTOM_7net-nooverlaps-emc001") #always leave "CUSTOM_" in front
+    fw2 = File_writer("last_SQL_query_results")
     fw.create_txt("../res/newres/")
     fw2.create_txt("../res/newres/")
     print '\nDEVICE '+ str(chosenDevices) + ': '

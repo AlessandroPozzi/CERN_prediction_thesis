@@ -6,6 +6,7 @@ Created on 28 dic 2017
 @author: Alessandro Corsair
 '''
 import pandas as pd
+import mysql.connector 
 from DataError import DataError
 
 class Log_extractor(object):
@@ -29,26 +30,26 @@ class Log_extractor(object):
     def find_location(self, devices):
         ''' 
         Finds the area of each of the devices in the list.
-        Zone = H0 or H1 or H2
-        Returns a dictionary with key = device and value = zone
+        devices = List of devices
+        Returns a dictionary with key = device and value = (H0, H1)
         '''
-        df = pd.read_csv('../res/2016_data.csv')
+        cnx = mysql.connector.connect(host='127.0.0.1', user='root', password='password', database='cern')
+        cursor = cnx.cursor()
         d = dict() 
-        for index, row in df.iterrows():
-            H0 = df.loc[index, 'H0']
-            H1 = df.loc[index, 'H1']
-            H2 = df.loc[index, 'H2']
-            H0 = unicode(H0, 'mbcs')
-            H1 = unicode(H1, 'mbcs')
-            H2 = unicode(H2, 'mbcs')
-            device = df.loc[index, 'Device']
-            if device in devices:
-                d[device] = (H0, H1, H2)
-                devices.remove(device)
-            if not devices:
-                return d
-        return DataError("At least one of the devices is not in the .csv file")
-    
+        for dev in devices:
+            query = "select Device, H0, H1, H2 from electric where device=%s LIMIT 1"
+            tpl = (dev,)
+            cursor.execute(query, tpl)
+            events = cursor.fetchall()
+            if not events:
+                return DataError("At least one of the devices is not in the .csv file")
+            e = events[0]
+            H0 = e[1]
+            H1 = e[2]
+            #H0 = unicode(H0, 'mbcs')
+            #H1 = unicode(H1, 'mbcs')
+            d[dev] = (H0, H1)
+        return d
     
     def count_occurrences(self, devices):
         ''' Counts the occurrences in the .csv of all devices in the given list '''

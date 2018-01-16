@@ -16,8 +16,8 @@ class Pre_network_handler(object):
 
     def __init__(self, gh):
         
-        self.file_names = ["EMC0019", "EHS60BE", "ES115H","ESS184","EXS48X","EXS1062X"]
-        self.true_device_names = ["EMC001*9", 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X']
+        self.file_names = ["EMC0019", "EHS60BE", "ES115H","ESS184","EXS48X","EXS1062X", "CUSTOM"]
+        self.true_device_names = ["EMC001*9", 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X', 'CUSTOM']
         self.extractor = Data_extractor()
         self.general_handler = gh
         self.data = []
@@ -38,6 +38,7 @@ class Pre_network_handler(object):
         self.extractor.extract(self.file_names[num-1], self.true_device_names[num-1], select_priority, file_suffix)
         self.device_considered = self.file_names[num-1]
         self.priority_considered = select_priority
+        self.file_suffix = file_suffix
         
         self.file_writer = File_writer(self.device_considered, self.priority_considered)
         self.log("Priority level considered: " + select_priority, log)
@@ -106,6 +107,9 @@ class Pre_network_handler(object):
     
     def get_file_writer(self):
         return self.file_writer
+    
+    def get_file_suffix(self):
+        return self.file_suffix
     
     def log(self, text, log):
         ''' Prints the text in the console, if the "log" condition is True. '''

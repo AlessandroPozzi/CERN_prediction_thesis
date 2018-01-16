@@ -75,6 +75,9 @@ class Network_handler:
         self.best_model = est.estimate()
         self.eliminate_isolated_nodes() # REMOVE all nodes not connected to anything else
         
+        for edge in self.best_model.edges_iter():
+            self.file_writer.write_txt(str(edge))
+        
         self.log("Method used for structural learning: " + method, log)
         #self.log("Training instances skipped: " + str(self.extractor.get_skipped_lines()), log)
         self.log("Search terminated", log)
@@ -340,6 +343,7 @@ class Network_handler:
         for nodeX in self.best_model.nodes():
             tup = [item for item in self.best_model.edges() if nodeX in item]
             if not tup:
+                self.file_writer.write_txt("Node " + str(nodeX) + " has no edges: it has been eliminated.")
                 self.best_model.remove_node(nodeX)
         if self.best_model.nodes() == []:
             raise DataError("No nodes left in this file-priority combination.")

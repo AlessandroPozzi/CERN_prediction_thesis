@@ -5,6 +5,10 @@ Created on 14 gen 2018
 '''
 from datetime import datetime
 from datetime import timedelta
+from File_writer import File_writer
+
+fwDebug = File_writer("last_execution_state_debug") #logging and debuggin purposes
+fwDebug.create_txt("../res/newres/")
 
 class DeviceState(object):
     '''
@@ -36,6 +40,7 @@ class StateHandler(object):
         self.overtime = overtime
         self.overlaps = overlaps
         self.devicesStates = dict()
+
         
     def addActivatedDevice(self, device, timestamp):
         ''' Adds a devices that has been found to be activated on a certain timestamp.
@@ -57,6 +62,7 @@ class StateHandler(object):
             else: #the device is not new
                 if len(self.devicesStates) == 1:#there is only 1 device in the dictionary, 
                                                 #and it is the same device that we are adding now
+                    fwDebug.write_txt("[dev1 dev1] sequence has been cut to [dev1]. " + device +" event ignored.")      
                     newState = DeviceState(timestamp, True)
                     self.counter = newState.getTimestamp() #reset the 5 minutes counter
                 #else do nothing

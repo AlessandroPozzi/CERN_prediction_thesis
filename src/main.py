@@ -24,7 +24,7 @@ def preprocess_network(select_priority, file_selection, gh, log):
     pre_network_handler = Pre_network_handler(gh)
     
     # 1) PROCESS FILES
-    file_suffix = "_7net-overlaps-emc001"
+    file_suffix = "_7net-nooverlaps-yessingledup-emc001"
     pre_network_handler.process_files(select_priority, file_selection, file_suffix, log)
     
     # 2) SELECT VARIABLES

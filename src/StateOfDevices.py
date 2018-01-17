@@ -37,6 +37,7 @@ class StateHandler(object):
     eventiScartatiDuplicati = 0
     eventiOltre5Minuti = 0
     eventiScartatiSovrapposti = 0
+    specialSingleSequences = 0
     
     def __init__(self, undertime = 0, overtime = 0, overlaps = False):
         ''' Put overlaps = True if you you want to have overlapping sequences '''
@@ -46,6 +47,7 @@ class StateHandler(object):
         self.overtime = overtime
         self.overlaps = overlaps
         self.devicesStates = dict()
+        self.singleDeviceReady = False # If True, it signals that there is a device ready to be saved as a single sequence [dev1]
 
         
     def addActivatedDevice(self, device, timestamp):
@@ -72,14 +74,14 @@ class StateHandler(object):
                
                 if len(self.devicesStates) == 1:#there is only 1 device in the dictionary, 
                                                 #and it is the same device that we are adding now
-                    #StateHandler.fwDebug.write_txt("[dev1 dev1] sequence has been cut. " + device +" event ignored.")
-                    StateHandler.eventiScartatiDuplicati += 1      
+                    StateHandler.eventiScartatiDuplicati += 1
                     newState = DeviceState(timestamp, True)
-                    self.counter = newState.getTimestamp() #reset the 5 minutes counter 
+                    self.counter = newState.getTimestamp() #reset the 5 minutes counter
+                    self.singleDeviceReady = True
+                    self.singleDevice = device
                 #else do nothing
                 else:
                     StateHandler.eventiScartatiSovrapposti += 1
-                    #StateHandler.fwDebug.write_txt("A device has been ignored because it was already in the sequence: " + device)
         return True
     
     def minutesElapsed(self, mins, ts):
@@ -100,6 +102,19 @@ class StateHandler(object):
             sequence.append(key)
         return sequence
     
+    def check_device_ready(self):
+        if self.singleDeviceReady:
+            self.singleDeviceReady = False
+            return True
+        else:
+            return False
+        
+    def get_device_ready(self):
+        dev = self.singleDevice
+        StateHandler.specialSingleSequences += 1
+        #self.get_device_ready = ""
+        return [dev]
+    
     def debugFile(self):
         StateHandler.fwDebug.write_txt("EVENTI RICEVUTI: " + str(StateHandler.eventiRicevuti))
         StateHandler.fwDebug.write_txt("EVENTI DUPLICATI SCARTATI: " + str(StateHandler.eventiScartatiDuplicati))
@@ -108,6 +123,7 @@ class StateHandler(object):
         print("EVENTI RICEVUTI: " + str(StateHandler.eventiRicevuti))
         print("EVENTI DUPLICATI SCARTATI tipo [dev1dev1dev1]: " + str(StateHandler.eventiScartatiDuplicati))
         print("EVENTI SOVRAPPOSTI SCARTATI tipo [dev1dev2dev1dev2]: " + str(StateHandler.eventiScartatiSovrapposti))
+        print("SEQUENZE SINGOLE SPECIALI CREATE tipo [dev1] da [dev1dev1]: " + str(StateHandler.specialSingleSequences))
         print("EVENTI MESSI IN SEQUENZE: " + (str(StateHandler.eventiRicevuti - 
                                                   StateHandler.eventiScartatiDuplicati - 
                                                   StateHandler.eventiScartatiSovrapposti)))

@@ -54,6 +54,9 @@ def compareChosenDevicesByAlarmPriority(cursor):
             afterSeq.append(sequence)
             stateOfDevices = StateHandler() #create new StateHandler
             stateOfDevices.addActivatedDevice(e[4], e[0])
+        elif stateOfDevices.check_device_ready(): #if we have a single device sequence ready..
+            single_sequence = stateOfDevices.get_device_ready()
+            afterSeq.append(single_sequence)
         
         #totalEvents = totalEvents + len(eventsAfter)
         for ea in eventsAfter:
@@ -66,6 +69,9 @@ def compareChosenDevicesByAlarmPriority(cursor):
                     afterSeq.append(sequence)
                     stateOfDevices = StateHandler() #create new StateHandler
                     stateOfDevices.addActivatedDevice(ea[4], ea[0])
+                elif stateOfDevices.check_device_ready(): #if we have a single device sequence ready..
+                    single_sequence = stateOfDevices.get_device_ready()
+                    afterSeq.append(single_sequence)
         
         #if devicesAfter != []:
         #    devicesAfter.append(e[4])

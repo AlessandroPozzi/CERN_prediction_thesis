@@ -7,8 +7,7 @@ from datetime import datetime
 from datetime import timedelta
 from File_writer import File_writer
 
-fwDebug = File_writer("last_execution_state_debug") #logging and debuggin purposes
-fwDebug.create_txt("../res/newres/")
+
 
 class DeviceState(object):
     '''
@@ -32,6 +31,13 @@ class StateHandler(object):
     over the time period.
     '''
     
+    fwDebug = File_writer("last_execution_state_debug") #logging and debuggin purposes
+    fwDebug.create_txt("../res/newres/")
+    eventiRicevuti = 0
+    eventiScartatiDuplicati = 0
+    eventiOltre5Minuti = 0
+    eventiScartatiSovrapposti = 0
+    
     def __init__(self, undertime = 0, overtime = 0, overlaps = False):
         ''' Put overlaps = True if you you want to have overlapping sequences '''
         
@@ -45,8 +51,11 @@ class StateHandler(object):
     def addActivatedDevice(self, device, timestamp):
         ''' Adds a devices that has been found to be activated on a certain timestamp.
             Does nothing and return False if the event to be added is more then 5 minutes old, True otherwise.'''
+        StateHandler.eventiRicevuti += 1
         
         if self.minutesElapsed(5, timestamp): # 5 minutes are elapsed since the counter
+            StateHandler.eventiRicevuti -= 1
+            StateHandler.eventiOltre5Minuti += 1
             return False
         else:
             if device not in self.devicesStates: # the device is new...
@@ -60,12 +69,17 @@ class StateHandler(object):
                 #if self.overlaps:
                 
             else: #the device is not new
+               
                 if len(self.devicesStates) == 1:#there is only 1 device in the dictionary, 
                                                 #and it is the same device that we are adding now
-                    fwDebug.write_txt("[dev1 dev1] sequence has been cut to [dev1]. " + device +" event ignored.")      
+                    #StateHandler.fwDebug.write_txt("[dev1 dev1] sequence has been cut. " + device +" event ignored.")
+                    StateHandler.eventiScartatiDuplicati += 1      
                     newState = DeviceState(timestamp, True)
-                    self.counter = newState.getTimestamp() #reset the 5 minutes counter
+                    self.counter = newState.getTimestamp() #reset the 5 minutes counter 
                 #else do nothing
+                else:
+                    StateHandler.eventiScartatiSovrapposti += 1
+                    #StateHandler.fwDebug.write_txt("A device has been ignored because it was already in the sequence: " + device)
         return True
     
     def minutesElapsed(self, mins, ts):
@@ -86,8 +100,18 @@ class StateHandler(object):
             sequence.append(key)
         return sequence
     
-    
-    
+    def debugFile(self):
+        StateHandler.fwDebug.write_txt("EVENTI RICEVUTI: " + str(StateHandler.eventiRicevuti))
+        StateHandler.fwDebug.write_txt("EVENTI DUPLICATI SCARTATI: " + str(StateHandler.eventiScartatiDuplicati))
+        StateHandler.fwDebug.write_txt("EVENTI FUORI DAI 5 MINUTI: " + str(StateHandler.eventiOltre5Minuti))
+        print("--- StateHandler ---")
+        print("EVENTI RICEVUTI: " + str(StateHandler.eventiRicevuti))
+        print("EVENTI DUPLICATI SCARTATI tipo [dev1dev1dev1]: " + str(StateHandler.eventiScartatiDuplicati))
+        print("EVENTI SOVRAPPOSTI SCARTATI tipo [dev1dev2dev1dev2]: " + str(StateHandler.eventiScartatiSovrapposti))
+        print("EVENTI MESSI IN SEQUENZE: " + (str(StateHandler.eventiRicevuti - 
+                                                  StateHandler.eventiScartatiDuplicati - 
+                                                  StateHandler.eventiScartatiSovrapposti)))
+        print("EVENTI FUORI DAI 5 MINUTI (#itemsets): " + str(StateHandler.eventiOltre5Minuti))
     
     
     

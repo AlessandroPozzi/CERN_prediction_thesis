@@ -5,7 +5,7 @@ from StateOfDevices import StateHandler
 
 support = 0.5
 
-#THIS IS THE expandDevice WITH THE STATES that REMOVE the OVERLAPS
+#THIS IS THE expandDevice WITH THE STATES that REMOVE OVERLAPS and REMOVE DUPLICATES
 def compareChosenDevicesByAlarmPriority(cursor):
     #chosenDevices = ['EHS60/BE', 'EXS4/8X', 'EMC001*9', 'EXS106/2X', 'ESS1*84',
     #                 'ESS11/5H', 'ESS406/E91', 'ESS407/E91', 'ESS520/E91', 'ESS11*84']
@@ -39,8 +39,12 @@ def compareChosenDevicesByAlarmPriority(cursor):
     intersectionDevicesBeforeAndAfter = []
 
     stateOfDevices = StateHandler()
+    totalEvents = 0
+    totalRelevantEvents = 0
     for e in events:
         #print '\n' + str(e)
+        totalEvents = totalEvents + 1
+        totalRelevantEvents += 1
         query = ("select * from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
         cursor.execute(query, (e[0], e[0], 5))
         eventsAfter = cursor.fetchall()
@@ -50,9 +54,12 @@ def compareChosenDevicesByAlarmPriority(cursor):
             afterSeq.append(sequence)
             stateOfDevices = StateHandler() #create new StateHandler
             stateOfDevices.addActivatedDevice(e[4], e[0])
-            
+        
+        #totalEvents = totalEvents + len(eventsAfter)
         for ea in eventsAfter:
+            totalEvents = totalEvents + 1
             if ea[4] in chosenDevices:
+                totalRelevantEvents += 1
                 devicesAfter.append(ea[4]) #ea[4] = nome del device
                 if not stateOfDevices.addActivatedDevice(ea[4], ea[0]):
                     sequence = stateOfDevices.getSequence()
@@ -68,6 +75,10 @@ def compareChosenDevicesByAlarmPriority(cursor):
         print(e[4] + str(devicesAfter) + " - ID " + str(e[21]))
         fw2.write_txt(e[4] + str(devicesAfter) + " - ID " + str(e[21]))
 
+    #add the last sequence
+    sequence = stateOfDevices.getSequence()
+    afterSeq.append(sequence)
+    
     '''
     # CONSOLE
     print '========= AFTER ========='
@@ -160,6 +171,19 @@ def compareChosenDevicesByAlarmPriority(cursor):
     fw.write_txt( ']' )
     '''
 
+    print("EVENTI TOTALI NEL DOPPIO CICLO DI QUERY: " + str(totalEvents))
+    print("EVENTI TOTALI UNICAMENTE RELATIVI AI DEVICE PRESCELTI NEL DOPPIO CICLO DI QUERY: " + str(totalRelevantEvents))
+    counterEvents = 0
+    counterItemsets = 0
+    for lst in afterSeq:
+        counterEvents = counterEvents + len(lst)
+        counterItemsets = counterItemsets + 1
+    print("NUMERO DI ITEMSET TOTALI GENERATI: " + str(counterItemsets))
+    print("EVENTI TOTALI IN TUTTI GLI ITEMSET GENERATI: " + str(counterEvents))
+
+    stateOfDevices.debugFile()
+
+    
     #relim_input = itemmining.get_relim_input(beforeSeq)
     #report = itemmining.relim(relim_input, min_support=int(beforeSeq.__len__() * support))
     # print "\t\t  Frequent Itemsets in Distinct devices before: (soglia=" + str(beforeSeq.__len__()*support) + ")"

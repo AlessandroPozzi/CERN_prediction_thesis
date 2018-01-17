@@ -81,6 +81,8 @@ class StateHandler(object):
                     self.singleDevice = device
                 #else do nothing
                 else:
+                    self.singleDeviceReady = True
+                    self.singleDevice = device
                     StateHandler.eventiScartatiSovrapposti += 1
         return True
     

@@ -14,7 +14,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
     levelsOfPriority = ['L0', 'L1', 'L2', 'L3']
 
 
-    fw = File_writer("CUSTOM_7net-nooverlaps-emc001") #always leave "CUSTOM_" in front
+    fw = File_writer("CUSTOM_7net-nooverlaps-yesallsingledup-emc001") #always leave "CUSTOM_" in front
     fw2 = File_writer("last_SQL_query_results")
     fw.create_txt("../res/newres/")
     fw2.create_txt("../res/newres/")
@@ -26,7 +26,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
     strList = "%s"
     for i in range(1, len(chosenDevices)):
         strList = strList + " OR device=" + "%s"
-    textQuery = "select * from electric where device=" + strList + " and action='Alarm CAME' order by time"
+    textQuery = "select * from electric where (device=" + strList + ") and action='Alarm CAME' order by time"
     print(textQuery)
     query = (textQuery)
     tpl = tuple(chosenDevices)
@@ -45,9 +45,11 @@ def compareChosenDevicesByAlarmPriority(cursor):
         #print '\n' + str(e)
         totalEvents = totalEvents + 1
         totalRelevantEvents += 1
+        '''
         query = ("select * from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
         cursor.execute(query, (e[0], e[0], 5))
         eventsAfter = cursor.fetchall()
+        '''
         devicesAfter = []  # all events that happened 5 min after the event "e"
         if not stateOfDevices.addActivatedDevice(e[4], e[0]): #i.e. sequence is ready
             sequence = stateOfDevices.getSequence()
@@ -58,6 +60,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
             single_sequence = stateOfDevices.get_device_ready()
             afterSeq.append(single_sequence)
         
+        '''
         #totalEvents = totalEvents + len(eventsAfter)
         for ea in eventsAfter:
             totalEvents = totalEvents + 1
@@ -72,14 +75,16 @@ def compareChosenDevicesByAlarmPriority(cursor):
                 elif stateOfDevices.check_device_ready(): #if we have a single device sequence ready..
                     single_sequence = stateOfDevices.get_device_ready()
                     afterSeq.append(single_sequence)
+        '''
         
         #if devicesAfter != []:
         #    devicesAfter.append(e[4])
         #afterSequence.append(devicesAfter) # Contiene tutte le liste di deviceAfter (con duplicati). E' una lista di liste
         #devicesAfter=list(set(devicesAfter)) #Lista non ordinata di distinct devices
         #afterSeq.append(devicesAfter) #Lista di liste (i.e. tutti quello dopo "distinct device after 5 min")
-        print(e[4] + str(devicesAfter) + " - ID " + str(e[21]))
-        fw2.write_txt(e[4] + str(devicesAfter) + " - ID " + str(e[21]))
+        if e[4] in ["EMD1A*9", "EMD2A*9", "EMD3A*9"]:
+            print(e[4] + str(devicesAfter) + " - Timestamp " + str(e[0]))
+            fw2.write_txt(e[4] + str(devicesAfter) + " - Timestamp " + str(e[0]))
 
     #add the last sequence
     sequence = stateOfDevices.getSequence()

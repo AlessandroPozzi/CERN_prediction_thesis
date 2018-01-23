@@ -224,7 +224,7 @@ class Network_handler:
         if self.device_considered=="CUSTOM":
             imgPath = '../output/CUSTOM' + self.file_suffix
         else:
-            if location_color:
+            if location_choice:
                 locat = "_H0H1"
             else:
                 locat = ""

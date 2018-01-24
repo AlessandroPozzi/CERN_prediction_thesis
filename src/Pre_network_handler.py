@@ -9,11 +9,7 @@ from DataError import DataError
 from File_writer import File_writer
 
 class Pre_network_handler(object):
-    '''
-    classdocs
-    '''
-
-
+    
     def __init__(self, gh):
         
         self.file_names = ["EMC0019", "EHS60BE", "ES115H","ESS184","EXS48X","EXS1062X", "CUSTOM"]
@@ -37,6 +33,7 @@ class Pre_network_handler(object):
         num = file_selection
         self.extractor.extract(self.file_names[num-1], self.true_device_names[num-1], select_priority, file_suffix)
         self.device_considered = self.file_names[num-1]
+        self.device_considered_realName = self.true_device_names[num-1]
         self.priority_considered = select_priority
         self.file_suffix = file_suffix
         
@@ -92,6 +89,13 @@ class Pre_network_handler(object):
         self.log("Library used: pgmpy", log)
         self.log("There are " + str(len(self.data)) + " 'training' instances in the dataframe.", log)    
         return self.data
+    
+    def checkColumnDistribution(self):
+        ''' (*)
+        Extracts some info about the distribution of state, tag and description in the devices in this network '''
+        from expandDevice4 import find_column_distribution
+        find_column_distribution(self.device_considered_realName, self.priority_considered, 
+                                 self.extractor.get_variable_names())
         
     def get_data_extractor(self):
         return self.extractor

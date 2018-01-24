@@ -38,6 +38,9 @@ def preprocess_network(select_priority, file_selection, gh, log):
     training_instances="all_events" #all_events, all_events_priority
     pre_network_handler.build_data(training_instances, log)
     
+    # *) COLUMNS INFO (state, tag, description)
+    pre_network_handler.checkColumnDistribution()
+    
     # RETURN the pre_network_handler object
     return pre_network_handler
 

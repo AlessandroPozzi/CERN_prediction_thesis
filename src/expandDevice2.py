@@ -82,9 +82,9 @@ def compareChosenDevicesByAlarmPriority(cursor):
         #afterSequence.append(devicesAfter) # Contiene tutte le liste di deviceAfter (con duplicati). E' una lista di liste
         #devicesAfter=list(set(devicesAfter)) #Lista non ordinata di distinct devices
         #afterSeq.append(devicesAfter) #Lista di liste (i.e. tutti quello dopo "distinct device after 5 min")
-        if e[4] in ["EMD1A*9", "EMD2A*9", "EMD3A*9"]:
-            print(e[4] + str(devicesAfter) + " - Timestamp " + str(e[0]))
-            fw2.write_txt(e[4] + str(devicesAfter) + " - Timestamp " + str(e[0]))
+        if e[4] in ["ECC01/5DX"]:
+            print(e[4] + " - Timestamp " + str(e[0]))
+            fw2.write_txt(e[4]  + " - Timestamp " + str(e[0]))
 
     #add the last sequence
     sequence = stateOfDevices.getSequence()

@@ -89,7 +89,7 @@ class Network_handler:
         '''
         estimator = BayesianEstimator(self.best_model, self.data)
         self.file_writer.write_txt("Number of nodes: " + str(len(self.variables_names)))
-        self.file_writer.write_txt("Complete list: " + " ".join(self.variables_names))
+        self.file_writer.write_txt("Complete list: " + str(self.variables_names))
         
         for node in self.best_model.nodes():
             cpd = estimator.estimate_cpd(node, prior_type='K2')
@@ -181,6 +181,7 @@ class Network_handler:
                 locationH0 = device_location[node]
                 locationH1 = device_locationH1[node]
                 loc_subgraphs[locationH0].node(node, style='filled',fillcolor=location_colorH1[locationH1]) #add the node to the right subgraph
+                #loc_subgraphs[locationH0].node(node) #USE THIS TO ADD ONLY H0
             else:
                 bn_graph.node(node)
             

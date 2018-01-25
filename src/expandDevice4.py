@@ -1,4 +1,5 @@
-# USE THIS TO CHECK IF STATES, TAGS AND DESCRIPTIONS ARE MEANINFUL
+# USE THIS TO CHECK IF STATES, TAGS AND DESCRIPTIONS ARE MEANINFUL 
+#(IT IS CALLED AUTOMATICALLY WHEN THE MAIN IS EXECUTED)
 
 import mysql.connector  # pip install mysql-connector-python
 from pymining import itemmining # pip install pymining  
@@ -80,12 +81,13 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_filtering, cu
         
         if e not in allSeenEvents:
             allSeenEvents.append(e)
-        else:
-            devicesDict[e[0]].addDuplicate()
+            devicesDict[e[0]].updateState(e[2])
+            devicesDict[e[0]].updateTag(e[3])
+            devicesDict[e[0]].updateDescr(e[4])
+        #else:
+        #    devicesDict[e[0]].addDuplicate()
             
-        devicesDict[e[0]].updateState(e[2])
-        devicesDict[e[0]].updateTag(e[3])
-        devicesDict[e[0]].updateDescr(e[4])
+        
         
         for ea in eventsAfter:
             
@@ -95,12 +97,13 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_filtering, cu
                     
                 if ea not in allSeenEvents:
                     allSeenEvents.append(ea)
-                else:
-                    devicesDict[ea[0]].addDuplicate()
+                    devicesDict[ea[0]].updateState(ea[2])
+                    devicesDict[ea[0]].updateTag(ea[3])
+                    devicesDict[ea[0]].updateDescr(ea[4])
+                #else:
+                #    devicesDict[ea[0]].addDuplicate()
                     
-                devicesDict[ea[0]].updateState(ea[2])
-                devicesDict[ea[0]].updateTag(ea[3])
-                devicesDict[ea[0]].updateDescr(ea[4])
+                
     
     # PUT EVERYTHING IN THE TXT FILE
     for k in devicesDict:

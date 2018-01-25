@@ -22,7 +22,8 @@ if (date1-date2) < time5min:
 else:
     print("more than 5 min")
 
-
+ls = ["A", "B", "C", "D"]
+print(ls[2:4])
 
 
 '''

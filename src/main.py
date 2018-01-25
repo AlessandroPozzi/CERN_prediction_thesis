@@ -13,10 +13,10 @@ from DataError import DataError
 from General_handler import General_handler
 
 priority = ('L0', 'L1', 'L2', 'L3') # Hard coded priority, do NOT change
-select_priority = 'L2' # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE"
-file_selection = 2  # 1 to 7 -->  ("EMC0019", "EHS60BE", "ES115H", "ESS184", "EXS48X", "EXS1062X", "CUSTOM")
+select_priority = 'L1' # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE"
+file_selection = 1  # 1 to 7 -->  ("EMC0019", "EHS60BE", "ES115H", "ESS184", "EXS48X", "EXS1062X", "CUSTOM")
                     # use "CUSTOM" (file number 7) in mode="one" to generate a custom network from expandDevice2 (SET PRIORITY L0)
-mode = "all" #one, all  | "one" to do the single file-priority selected above; 
+mode = "one" #one, all  | "one" to do the single file-priority selected above; 
                         # "all" to do all the possible files and priorities
 
 def preprocess_network(select_priority, file_selection, gh, log):
@@ -31,7 +31,7 @@ def preprocess_network(select_priority, file_selection, gh, log):
     var_type = "frequency" #occurrences, frequency
     support = 0.4
     MIN = 4
-    MAX = 8
+    MAX = 6
     pre_network_handler.select_variables(var_type, MIN, MAX, support, log)
     
     # 3) BUILD DATA

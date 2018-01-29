@@ -12,7 +12,7 @@ class Pre_network_handler(object):
     
     def __init__(self, gh):
         
-        self.file_names = ["EMC0019", "EHS60BE", "ES115H","ESS184","EXS48X","EXS1062X", "CUSTOM"]
+        self.file_names = ["EMC0019", "EHS60BE", "ESS115H","ESS184","EXS48X","EXS1062X", "CUSTOM"]
         self.true_device_names = ["EMC001*9", 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X', 'CUSTOM']
         self.extractor = Data_extractor()
         self.general_handler = gh

@@ -24,6 +24,8 @@ else:
 
 ls = ["A", "B", "C", "D"]
 print(ls[2:4])
+print(ls[0:2])
+print(ls[0:1])
 
 
 '''

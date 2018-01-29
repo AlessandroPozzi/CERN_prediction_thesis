@@ -1,9 +1,11 @@
-# USE THIS TO CHECK IF STATES, TAGS AND DESCRIPTIONS ARE MEANINFUL 
+# USE THIS TO CHECK IF STATES, TAGS AND DESCRIPTIONS ARE MEANINGFUL 
 #(IT IS CALLED AUTOMATICALLY WHEN THE MAIN IS EXECUTED)
 
 import mysql.connector  # pip install mysql-connector-python
-from pymining import itemmining # pip install pymining  
 from File_writer import File_writer
+from datetime import datetime
+from datetime import timedelta
+import math
 
 class ColumnStats(object):
     ''' Deals with columns statistics of 1 device '''
@@ -12,6 +14,7 @@ class ColumnStats(object):
         self.tagsDict = dict() 
         self.descriptionDict = dict()
         self.duplicates = 0
+        self.deltaTimestamps = [] #list of temporal differences between the events of this device and the reference device
         
     def updateState(self, state):
         if state not in self.statesDict:
@@ -30,6 +33,15 @@ class ColumnStats(object):
             self.descriptionDict[descr] = 1
         else:
             self.descriptionDict[descr] = self.descriptionDict[descr] + 1 
+            
+    def addTimestamp(self, tsReference, tsCurrent):
+        ''' 
+        tsReference = timestamp of the reference event
+        tsCurrent = timestamp of event considered in this object
+        '''
+        ref = datetime.strptime(tsReference, '%Y-%m-%d %H:%M:%S.%f')
+        cur = datetime.strptime(tsCurrent, '%Y-%m-%d %H:%M:%S.%f')
+        self.deltaTimestamps.append(cur-ref)
             
     def addDuplicate(self):
         self.duplicates += 1
@@ -55,6 +67,25 @@ class ColumnStats(object):
     def writeDuplicates(self, fw):
         result = "Numero di dati falsati dalla doppia query (duplicati): " + str(self.duplicates)
         fw.write_txt(result)
+        
+    def writeTemporalPosition(self, fw):
+        if len(self.deltaTimestamps) <= 1:
+            return #no reason to compute average and variance
+        tsum = timedelta()
+        for ts in self.deltaTimestamps:
+            tsum += ts
+        average = tsum / len(self.deltaTimestamps)
+        numerator = 0.000000000
+        for ts in self.deltaTimestamps:
+            par = ts - average
+            parSec = par.total_seconds() #convert in seconds, lose microsecond accuracy for variance
+            numerator += (parSec * parSec)
+        varianceSec = numerator / (len(self.deltaTimestamps) - 1)
+        standDev = timedelta(seconds = math.sqrt(varianceSec)) #standard deviation
+        resultAvg = "AVERAGE appearance after: " + str(average)
+        resultVar = "STANDARD DEVIATION of appearances: " + str(standDev)
+        fw.write_txt(resultAvg)
+        fw.write_txt(resultVar)
 
 def compareChosenDevicesByAlarmPriority(fileName, priority, device_filtering, cursor):
           
@@ -87,8 +118,6 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_filtering, cu
         #else:
         #    devicesDict[e[0]].addDuplicate()
             
-        
-        
         for ea in eventsAfter:
             
             if ea[0] in device_filtering or ea[0] == d:
@@ -100,6 +129,7 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_filtering, cu
                     devicesDict[ea[0]].updateState(ea[2])
                     devicesDict[ea[0]].updateTag(ea[3])
                     devicesDict[ea[0]].updateDescr(ea[4])
+                    devicesDict[ea[0]].addTimestamp(e[1], ea[1])
                 #else:
                 #    devicesDict[ea[0]].addDuplicate()
                     
@@ -111,7 +141,8 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_filtering, cu
         devicesDict[k].writeState(fw)
         devicesDict[k].writeTag(fw)
         devicesDict[k].writeDescr(fw)
-        devicesDict[k].writeDuplicates(fw)
+        devicesDict[k].writeTemporalPosition(fw)
+        #devicesDict[k].writeDuplicates(fw)
 
 def find_column_distribution(fileName, priority, networkDevices):
     cnx = mysql.connector.connect(host='127.0.0.1', user='root', password='password', database='cern')

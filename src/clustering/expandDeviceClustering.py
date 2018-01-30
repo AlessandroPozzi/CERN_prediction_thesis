@@ -1,7 +1,7 @@
 import mysql.connector  # pip install mysql-connector-python
-from File_writer import File_writer
-from ClusteringHandler import ClusterHandler
-from DataError import DataError
+from helpers.File_writer import File_writer
+from clustering.ClusteringHandler import ClusterHandler
+from helpers.DataError import DataError
 from datetime import timedelta
 
 def compareChosenDevicesByAlarmPriority(cursor):
@@ -15,9 +15,9 @@ def compareChosenDevicesByAlarmPriority(cursor):
         # clusters-offlineAverage
         # clusters-staticDistance
         fw = File_writer(d, "clusters-staticDistance")
-        fw.create_txt("../res/newres/")
+        fw.create_txt("../../res/newres/")
         fw2 = File_writer(d, "DEBUG-clusters-staticDistance")
-        fw2.create_txt("../res/newres/")
+        fw2.create_txt("../../res/newres/")
         print '\nDEVICE '+ str(d) + ': '
         fw.write_txt('\nDEVICE '+ str(d) + ': ')
         for l in levelsOfPriority:

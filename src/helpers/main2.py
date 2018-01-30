@@ -4,7 +4,7 @@ Created on 28 dic 2017
 
 This is a (probably only temporary) module that can be used to do some tests.
 '''
-from Log_extractor import Log_extractor
+from networkgeneration.Log_extractor import Log_extractor
 import graphviz as gv
 from datetime import datetime
 from datetime import timedelta

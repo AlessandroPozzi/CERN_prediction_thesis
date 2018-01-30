@@ -4,7 +4,7 @@ e con l'aggiunta di una condizione sulla lista "markedEvents" per far si' che un
 NON venga considerato piu' volte per via dei problemi della DOPPIA QUERY.
 '''
 import mysql.connector  # pip install mysql-connector-python
-from File_writer import File_writer
+from helpers.File_writer import File_writer
 
 def compareChosenDevicesByAlarmPriority(cursor):
     #chosenDevices = ['EHS60/BE', 'EXS4/8X', 'EMC001*9', 'EXS106/2X', 'ESS1*84',
@@ -15,7 +15,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
 
     for d in chosenDevices:
         fw = File_writer(d, "afterNoDup")
-        fw.create_txt("../res/newres/")
+        fw.create_txt("../../res/newres/")
         markedEvents = []
         print '\nDEVICE '+ str(d) + ': '
         fw.write_txt('\nDEVICE '+ str(d) + ': ')

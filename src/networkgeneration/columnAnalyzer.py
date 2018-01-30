@@ -2,7 +2,7 @@
 #(IT IS CALLED AUTOMATICALLY WHEN THE MAIN IS EXECUTED)
 
 import mysql.connector  # pip install mysql-connector-python
-from File_writer import File_writer
+from helpers.File_writer import File_writer
 from datetime import datetime
 from datetime import timedelta
 import math
@@ -92,7 +92,7 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_filtering, cu
     d = fileName
     l = priority
     fw = File_writer(d, priority, "column", "analysis")
-    fw.create_txt("../output/columnAnalysis/")
+    fw.create_txt("../../output/columnAnalysis/")
     fw.write_txt('\nDEVICE '+ str(d) + ': ')
     fw.write_txt('\n\tPRIORITY ' + str(l) + ':')
     query = ("select Device, Time, State, Tag, Description from electric where device=%s and livellopriorita=%s and action='Alarm CAME'")

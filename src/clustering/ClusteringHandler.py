@@ -11,8 +11,8 @@ Device_SecondLetter_LevelOfTension, Device_ThirdLetter_Type, Device_Forth_Number
 '''
 from datetime import datetime
 from datetime import timedelta
-from DataError import DataError
-from File_writer import File_writer
+from helpers.DataError import DataError
+from helpers.File_writer import File_writer
 
 markedEvents = [] # a global list that contains all the events that have been already processed (i.e. "marked")
 

@@ -17,7 +17,7 @@ class File_writer(object):
         self.file_name = self.file_name.replace("*", "")
         self.created = False
 
-    def create_txt(self, dir = "../output/"):
+    def create_txt(self, dir = "../../output/"):
         ''' Creates the file in the directory specified (by default is: "../output/" ) '''
         self.path = dir + self.file_name
         self.txt = open(self.path + ".txt", "w")

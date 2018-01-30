@@ -60,7 +60,7 @@ class Data_extractor:
         self.priority_selected = select_priority
         self.events_by_file[true_device_name] = []
         
-        with open ('../res/' + txtfile + file_suffix + '.txt', 'r') as in_file:
+        with open ('../../res/' + txtfile + file_suffix + '.txt', 'r') as in_file:
             all_events = 1
             p = 0
             
@@ -180,7 +180,7 @@ class Data_extractor:
             dict_data[ud].append(0)
 
         data = pd.DataFrame(dict_data)
-        data.to_csv(path_or_buf="../output/dataframes/" + self.txt_file_names[0] + "_" + 
+        data.to_csv(path_or_buf="../../output/dataframes/" + self.txt_file_names[0] + "_" + 
                     self.priority_selected[0] + "_" + "dataframe.csv")
         
         return data

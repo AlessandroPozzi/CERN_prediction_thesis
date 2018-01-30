@@ -5,8 +5,7 @@ Created on 14 gen 2018
 '''
 from datetime import datetime
 from datetime import timedelta
-from File_writer import File_writer
-
+from helpers.File_writer import File_writer
 
 
 class DeviceState(object):
@@ -32,7 +31,7 @@ class StateHandler(object):
     '''
     
     fwDebug = File_writer("last_execution_state_debug") #logging and debuggin purposes
-    fwDebug.create_txt("../res/newres/")
+    fwDebug.create_txt("../../res/newres/")
     eventiRicevuti = 0
     eventiScartatiDuplicati = 0
     eventiOltre5Minuti = 0

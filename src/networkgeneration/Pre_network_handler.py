@@ -4,9 +4,10 @@ Created on 09 gen 2018
 @author: Alessandro Corsair
 '''
 
-from Data_extractor import Data_extractor
-from DataError import DataError
-from File_writer import File_writer
+from networkgeneration.Data_extractor import Data_extractor
+from helpers.DataError import DataError
+from helpers.File_writer import File_writer
+
 
 class Pre_network_handler(object):
     
@@ -93,8 +94,8 @@ class Pre_network_handler(object):
     def checkColumnDistribution(self):
         ''' (*)
         Extracts some info about the distribution of state, tag and description in the devices in this network '''
-        from expandDevice4 import find_column_distribution
-        find_column_distribution(self.device_considered_realName, self.priority_considered, 
+        import columnAnalyzer
+        columnAnalyzer.find_column_distribution(self.device_considered_realName, self.priority_considered, 
                                  self.extractor.get_variable_names())
         
     def get_data_extractor(self):

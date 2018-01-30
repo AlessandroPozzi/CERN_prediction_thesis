@@ -1,7 +1,6 @@
 import mysql.connector  # pip install mysql-connector-python
-from pymining import itemmining # pip install pymining  
-from File_writer import File_writer
-from StateOfDevices import StateHandler
+from helpers.File_writer import File_writer
+from itemsetsgeneration.StateOfDevices import StateHandler
 
 support = 0.5
 

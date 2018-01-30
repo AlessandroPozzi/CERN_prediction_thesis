@@ -1,6 +1,6 @@
 import mysql.connector  # pip install mysql-connector-python
 from pymining import itemmining # pip install pymining  
-from File_writer import File_writer
+from helpers.File_writer import File_writer
 
 support = 0.5
 
@@ -15,7 +15,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
 
 
     fw = File_writer("CUSTOM_7net-overlaps-emc001")
-    fw.create_txt("../res/newres/")
+    fw.create_txt("../../res/newres/")
     print '\nDEVICE '+ str(chosenDevices) + ': '
     fw.write_txt('\nDEVICE '+ str(chosenDevices) + ': ')
     

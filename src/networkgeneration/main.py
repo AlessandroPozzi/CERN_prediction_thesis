@@ -24,7 +24,7 @@ def preprocess_network(select_priority, file_selection, gh, log):
     pre_network_handler = Pre_network_handler(gh)
     
     # 1) PROCESS FILES
-    file_suffix = "_afterNoDup"
+    file_suffix = "_clusters-dbscan"
     pre_network_handler.process_files(select_priority, file_selection, file_suffix, log)
     
     # 2) SELECT VARIABLES
@@ -70,7 +70,7 @@ def create_network(pnh, gh, log):
     network_handler.draw_network(label, location_choice, location, log)
     
     # 8 ) DATA INFO
-    selection = [1] #Put in the list what you want to show
+    selection = [1, 2] #Put in the list what you want to show
     # 1: Device frequency and occurrences
     # 2: Edges of the network
     # 3: Markov Network

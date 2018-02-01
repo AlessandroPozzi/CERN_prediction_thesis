@@ -14,9 +14,10 @@ def compareChosenDevicesByAlarmPriority(cursor):
     for d in chosenDevices:
         # clusters-offlineAverage
         # clusters-staticDistance
-        fw = File_writer(d, "clusters-staticDistance")
+        # clusters-dbscan
+        fw = File_writer(d, "clusters-dbscan")
         fw.create_txt("../../res/newres/")
-        fw2 = File_writer(d, "DEBUG-clusters-staticDistance")
+        fw2 = File_writer(d, "DEBUG-clusters-dbscan")
         fw2.create_txt("../../res/newres/")
         print '\nDEVICE '+ str(d) + ': '
         fw.write_txt('\nDEVICE '+ str(d) + ': ')
@@ -39,8 +40,9 @@ def compareChosenDevicesByAlarmPriority(cursor):
                 
                 try:
                     #clusterHandler.findClustersOfflineAverage(fw2, debug=True)
-                    timeDelta = timedelta(minutes = 5)
-                    clusterHandler.findClustersStaticDistance(fw2, timeDelta, debug=True)
+                    #timeDelta = timedelta(minutes = 5)
+                    #clusterHandler.findClustersStaticDistance(fw2, timeDelta, debug=True)
+                    clusterHandler.findClustersDBSCAN(fw2, debug=True)
                     
                 except DataError as e:
                     pass
@@ -57,7 +59,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
             #stateList = a list of objects "EventState"
             #evstate = a single object "EventState"
             
-            ''' #uncomment this if you want to see the itemsets printed to the console
+            #uncomment this if you want to see the itemsets printed to the console
             #CONSOLE 
             print '\n\t\tDistinct devices after 5 minutes: [ '
             for devList in clusterList: 
@@ -66,7 +68,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
                     print "'" + dev + "', ",
                 print '], '
             print ']'
-            '''
+            
                     
             #TEXT FILE
             fw.write_txt('\n\t\tDistinct devices after 5 minutes: [ ')

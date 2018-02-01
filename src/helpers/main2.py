@@ -8,6 +8,7 @@ from networkgeneration.Log_extractor import Log_extractor
 import graphviz as gv
 from datetime import datetime
 from datetime import timedelta
+import numpy as np
 
 mydate = "2016-01-10 23:49:21.678"
 mydate2 = "2016-01-10 23:43:59.741"
@@ -15,7 +16,16 @@ mydate2 = "2016-01-10 23:43:59.741"
 
 date1 = datetime.strptime(mydate, '%Y-%m-%d %H:%M:%S.%f')
 date2 = datetime.strptime(mydate2, '%Y-%m-%d %H:%M:%S.%f')
-time5min = timedelta(minutes = 5)
+time5min = timedelta(seconds = 5.40)
+print(str(time5min.microseconds / 1000))
+
+m = np.matrix([[1,2,3,4], [2,2,2,2], [1,1,1,1]])
+s = np.matrix([])
+print(s.shape[1])
+if s.shape[1] == 0:
+    print("OK!")
+
+'''
 print(date1 - date2)
 if (date1-date2) < time5min:
     print("less than 5 min")
@@ -26,7 +36,7 @@ ls = ["A", "B", "C", "D"]
 print(ls[2:4])
 print(ls[0:2])
 print(ls[0:1])
-
+'''
 
 '''
 g = gv.Digraph(format='png')

@@ -1,10 +1,12 @@
+''' 
+Questo modulo è l'expandDevice usato per generare reti con dispositivi arbitrari.
+In particolare qui si utilizzava anche il modulo "StateOfDevices" per generare itemsets da 
+sequenze SENZA DUPLICATI e SOVRAPPOSIZIONI.
+'''
 import mysql.connector  # pip install mysql-connector-python
 from helpers.File_writer import File_writer
 from itemsetsgeneration.StateOfDevices import StateHandler
 
-support = 0.5
-
-#THIS IS THE expandDevice WITH THE STATES that REMOVE OVERLAPS and REMOVE DUPLICATES
 def compareChosenDevicesByAlarmPriority(cursor):
     #chosenDevices = ['EHS60/BE', 'EXS4/8X', 'EMC001*9', 'EXS106/2X', 'ESS1*84',
     #                 'ESS11/5H', 'ESS406/E91', 'ESS407/E91', 'ESS520/E91', 'ESS11*84']

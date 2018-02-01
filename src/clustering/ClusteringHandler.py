@@ -218,7 +218,25 @@ class ClusterHandler(object):
                     previousLabel = labels[i]
     
     def findClustersMeanShift(self, fw, debug=False):
-        print("NOT DONE YET")
+        featureArray = self.buildFeatureArray()
+        nsamples = featureArray.shape[0]
+        if nsamples <= 1:
+            return
+        bandwidth = estimate_bandwidth(featureArray, n_samples=nsamples)
+        ms = MeanShift(bandwidth=bandwidth, bin_seeding=True)
+        ms.fit(featureArray)
+        labels = ms.labels_
+        cluster_centers = ms.cluster_centers_
+        labels_unique = np.unique(labels)
+        n_clusters_ = len(labels_unique)
+        if debug:
+            fw.write_txt("STARTING EVENT: " + self.startingEvent[0] + " - " + self.startingEvent[4], newline=True)
+            fw.write_txt("Number of events: " + str(self.eventStateList.__len__()))
+            fw.write_txt('Estimated number of clusters: %d' % n_clusters_)
+            for i in range(0, len(self.eventStateList)-1):
+                events = self.eventStateList
+                fw.write_txt(str(events[i].getTimestamp()) + " - " + events[i].getDevice() + " --> " + str(labels[i]))
+            fw.write_txt('Labelling of clusters: ' + str(labels))
         
     
     def buildDistanceMatrix(self):
@@ -236,8 +254,11 @@ class ClusterHandler(object):
     
     def buildFeatureArray(self):
         # build an array with shape=[n_samples, n_features]. In this case we have only 1 feature (temporal distance)
-        print("NOT DONE YET")
-        
+        featureArray = [] # a list for each sample, containing the value of the only feature we have
+        for event in self.eventStateList:
+            sampleLine = [event.getMilliSecondsElapsed()]
+            featureArray.append(sampleLine)
+        return np.array(featureArray)
     
     def getClusters(self):
         '''

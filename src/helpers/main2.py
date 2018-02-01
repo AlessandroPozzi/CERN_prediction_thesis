@@ -19,12 +19,17 @@ date2 = datetime.strptime(mydate2, '%Y-%m-%d %H:%M:%S.%f')
 time5min = timedelta(seconds = 5.40)
 print(str(time5min.microseconds / 1000))
 
+myArray = [[1], [2], [3]]
+a = np.array(myArray)
+print(a.shape)
+
+'''
 m = np.matrix([[1,2,3,4], [2,2,2,2], [1,1,1,1]])
 s = np.matrix([])
 print(s.shape[1])
 if s.shape[1] == 0:
     print("OK!")
-
+'''
 '''
 print(date1 - date2)
 if (date1-date2) < time5min:

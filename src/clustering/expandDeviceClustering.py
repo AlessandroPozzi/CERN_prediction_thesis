@@ -15,9 +15,9 @@ def compareChosenDevicesByAlarmPriority(cursor):
         # clusters-offlineAverage
         # clusters-staticDistance
         # clusters-dbscan
-        fw = File_writer(d, "clusters-dbscan")
+        fw = File_writer(d, "clusters-meanShift")
         fw.create_txt("../../res/newres/")
-        fw2 = File_writer(d, "DEBUG-clusters-dbscan")
+        fw2 = File_writer(d, "DEBUG-clusters-meanShift")
         fw2.create_txt("../../res/newres/")
         print '\nDEVICE '+ str(d) + ': '
         fw.write_txt('\nDEVICE '+ str(d) + ': ')
@@ -39,10 +39,15 @@ def compareChosenDevicesByAlarmPriority(cursor):
                     clusterHandler.addEvent(ea)
                 
                 try:
+                    # 1) OFFLINE AVERAGE
                     #clusterHandler.findClustersOfflineAverage(fw2, debug=True)
+                    # 2) STATIC DISTANCE
                     #timeDelta = timedelta(minutes = 5)
                     #clusterHandler.findClustersStaticDistance(fw2, timeDelta, debug=True)
-                    clusterHandler.findClustersDBSCAN(fw2, debug=True)
+                    # 3) DBSCAN
+                    #clusterHandler.findClustersDBSCAN(fw2, debug=True)
+                    # 4) MEAN SHIFT
+                    clusterHandler.findClustersMeanShift(fw2, debug=True)
                     
                 except DataError as e:
                     pass

@@ -2,14 +2,18 @@
 Created on 28 dic 2017
 @author: Alessandro Corsair
 
-This is a (probably only temporary) module that can be used to do some tests.
+This is a (probably only temporary) module that can be used to do some tests. ààà
 '''
-from networkgeneration.Log_extractor import Log_extractor
 import graphviz as gv
 from datetime import datetime
 from datetime import timedelta
 import numpy as np
 
+stringa = "h�ll��"
+stringa2 = stringa.encode('ascii', 'ignore').decode('ascii')
+print(stringa2)
+
+'''
 mydate = "2016-01-10 23:49:21.678"
 mydate2 = "2016-01-10 23:43:59.741"
 
@@ -22,7 +26,7 @@ print(str(time5min.microseconds / 1000))
 myArray = [[1], [2], [3]]
 a = np.array(myArray)
 print(a.shape)
-
+'''
 '''
 m = np.matrix([[1,2,3,4], [2,2,2,2], [1,1,1,1]])
 s = np.matrix([])

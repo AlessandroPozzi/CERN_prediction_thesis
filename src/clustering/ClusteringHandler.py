@@ -12,7 +12,8 @@ Device_SecondLetter_LevelOfTension, Device_ThirdLetter_Type, Device_Forth_Number
 from datetime import datetime
 from datetime import timedelta
 import numpy as np
-from helpers.DataError import DataError
+#from helpers.DataError import DataError
+from DataError import DataError
 from sklearn.cluster import DBSCAN
 from sklearn import metrics
 from sklearn.preprocessing import StandardScaler
@@ -117,7 +118,7 @@ class ClusterHandler(object):
             # Now, divide the groups of events based on the average:
             j = 0 # "j" indicates the first element from which we'll start the next cluster
             for i in range(1, len(esl)-1):
-                if esl[i].getTimeDelta() > 2 * average:
+                if esl[i].getTimeDelta() > average:
                     newCluster = esl[j:i]
                     self.clustersList.append(newCluster)
                     if debug:

@@ -3,10 +3,14 @@ Created on 09 gen 2018
 
 @author: Alessandro Corsair
 '''
-
+'''
 from networkgeneration.Data_extractor import Data_extractor
 from helpers.DataError import DataError
 from helpers.File_writer import File_writer
+'''
+from Data_extractor import Data_extractor
+from DataError import DataError
+from File_writer import File_writer
 
 
 class Pre_network_handler(object):

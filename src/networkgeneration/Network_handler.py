@@ -10,10 +10,16 @@ from pgmpy.estimators import ConstraintBasedEstimator
 from pgmpy.inference import VariableElimination
 from pgmpy.estimators.ExhaustiveSearch import ExhaustiveSearch
 from pgmpy.models import MarkovModel
+'''
 from networkgeneration.Data_extractor import Data_extractor
 from helpers.DataError import DataError
 from helpers.File_writer import File_writer
 from networkgeneration.Log_extractor import Log_extractor
+'''
+from Log_extractor import Log_extractor
+from DataError import DataError
+from File_writer import File_writer
+from DataError import DataError
 import pydot
 import graphviz as gv
 import os

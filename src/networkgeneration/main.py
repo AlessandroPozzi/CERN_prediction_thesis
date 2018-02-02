@@ -7,10 +7,16 @@ Running this module will start the processing of one - or all - the file/priorit
 You can change some the parameters in this module in order to see how the output varies.
 Parameters that can be changed usually have a comment that shows which values can be selected.
 '''
+'''
 from networkgeneration.Network_handler import Network_handler
 from networkgeneration.Pre_network_handler import Pre_network_handler
 from helpers.DataError import DataError
 from networkgeneration.General_handler import General_handler
+'''
+from General_handler import General_handler
+from DataError import DataError
+from Network_handler import Network_handler
+from Pre_network_handler import Pre_network_handler
 
 priority = ('L0', 'L1', 'L2', 'L3') # Hard coded priority, do NOT change
 select_priority = 'L1' # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE"
@@ -24,14 +30,14 @@ def preprocess_network(select_priority, file_selection, gh, log):
     pre_network_handler = Pre_network_handler(gh)
     
     # 1) PROCESS FILES
-    file_suffix = "_clusters-dbscan"
+    file_suffix = "_afterDescrNoDup"
     pre_network_handler.process_files(select_priority, file_selection, file_suffix, log)
     
     # 2) SELECT VARIABLES
     var_type = "frequency" #occurrences, frequency
     support = 0.4
-    MIN = 4
-    MAX = 8
+    MIN = 6
+    MAX = 10
     pre_network_handler.select_variables(var_type, MIN, MAX, support, log)
     
     # 3) BUILD DATA
@@ -65,7 +71,7 @@ def create_network(pnh, gh, log):
     
     # 7) DRAW THE NETWORK
     label = "double" # none, single, double
-    location_choice = True # True, False
+    location_choice = False # True, False
     location = 1 # 0, 1, 2 (i.e. H0, H1, H2)
     network_handler.draw_network(label, location_choice, location, log)
     

@@ -2,7 +2,8 @@
 #(IT IS CALLED AUTOMATICALLY WHEN THE MAIN IS EXECUTED)
 
 import mysql.connector  # pip install mysql-connector-python
-from helpers.File_writer import File_writer
+#from helpers.File_writer import File_writer
+from File_writer import File_writer
 from datetime import datetime
 from datetime import timedelta
 import math

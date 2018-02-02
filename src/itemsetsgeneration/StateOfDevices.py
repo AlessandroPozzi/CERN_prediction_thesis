@@ -5,8 +5,8 @@ Created on 14 gen 2018
 '''
 from datetime import datetime
 from datetime import timedelta
-from helpers.File_writer import File_writer
-
+#from helpers.File_writer import File_writer
+from File_writer import File_writer
 
 class DeviceState(object):
     '''

@@ -4,8 +4,10 @@ In particolare qui si utilizzava anche il modulo "StateOfDevices" per generare i
 sequenze SENZA DUPLICATI e SOVRAPPOSIZIONI.
 '''
 import mysql.connector  # pip install mysql-connector-python
-from helpers.File_writer import File_writer
-from itemsetsgeneration.StateOfDevices import StateHandler
+#from helpers.File_writer import File_writer
+#from itemsetsgeneration.StateOfDevices import StateHandler
+from File_writer import File_writer
+from StateOfDevices import StateHandler
 
 def compareChosenDevicesByAlarmPriority(cursor):
     #chosenDevices = ['EHS60/BE', 'EXS4/8X', 'EMC001*9', 'EXS106/2X', 'ESS1*84',

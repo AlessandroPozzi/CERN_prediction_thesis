@@ -4,8 +4,10 @@ Created on 03 gen 2018
 @author: Alessandro Corsair
 '''
 
-from helpers.File_writer import File_writer
-from networkgeneration.Log_extractor import Log_extractor
+#from helpers.File_writer import File_writer
+#from networkgeneration.Log_extractor import Log_extractor
+from Log_extractor import Log_extractor
+from File_writer import File_writer
 import copy
 
 class General_handler(object):

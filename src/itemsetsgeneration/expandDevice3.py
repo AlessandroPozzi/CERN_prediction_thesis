@@ -3,8 +3,9 @@ Questo modulo è l'expandDevice usato per generare reti con dispositivi arbitrari
 Le sequenze qui utilizzate HANNO DUPLICATI e SOVRAPPOSIZIONI.
 '''
 import mysql.connector  # pip install mysql-connector-python
-from pymining import itemmining # pip install pymining  
-from helpers.File_writer import File_writer
+from pymining import itemmining # pip install pymining
+from File_writer import File_writer
+#from helpers.File_writer import File_writer
 
 support = 0.5
 

@@ -7,7 +7,8 @@ Created on 28 dic 2017
 '''
 import pandas as pd
 import mysql.connector 
-from helpers.DataError import DataError
+#from helpers.DataError import DataError
+from DataError import DataError
 
 class Log_extractor(object):
     '''

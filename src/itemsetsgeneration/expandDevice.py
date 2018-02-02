@@ -15,7 +15,8 @@ id, LivelloPriorita
 21,              22
 '''
 import mysql.connector  # pip install mysql-connector-python
-from helpers.File_writer import File_writer
+#from helpers.File_writer import File_writer
+from File_writer import File_writer
 import re
 
 def compareChosenDevicesByAlarmPriority(cursor):
@@ -26,7 +27,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
     levelsOfPriority = ['L0', 'L1', 'L2', 'L3']
 
     for d in chosenDevices:
-        fw = File_writer(d, "afterStateNoDup")
+        fw = File_writer(d, "afterDescrNoDup")
         fw.create_txt("../../res/newres/")
         markedEvents = []
         print '\nDEVICE '+ str(d) + ': '
@@ -49,7 +50,8 @@ def compareChosenDevicesByAlarmPriority(cursor):
                     if ea not in markedEvents: #CONDIZIONE per rimuovere i DUPLICATI
                         markedEvents.append(ea)
                         if ea[4] != d: #CONDIZIONE per evitare problemi con il device di riferimento e l'aggiunta di stati, tag o descr.
-                            extraColumn = ea[10].encode('ascii', 'ignore').decode('ascii')
+                            extraColumn = ea[6].encode('ascii', 'ignore').decode('ascii')
+                            extraColumn.replace("'", "")
                             extraColumn = re.escape(extraColumn)
                             devicesAfter.append(ea[4] + "--" + extraColumn)
                 if devicesAfter != []:

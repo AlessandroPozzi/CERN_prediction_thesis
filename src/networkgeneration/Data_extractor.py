@@ -5,6 +5,7 @@ Created on 15 nov 2017
 
 import re
 import pandas as pd
+import columnAnalyzer as colAnal
 
 class Data_extractor:
     '''
@@ -44,6 +45,7 @@ class Data_extractor:
         self.ranked_devices = [] #list of tuples: (device, frequency, occurrences)
         self.skipped_lines = 0
         self.totalRows = 0
+        self.dev_list_for_variance = []
 
     def extract(self, txtfile, true_device_name, select_priority, file_suffix):
         '''
@@ -117,7 +119,7 @@ class Data_extractor:
                         occurrences[d] = occurrences[d] + 1
             for d in occurrences:
                 frequency_by_device[d] = round( occurrences[d] / float(total_events) , 2)
-        
+
         for d in frequency_by_device:
             tupl = (d, frequency_by_device[d], occurrences[d])
             self.ranked_devices.append(tupl)
@@ -125,28 +127,54 @@ class Data_extractor:
         
     def select_candidates(self, var_type, support, MIN, MAX):
         
-        if var_type == "occurrences":
+        if var_type == "occurrences" or var_type == "best_variance":
             self.ranked_devices.sort(key = lambda tup: tup[2], reverse=True)
         elif var_type == "frequency":
             self.ranked_devices.sort(key = lambda tup: tup[1], reverse=True)
             
         ordered_ranking = [i for i in self.ranked_devices if i[0] != self.true_file_names[0]] # helper list with no file device in it
-            
-        for i in range(len(ordered_ranking)):
-            NUM = len(self.variable_names)
-            device = ordered_ranking[i][0]
-            frequency = ordered_ranking[i][1]
-            
-            if NUM < MIN:
-                self.variable_names.append(device)
-            elif NUM < MAX:
-                if var_type == "frequency":
-                    if frequency > support:
-                        self.variable_names.append(device)
-                elif var_type == "occurrences":
+
+        if var_type == "best_variance":
+            for i in range(len(ordered_ranking)):
+                device = ordered_ranking[i][0]
+                frequency = ordered_ranking[i][1]
+                if frequency >= 0.3:
+                    self.dev_list_for_variance.append(device)
+                else:
+                    break
+
+            devicesDict = colAnal.find_column_distribution(self.true_file_names[0], self.priority_selected, self.dev_list_for_variance)
+            dev_list_final = sorted(devicesDict.values(), key=lambda dev: dev.standDev)
+
+            for i in range(len(dev_list_final)):
+                NUM = len(self.variable_names)
+                device = dev_list_final[i]
+                standDev = devicesDict[device]['standDev']
+
+                if NUM < MIN:
                     self.variable_names.append(device)
-            else:
-                break
+                elif NUM < MAX:
+                    if standDev < 30:
+                        self.variable_names.append(device)
+                else:
+                    break
+
+        else:
+            for i in range(len(ordered_ranking)):
+                NUM = len(self.variable_names)
+                device = ordered_ranking[i][0]
+                frequency = ordered_ranking[i][1]
+
+                if NUM < MIN:
+                    self.variable_names.append(device)
+                elif NUM < MAX:
+                    if var_type == "frequency":
+                        if frequency > support:
+                            self.variable_names.append(device)
+                    elif var_type == "occurrences":
+                        self.variable_names.append(device)
+                else:
+                    break
     
     
     def build_dataframe(self, training_instances="none"):

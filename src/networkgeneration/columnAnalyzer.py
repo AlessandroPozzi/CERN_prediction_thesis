@@ -16,6 +16,8 @@ class ColumnStats(object):
         self.descriptionDict = dict()
         self.duplicates = 0
         self.deltaTimestamps = [] #list of temporal differences between the events of this device and the reference device
+        self.average = -1
+        self.standDev = -1
         
     def updateState(self, state):
         if state not in self.statesDict:
@@ -75,16 +77,16 @@ class ColumnStats(object):
         tsum = timedelta()
         for ts in self.deltaTimestamps:
             tsum += ts
-        average = tsum / len(self.deltaTimestamps)
+        self.average = tsum / len(self.deltaTimestamps)
         numerator = 0.000000000
         for ts in self.deltaTimestamps:
-            par = ts - average
+            par = ts - self.average
             parSec = par.total_seconds() #convert in seconds, lose microsecond accuracy for variance
             numerator += (parSec * parSec)
         varianceSec = numerator / (len(self.deltaTimestamps) - 1)
-        standDev = timedelta(seconds = math.sqrt(varianceSec)) #standard deviation
-        resultAvg = "AVERAGE appearance after: " + str(average)
-        resultVar = "STANDARD DEVIATION of appearances: " + str(standDev)
+        self.standDev = timedelta(seconds = math.sqrt(varianceSec)) #standard deviation
+        resultAvg = "AVERAGE appearance after: " + str(self.average)
+        resultVar = "STANDARD DEVIATION of appearances: " + str(self.standDev)
         fw.write_txt(resultAvg)
         fw.write_txt(resultVar)
 
@@ -144,8 +146,10 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_filtering, cu
         devicesDict[k].writeDescr(fw)
         devicesDict[k].writeTemporalPosition(fw)
         #devicesDict[k].writeDuplicates(fw)
+    return devicesDict
 
 def find_column_distribution(fileName, priority, networkDevices):
     cnx = mysql.connector.connect(host='127.0.0.1', user='root', password='password', database='cern')
     cursor = cnx.cursor()
-    compareChosenDevicesByAlarmPriority(fileName, priority, networkDevices, cursor)
+    devicesDict = compareChosenDevicesByAlarmPriority(fileName, priority, networkDevices, cursor)
+    return devicesDict

@@ -30,11 +30,11 @@ def preprocess_network(select_priority, file_selection, gh, log):
     pre_network_handler = Pre_network_handler(gh)
     
     # 1) PROCESS FILES
-    file_suffix = "_afterDescrNoDup"
+    file_suffix = "_after"
     pre_network_handler.process_files(select_priority, file_selection, file_suffix, log)
     
     # 2) SELECT VARIABLES
-    var_type = "frequency" #occurrences, frequency
+    var_type = "best_variance" #occurrences, frequency, best_variance
     support = 0.4
     MIN = 6
     MAX = 10

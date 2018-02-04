@@ -1,8 +1,4 @@
-# USE THIS TO CHECK IF STATES, TAGS AND DESCRIPTIONS ARE MEANINGFUL 
-#(IT IS CALLED AUTOMATICALLY WHEN THE MAIN IS EXECUTED)
-
-import mysql.connector  # pip install mysql-connector-python
-#from helpers.File_writer import File_writer
+import mysql.connector
 from File_writer import File_writer
 from datetime import datetime
 from datetime import timedelta
@@ -16,8 +12,8 @@ class ColumnStats(object):
         self.descriptionDict = dict()
         self.duplicates = 0
         self.deltaTimestamps = [] #list of temporal differences between the events of this device and the reference device
-        self.msAverage = -1
-        self.msStandDev = -1
+        self.msAverage = 99999999999999999
+        self.msStandDev = 99999999999999999
         
     def updateState(self, state):
         if state not in self.statesDict:
@@ -82,7 +78,6 @@ class ColumnStats(object):
         numerator = 0.000000000 # numerator of the variance formula
         for ts in self.deltaTimestamps:
             par = ts - average
-            #parSec = par.total_seconds() #convert in seconds, lose microsecond accuracy for variance
             msPar = par.total_seconds() * 1000 + par.microseconds / 1000
             numerator += (msPar * msPar)
         variancems = numerator / (len(self.deltaTimestamps) - 1) #variance in milliseconds
@@ -111,13 +106,13 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_filtering, cu
         if e[0] not in devicesDict:
             devicesDict[e[0]] = ColumnStats()
         
-        allSeenEvents.append(e)
+        allSeenEvents.append((e[0], e[1]))
         query = ("select Device, Time, State, Tag, Description from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
         cursor.execute(query, (e[1], e[1], 5))
         eventsAfter = cursor.fetchall()
         
-        if e not in allSeenEvents:
-            allSeenEvents.append(e)
+        if (e[0], e[1]) not in allSeenEvents:
+            allSeenEvents.append((e[0], e[1]))
             devicesDict[e[0]].updateState(e[2])
             devicesDict[e[0]].updateTag(e[3])
             devicesDict[e[0]].updateDescr(e[4])
@@ -130,8 +125,8 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_filtering, cu
                 if ea[0] not in devicesDict:
                     devicesDict[ea[0]] = ColumnStats()
                     
-                if ea not in allSeenEvents:
-                    allSeenEvents.append(ea)
+                if (ea[0], ea[1]) not in allSeenEvents:
+                    allSeenEvents.append((ea[0], ea[1]))
                     devicesDict[ea[0]].updateState(ea[2])
                     devicesDict[ea[0]].updateTag(ea[3])
                     devicesDict[ea[0]].updateDescr(ea[4])

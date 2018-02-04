@@ -190,6 +190,8 @@ class Data_extractor:
                         self.variable_names.append(device)
             else:
                 break
+            
+        self.ranked_devices = ordered_ranking
     
     
     def build_dataframe(self, training_instances="none"):

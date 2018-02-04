@@ -249,13 +249,13 @@ class Network_handler:
         '''
         # 1 - DEVICE FREQUENCY AND OCCURRENCES
         if 1 in selection:
-            self.file_writer.write_txt("Device ranking (max 20 devices are visualized)", newline = True)
+            self.file_writer.write_txt("Device ranking (max 30 devices are visualized)", newline = True)
             i = 1
             for dr in self.rankedDevices:
                 self.file_writer.write_txt(dr[0] + "             \t" + str(dr[1]) + 
                                   "\t" + str(dr[2]) + "\t" + str(dr[3]/1000) + "            \t" + str(dr[4]/1000))
                 i = i + 1
-                if i == 20:
+                if i == 30:
                     break                    
         
         # 2 - EDGES OF THE NETWORK

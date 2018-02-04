@@ -13,6 +13,9 @@ stringa = "h�ll��"
 stringa2 = stringa.encode('ascii', 'ignore').decode('ascii')
 print(stringa2)
 
+if None < 0.33:
+    print("Hello")
+
 '''
 mydate = "2016-01-10 23:49:21.678"
 mydate2 = "2016-01-10 23:43:59.741"

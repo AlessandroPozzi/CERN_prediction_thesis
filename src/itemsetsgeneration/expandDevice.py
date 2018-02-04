@@ -27,7 +27,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
     levelsOfPriority = ['L0', 'L1', 'L2', 'L3']
 
     for d in chosenDevices:
-        fw = File_writer(d, "afterDescrNoDup")
+        fw = File_writer(d, "afterNoDup")
         fw.create_txt("../../res/newres/")
         markedEvents = []
         print '\nDEVICE '+ str(d) + ': '
@@ -53,7 +53,8 @@ def compareChosenDevicesByAlarmPriority(cursor):
                             extraColumn = ea[6].encode('ascii', 'ignore').decode('ascii')
                             extraColumn.replace("'", "")
                             extraColumn = re.escape(extraColumn)
-                            devicesAfter.append(ea[4] + "--" + extraColumn)
+                            #devicesAfter.append(ea[4] + "--" + extraColumn)
+                            devicesAfter.append(ea[4])
                 if devicesAfter != []:
                     afterSequence.append(devicesAfter) # Contiene tutte le liste di deviceAfter (con duplicati). E' una lista di liste
                     devicesAfter=list(set(devicesAfter)) #Lista non ordinata di distinct devices

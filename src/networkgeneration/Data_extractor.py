@@ -139,10 +139,10 @@ class Data_extractor:
         elif var_type == "frequency" or var_type == "support_variance":
             self.ranked_devices.sort(key = lambda tup: tup[1], reverse=True) #order by support
         elif var_type == "variance_only":
-            self.ranked_devices.sort(key = lambda tup: tup[4], reverse=True) #order by variance
+            self.ranked_devices.sort(key = lambda tup: tup[4]) #order by variance
             
         ordered_ranking = [i for i in self.ranked_devices if i[0] != self.true_file_names[0]] # helper list with no file device in it
-
+        ordered_ranking = [tup for tup in ordered_ranking if tup[2] > 8]
         '''
         if var_type == "best_variance":
             for i in range(len(ordered_ranking)):
@@ -186,7 +186,7 @@ class Data_extractor:
                 elif var_type == "occurrences":
                     self.variable_names.append(device)
                 elif var_type =="variance_only":
-                    if variance > 1000 * 30:
+                    if variance < 1000 * 30:
                         self.variable_names.append(device)
             else:
                 break

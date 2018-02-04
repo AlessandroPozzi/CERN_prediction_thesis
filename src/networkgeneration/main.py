@@ -30,11 +30,11 @@ def preprocess_network(select_priority, file_selection, gh, log):
     pre_network_handler = Pre_network_handler(gh)
     
     # 1) PROCESS FILES
-    file_suffix = "_after"
+    file_suffix = "_afterNoDup"
     pre_network_handler.process_files(select_priority, file_selection, file_suffix, log)
     
     # 2) SELECT VARIABLES
-    var_type = "frequency" #occurrences, frequency, variance_only, support_variance
+    var_type = "variance_only" #occurrences, frequency, variance_only, support_variance
     support = 0.4
     MIN = 6
     MAX = 10
@@ -72,8 +72,9 @@ def create_network(pnh, gh, log):
     # 7) DRAW THE NETWORK
     label = "double" # none, single, double
     location_choice = False # True, False
+    variance_filter = True # True, False
     location = 1 # 0, 1, 2 (i.e. H0, H1, H2)
-    network_handler.draw_network(label, location_choice, location, log)
+    network_handler.draw_network(label, location_choice, location, variance_filter, log)
     
     # 8 ) DATA INFO
     selection = [1, 2] #Put in the list what you want to show

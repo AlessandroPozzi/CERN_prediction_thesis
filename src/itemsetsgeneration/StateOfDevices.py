@@ -17,7 +17,7 @@ class DeviceState(object):
     def __init__(self, timestamp, state = True):
         
         self.deviceState = state #True = activated
-        self.timestamp = datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S.%f')
+        self.timestamp = datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
         
     def getTimestamp(self):
         return self.timestamp    
@@ -88,7 +88,7 @@ class StateHandler(object):
     def minutesElapsed(self, mins, ts):
         ''' Returns True if "mins" minutes are elapsed since the last counter '''
         deltaMin = timedelta(minutes = mins)
-        timestamp = datetime.strptime(ts, '%Y-%m-%d %H:%M:%S.%f')
+        timestamp = datetime.strptime(ts, '%Y-%m-%d %H:%M:%S')
         if self.counter == None:
             self.counter = timestamp
         if (timestamp - self.counter) > deltaMin:

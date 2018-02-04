@@ -6,6 +6,8 @@ Created on 15 nov 2017
 import re
 import pandas as pd
 import columnAnalyzer as colAnal
+from datetime import datetime
+from datetime import timedelta
 
 class Data_extractor:
     '''
@@ -107,6 +109,7 @@ class Data_extractor:
         '''
         self.ranked_devices = []
         frequency_by_device = dict() # key = device, value = sum of frequencies of device
+        allDevices = set()
 
         for key in self.events_by_file:
             occurrences = dict() #key = device; value = number of occurrences in SINGLE FILE
@@ -119,21 +122,28 @@ class Data_extractor:
                         occurrences[d] = occurrences[d] + 1
             for d in occurrences:
                 frequency_by_device[d] = round( occurrences[d] / float(total_events) , 2)
+                allDevices.add(d)
 
+        devicesColumnDict = colAnal.find_column_distribution(self.true_file_names[0], self.priority_selected, allDevices)
+        
         for d in frequency_by_device:
-            tupl = (d, frequency_by_device[d], occurrences[d])
+            tupl = (d, frequency_by_device[d], occurrences[d], 
+                    devicesColumnDict[d].msAverage, devicesColumnDict[d].msStandDev)
             self.ranked_devices.append(tupl)
             
         
     def select_candidates(self, var_type, support, MIN, MAX):
         
-        if var_type == "occurrences" or var_type == "best_variance":
-            self.ranked_devices.sort(key = lambda tup: tup[2], reverse=True)
-        elif var_type == "frequency":
-            self.ranked_devices.sort(key = lambda tup: tup[1], reverse=True)
+        if var_type == "occurrences":
+            self.ranked_devices.sort(key = lambda tup: tup[2], reverse=True) #order by occurrences
+        elif var_type == "frequency" or var_type == "support_variance":
+            self.ranked_devices.sort(key = lambda tup: tup[1], reverse=True) #order by support
+        elif var_type == "variance_only":
+            self.ranked_devices.sort(key = lambda tup: tup[4], reverse=True) #order by variance
             
         ordered_ranking = [i for i in self.ranked_devices if i[0] != self.true_file_names[0]] # helper list with no file device in it
 
+        '''
         if var_type == "best_variance":
             for i in range(len(ordered_ranking)):
                 device = ordered_ranking[i][0]
@@ -145,8 +155,9 @@ class Data_extractor:
 
             devicesDict = colAnal.find_column_distribution(self.true_file_names[0], self.priority_selected, self.dev_list_for_variance)
             dev_list_final = sorted(devicesDict.values(), key=lambda dev: dev.standDev)
-
-            for i in range(len(dev_list_final)):
+     
+        
+            for i in range(self.final):
                 NUM = len(self.variable_names)
                 device = dev_list_final[i]
                 standDev = devicesDict[device]['standDev']
@@ -158,23 +169,27 @@ class Data_extractor:
                         self.variable_names.append(device)
                 else:
                     break
+        '''
+        # DOVREMMO RIUSCIRE A METTERE TUTTI I CASI QUI
+        for i in range(len(ordered_ranking)):
+            NUM = len(self.variable_names)
+            device = ordered_ranking[i][0]
+            frequency = ordered_ranking[i][1]
+            variance = ordered_ranking[i][4]
 
-        else:
-            for i in range(len(ordered_ranking)):
-                NUM = len(self.variable_names)
-                device = ordered_ranking[i][0]
-                frequency = ordered_ranking[i][1]
-
-                if NUM < MIN:
-                    self.variable_names.append(device)
-                elif NUM < MAX:
-                    if var_type == "frequency":
-                        if frequency > support:
-                            self.variable_names.append(device)
-                    elif var_type == "occurrences":
+            if NUM < MIN:
+                self.variable_names.append(device)
+            elif NUM < MAX:
+                if var_type == "frequency":
+                    if frequency > support:
                         self.variable_names.append(device)
-                else:
-                    break
+                elif var_type == "occurrences":
+                    self.variable_names.append(device)
+                elif var_type =="variance_only":
+                    if variance > 1000 * 30:
+                        self.variable_names.append(device)
+            else:
+                break
     
     
     def build_dataframe(self, training_instances="none"):

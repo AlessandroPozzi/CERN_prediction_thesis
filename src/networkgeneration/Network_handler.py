@@ -253,7 +253,8 @@ class Network_handler:
             i = 1
             for dr in self.rankedDevices:
                 self.file_writer.write_txt(dr[0] + "             \t" + str(dr[1]) + 
-                                  "\t" + str(dr[2]) + "\t" + str(dr[3]/1000) + "            \t" + str(dr[4]/1000))
+                                  "\t" + str(dr[2]) )
+                #+ "\t" + str(dr[3]/1000) + "            \t" + str(dr[4]/1000)
                 i = i + 1
                 if i == 30:
                     break                    

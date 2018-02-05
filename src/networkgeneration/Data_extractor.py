@@ -152,7 +152,8 @@ class Data_extractor:
             self.ranked_devices.sort(key = lambda tup: tup[4]) #order by variance
             
         ordered_ranking = [i for i in self.ranked_devices if i[0] != self.true_file_names[0]] # helper list with no file device in it
-        ordered_ranking = [tup for tup in ordered_ranking if tup[2] > 8] #remove devices with less than 8 occurrences
+        if var_type == "variance_only":
+            ordered_ranking = [tup for tup in ordered_ranking if tup[2] > 5] #remove devices with less than n occurrences
 
         for i in range(len(ordered_ranking)):
             NUM = len(self.variable_names)

@@ -8,6 +8,7 @@ import pandas as pd
 import columnAnalyzer as colAnal
 from datetime import datetime
 from datetime import timedelta
+from sympy.core.compatibility import ordered
 
 class Data_extractor:
     '''
@@ -47,7 +48,6 @@ class Data_extractor:
         self.ranked_devices = [] #list of tuples: (device, frequency, occurrences)
         self.skipped_lines = 0
         self.totalRows = 0
-        self.dev_list_for_variance = []
 
     def extract(self, txtfile, true_device_name, select_priority, file_suffix):
         '''
@@ -133,7 +133,17 @@ class Data_extractor:
             
         
     def select_candidates(self, var_type, support, MIN, MAX):
-        
+        '''
+        Selects the devices to be used as variables of the network among the candidates previously selected.
+        "var_type" can be:
+        "occurrences" -- Select the "MAX" variables with most occurrences.
+        "frequency" -- Select the "MIN" variables with highest support plus a maximum of ("MAX"-"MIN") variables
+                       that have a support higher than the "support" parameter.
+        "variance_only" -- Select the "MIN" variables with highest variance, plus a maximum of ("MAX"-"MIN") variables
+                       that have a variance higher than a fixed value (ex: 30 seconds).
+        "support_variance" -- Select the "MIN" variables with highest support plus a number ("MAX"-"MIN") of remaining variables
+                              with the highest variance.
+        '''
         if var_type == "occurrences":
             self.ranked_devices.sort(key = lambda tup: tup[2], reverse=True) #order by occurrences
         elif var_type == "frequency" or var_type == "support_variance":
@@ -142,35 +152,8 @@ class Data_extractor:
             self.ranked_devices.sort(key = lambda tup: tup[4]) #order by variance
             
         ordered_ranking = [i for i in self.ranked_devices if i[0] != self.true_file_names[0]] # helper list with no file device in it
-        ordered_ranking = [tup for tup in ordered_ranking if tup[2] > 8]
-        '''
-        if var_type == "best_variance":
-            for i in range(len(ordered_ranking)):
-                device = ordered_ranking[i][0]
-                frequency = ordered_ranking[i][1]
-                if frequency >= 0.3:
-                    self.dev_list_for_variance.append(device)
-                else:
-                    break
+        ordered_ranking = [tup for tup in ordered_ranking if tup[2] > 8] #remove devices with less than 8 occurrences
 
-            devicesDict = colAnal.find_column_distribution(self.true_file_names[0], self.priority_selected, self.dev_list_for_variance)
-            dev_list_final = sorted(devicesDict.values(), key=lambda dev: dev.standDev)
-     
-        
-            for i in range(self.final):
-                NUM = len(self.variable_names)
-                device = dev_list_final[i]
-                standDev = devicesDict[device]['standDev']
-
-                if NUM < MIN:
-                    self.variable_names.append(device)
-                elif NUM < MAX:
-                    if standDev < 30:
-                        self.variable_names.append(device)
-                else:
-                    break
-        '''
-        # DOVREMMO RIUSCIRE A METTERE TUTTI I CASI QUI
         for i in range(len(ordered_ranking)):
             NUM = len(self.variable_names)
             device = ordered_ranking[i][0]
@@ -188,6 +171,12 @@ class Data_extractor:
                 elif var_type =="variance_only":
                     if variance < 1000 * 30:
                         self.variable_names.append(device)
+                elif var_type == "support_variance":
+                    ordered_ranking = [x for x in ordered_ranking if x[0] not in self.variable_names] #remove devices already added
+                    ordered_ranking.sort(key = lambda tup: tup[4]) #order by variance
+                    for j in range(NUM, MAX):
+                        self.variable_names.append(ordered_ranking[j - NUM][0])
+                    break    
             else:
                 break
             

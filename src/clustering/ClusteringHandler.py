@@ -64,7 +64,7 @@ class ClusterHandler(object):
     '''
     
     def __init__(self, startingEvent):
-        self.eventStateList = [] # the list of events to be considered for the clustering
+        self.eventStateList = [] # the list of events (EventState objects) to be considered for the clustering
         self.clustersList = [] # the list of clusters. Each cluster is a list of "EventState" objects
         self.averageDelta = float(0)
         self.startingEvent = startingEvent # the event that starts the 5 minutes analysis
@@ -117,8 +117,8 @@ class ClusterHandler(object):
                 fw.write_txt("AVERAGE = " + str(average))
             # Now, divide the groups of events based on the average:
             j = 0 # "j" indicates the first element from which we'll start the next cluster
-            for i in range(1, len(esl)-1):
-                if esl[i].getTimeDelta() > average:
+            for i in range(1, len(esl)):
+                if esl[i].getTimeDelta() > 2 * average:
                     newCluster = esl[j:i]
                     self.clustersList.append(newCluster)
                     if debug:
@@ -154,7 +154,7 @@ class ClusterHandler(object):
                 return
             # now the real clustering begins:
             j = 0 # "j" indicates the first element from which we'll start the next cluster
-            for i in range(1, len(esl)-1):
+            for i in range(1, len(esl)):
                 if esl[i].getTimeDelta() > timeDelta:
                     newCluster = esl[j:i]
                     self.clustersList.append(newCluster)
@@ -198,16 +198,16 @@ class ClusterHandler(object):
                 fw.write_txt("STARTING EVENT: " + self.startingEvent[0] + " - " + self.startingEvent[4], newline=True)
                 fw.write_txt("Number of events: " + str(self.eventStateList.__len__()))
                 fw.write_txt('Estimated number of clusters: %d' % n_clusters_)
-                for i in range(0, len(self.eventStateList)-1):
-                    events = self.eventStateList
-                    fw.write_txt(str(events[i].getTimestamp()) + " - " + events[i].getDevice() + " --> " + str(labels[i]))
+                for i in range(len(self.eventStateList)):
+                    event = self.eventStateList
+                    fw.write_txt(str(event[i].getTimestamp()) + " - " + event[i].getDevice() + " --> " + str(labels[i]))
                 fw.write_txt('Labelling of clusters: ' + str(labels))
         
             #Saving the clusters in the list:
             cluster = []
             cluster.append(self.eventStateList[0])
             previousLabel = labels[0]
-            for i in range(1, len(self.eventStateList)-1):
+            for i in range(1, len(self.eventStateList)):
                 if labels[i] == previousLabel:
                     #the event is in the same cluster
                     cluster.append(self.eventStateList[i])
@@ -234,7 +234,7 @@ class ClusterHandler(object):
             fw.write_txt("STARTING EVENT: " + self.startingEvent[0] + " - " + self.startingEvent[4], newline=True)
             fw.write_txt("Number of events: " + str(self.eventStateList.__len__()))
             fw.write_txt('Estimated number of clusters: %d' % n_clusters_)
-            for i in range(0, len(self.eventStateList)-1):
+            for i in range(0, len(self.eventStateList)):
                 events = self.eventStateList
                 fw.write_txt(str(events[i].getTimestamp()) + " - " + events[i].getDevice() + " --> " + str(labels[i]))
             fw.write_txt('Labelling of clusters: ' + str(labels))

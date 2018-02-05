@@ -34,9 +34,9 @@ def preprocess_network(select_priority, file_selection, gh, log):
     pre_network_handler.process_files(select_priority, file_selection, file_suffix, log)
     
     # 2) SELECT VARIABLES
-    var_type = "variance_only" #occurrences, frequency, variance_only, support_variance
+    var_type = "frequency" #occurrences, frequency, variance_only, support_variance
     support = 0.4
-    MIN = 6
+    MIN = 4
     MAX = 10
     pre_network_handler.select_variables(var_type, MIN, MAX, support, log)
     
@@ -71,8 +71,8 @@ def create_network(pnh, gh, log):
     
     # 7) DRAW THE NETWORK
     label = "double" # none, single, double
-    location_choice = False # True, False
-    variance_filter = True # True, False
+    location_choice = True # True, False
+    variance_filter = False # True, False
     location = 1 # 0, 1, 2 (i.e. H0, H1, H2)
     network_handler.draw_network(label, location_choice, location, variance_filter, log)
     
@@ -129,7 +129,7 @@ def run_script(mode):
             else:
                 print("Network creation completed.")
         
-        gh.save_to_file()        
+        #gh.save_to_file()        
     print("RUN completed")
     
     

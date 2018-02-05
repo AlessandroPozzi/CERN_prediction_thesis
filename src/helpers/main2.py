@@ -2,19 +2,16 @@
 Created on 28 dic 2017
 @author: Alessandro Corsair
 
-This is a (probably only temporary) module that can be used to do some tests. ààà
+This is a (probably only temporary) module that can be used to do some tests.
 '''
 import graphviz as gv
 from datetime import datetime
 from datetime import timedelta
 import numpy as np
 
-stringa = "h�ll��"
-stringa2 = stringa.encode('ascii', 'ignore').decode('ascii')
-print(stringa2)
-
-if None < 0.33:
-    print("Hello")
+abc = [1,2,3]
+for i in range(0, len(abc)-1):
+    print(str(i))
 
 '''
 mydate = "2016-01-10 23:49:21.678"

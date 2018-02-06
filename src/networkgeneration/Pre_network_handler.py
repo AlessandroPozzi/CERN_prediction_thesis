@@ -66,7 +66,7 @@ class Pre_network_handler(object):
         if self.extractor.nodata():
             raise DataError("No data in this file - priority")
             
-        self.extractor.prepare_candidates() #computes occurrences and frequency of the devices
+        self.extractor.prepare_candidates(var_type) #computes occurrences and frequency of the devices
         self.extractor.select_candidates(var_type, support, MIN, MAX)
         
         if self.general_handler:

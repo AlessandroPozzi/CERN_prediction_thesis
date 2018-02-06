@@ -9,9 +9,9 @@ from datetime import datetime
 from datetime import timedelta
 import numpy as np
 
-abc = [1,2,3]
-for i in range(0, len(abc)-1):
-    print(str(i))
+
+stringa = "B14-4ASD"
+print(stringa.encode('ascii', 'ignore').decode('ascii'))
 
 '''
 mydate = "2016-01-10 23:49:21.678"

@@ -36,7 +36,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
         for l in levelsOfPriority:
             print '\n\tPRIORITY ' + str(l) + ':'
             fw.write_txt('\n\tPRIORITY ' + str(l) + ':')
-            query = ("select * from electric where device=%s and livellopriorita=%s and action='Alarm CAME'")
+            query = ("select * from electric where device=%s and livellopriorita=%s and action='Alarm CAME' order by time")
             cursor.execute(query, (d,l))
             events = cursor.fetchall()
             afterSeq = [] # Contiene le liste dei device che vediamo in ogni riga nei file di testo

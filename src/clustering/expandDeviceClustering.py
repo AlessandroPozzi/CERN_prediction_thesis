@@ -30,7 +30,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
         for l in levelsOfPriority:
             print '\n\tPRIORITY ' + str(l) + ':'
             fw.write_txt('\n\tPRIORITY ' + str(l) + ':')
-            query = ("select * from electric where device=%s and livellopriorita=%s and action='Alarm CAME'")
+            query = ("select * from electric where device=%s and livellopriorita=%s and action='Alarm CAME' order by time")
             cursor.execute(query, (d,l))
             events = cursor.fetchall()
             clusterList = []
@@ -42,7 +42,8 @@ def compareChosenDevicesByAlarmPriority(cursor):
                 eventsAfter = cursor.fetchall()
                 
                 for ea in eventsAfter:
-                    clusterHandler.addEvent(ea)
+                    if ea != e:
+                        clusterHandler.addEvent(ea)
                 
                 try:
                     # 1) OFFLINE AVERAGE

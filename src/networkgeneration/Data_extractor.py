@@ -135,6 +135,8 @@ class Data_extractor:
                 tupl = (d, frequency_by_device[d], occurrences[d],
                         devicesColumnDict[d].msAverage, devicesColumnDict[d].msStandDev)
                 self.ranked_devices.append(tupl)
+
+                
             
         
     def select_candidates(self, var_type, support, MIN, MAX):

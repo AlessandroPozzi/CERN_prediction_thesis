@@ -108,7 +108,7 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_filtering, cu
         
         allSeenEvents.append((e[0], e[1]))
         query = ("select Device, Time, State, Tag, Description from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
-        cursor.execute(query, (e[1], e[1], 5))
+        cursor.execute(query, (e[1], e[1], 10))
         eventsAfter = cursor.fetchall()
         
         if (e[0], e[1]) not in allSeenEvents:

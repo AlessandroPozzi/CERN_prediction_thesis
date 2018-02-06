@@ -6,6 +6,7 @@ import mysql.connector  # pip install mysql-connector-python
 from pymining import itemmining # pip install pymining
 from File_writer import File_writer
 #from helpers.File_writer import File_writer
+import config
 
 support = 0.5
 
@@ -44,7 +45,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
     for e in events:
         #print '\n' + str(e)
         query = ("select * from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
-        cursor.execute(query, (e[0], e[0], 5))
+        cursor.execute(query, (e[0], e[0], config.CORRELATION_MINUTES))
         eventsAfter = cursor.fetchall()
         devicesAfter = []  # all events that happened 5 min after the event "e"
         for ea in eventsAfter:

@@ -18,6 +18,7 @@ import mysql.connector  # pip install mysql-connector-python
 #from helpers.File_writer import File_writer
 from File_writer import File_writer
 import re
+import config
 
 def compareChosenDevicesByAlarmPriority(cursor):
     #chosenDevices = ['EHS60/BE', 'EXS4/8X', 'EMC001*9', 'EXS106/2X', 'ESS1*84',
@@ -27,8 +28,8 @@ def compareChosenDevicesByAlarmPriority(cursor):
     levelsOfPriority = ['L0', 'L1', 'L2', 'L3']
 
     for d in chosenDevices:
-        fw = File_writer(d, "afterNoDup")
-        fw.create_txt("../../res/newres/")
+        fw = File_writer(d, config.FILE_SUFFIX)
+        fw.create_txt("../../res/")
         markedEvents = []
         print '\nDEVICE '+ str(d) + ': '
         fw.write_txt('\nDEVICE '+ str(d) + ': ')
@@ -43,7 +44,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
 
             for e in events:
                 query = ("select * from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
-                cursor.execute(query, (e[0], e[0], 5))
+                cursor.execute(query, (e[0], e[0], config.CORRELATION_MINUTES))
                 eventsAfter = cursor.fetchall()
                 devicesAfter = []  # all events that happened 5 min after the event "e"
                 for ea in eventsAfter:
@@ -81,7 +82,9 @@ def compareChosenDevicesByAlarmPriority(cursor):
             print("==>")
             fw.write_txt('==>', newline = True) #KEEP THIS!
 
+def searchItemsets():
+    cnx = mysql.connector.connect(host='127.0.0.1', user='root', password='password', database='cern')
+    cursor = cnx.cursor()
+    compareChosenDevicesByAlarmPriority(cursor)
 
-cnx = mysql.connector.connect(host='127.0.0.1', user='root', password='password', database='cern')
-cursor = cnx.cursor()
-compareChosenDevicesByAlarmPriority(cursor)
+searchItemsets()

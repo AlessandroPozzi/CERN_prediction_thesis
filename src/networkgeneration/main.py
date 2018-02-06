@@ -17,6 +17,7 @@ from General_handler import General_handler
 from DataError import DataError
 from Network_handler import Network_handler
 from Pre_network_handler import Pre_network_handler
+import config
 
 priority = ('L0', 'L1', 'L2', 'L3') # Hard coded priority, do NOT change
 select_priority = 'L1' # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE"
@@ -30,11 +31,11 @@ def preprocess_network(select_priority, file_selection, gh, log):
     pre_network_handler = Pre_network_handler(gh)
     
     # 1) PROCESS FILES
-    file_suffix = "_afterNoDup"
+    file_suffix = "_" + config.FILE_SUFFIX
     pre_network_handler.process_files(select_priority, file_selection, file_suffix, log)
     
     # 2) SELECT VARIABLES
-    var_type = "variance_only" #occurrences, frequency, variance_only, support_variance
+    var_type = "frequency" #occurrences, frequency, variance_only, support_variance
     support = 0.4
     MIN = 4
     MAX = 10
@@ -132,6 +133,7 @@ def run_script(mode):
         #gh.save_to_file()        
     print("RUN completed")
     
-    
-run_script(mode)
+if __name__ == "__main__":
+    # stuff only to run when not called via 'import' here
+    run_script(mode)
 

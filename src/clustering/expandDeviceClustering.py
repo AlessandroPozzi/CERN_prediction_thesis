@@ -8,6 +8,7 @@ from File_writer import File_writer
 from ClusteringHandler import ClusterHandler
 from DataError import DataError
 from datetime import timedelta
+import config 
 
 def compareChosenDevicesByAlarmPriority(cursor):
     #chosenDevices = ['EHS60/BE', 'EXS4/8X', 'EMC001*9', 'EXS106/2X', 'ESS1*84',
@@ -20,10 +21,10 @@ def compareChosenDevicesByAlarmPriority(cursor):
         # clusters-offlineAverage
         # clusters-staticDistance
         # clusters-dbscan
-        fw = File_writer(d, "clusters-offlineAverage")
-        fw.create_txt("../../res/newres/")
-        fw2 = File_writer(d, "DEBUG-clusters-offlineAverage")
-        fw2.create_txt("../../res/newres/")
+        fw = File_writer(d, config.FILE_SUFFIX)
+        fw.create_txt("../../res/")
+        fw2 = File_writer(d, "DEBUG-" + config.FILE_SUFFIX)
+        fw2.create_txt("../../res/debug/")
         print '\nDEVICE '+ str(d) + ': '
         fw.write_txt('\nDEVICE '+ str(d) + ': ')
         for l in levelsOfPriority:
@@ -36,7 +37,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
 
             for e in events:
                 query = ("select * from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
-                cursor.execute(query, (e[0], e[0], 5))
+                cursor.execute(query, (e[0], e[0], config.CORRELATION_MINUTES))
                 clusterHandler = ClusterHandler(e)
                 eventsAfter = cursor.fetchall()
                 
@@ -45,12 +46,12 @@ def compareChosenDevicesByAlarmPriority(cursor):
                 
                 try:
                     # 1) OFFLINE AVERAGE
-                    clusterHandler.findClustersOfflineAverage(fw2, debug=True)
+                    #clusterHandler.findClustersOfflineAverage(fw2, debug=True)
                     # 2) STATIC DISTANCE
                     #timeDelta = timedelta(minutes = 5)
                     #clusterHandler.findClustersStaticDistance(fw2, timeDelta, debug=True)
                     # 3) DBSCAN
-                    #clusterHandler.findClustersDBSCAN(fw2, debug=True)
+                    clusterHandler.findClustersDBSCAN(fw2, debug=True)
                     # 4) MEAN SHIFT
                     #clusterHandler.findClustersMeanShift(fw2, debug=True)
                     
@@ -92,7 +93,9 @@ def compareChosenDevicesByAlarmPriority(cursor):
             print("==>")
             fw.write_txt('==>', newline = True)
             
+def searchItemsets():
+    cnx = mysql.connector.connect(host='127.0.0.1', user='root', password='password', database='cern')
+    cursor = cnx.cursor()
+    compareChosenDevicesByAlarmPriority(cursor)
 
-cnx = mysql.connector.connect(host='127.0.0.1', user='root', password='password', database='cern')
-cursor = cnx.cursor()
-compareChosenDevicesByAlarmPriority(cursor)
+searchItemsets()

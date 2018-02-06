@@ -179,6 +179,7 @@ class ClusterHandler(object):
         i.e. it updates the average of the temporal differences between events while they are added one 
         by one, and separates groups of events with the delta greater than the average (with a margin).
         '''
+        
         print("NOT DONE YET")
         
     def findClustersDBSCAN(self, fw, debug = False):

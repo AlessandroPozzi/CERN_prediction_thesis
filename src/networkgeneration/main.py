@@ -106,7 +106,7 @@ def run_script(mode):
         gh = General_handler()
         pnhs = [] # LIST OF THE PRE-NETWORK HANDLERS
         i = 1
-        while i <= 10:
+        while i <= 6:
             for p in priority:
                 print("File " + str(i) + " with priority " + p + ":")
                 try:

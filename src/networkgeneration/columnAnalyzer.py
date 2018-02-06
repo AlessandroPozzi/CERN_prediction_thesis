@@ -144,6 +144,8 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_filtering, cu
         devicesDict[k].writeDescr(fw)
         devicesDict[k].writeTemporalPosition(fw)
         #devicesDict[k].writeDuplicates(fw)
+        
+        
     return devicesDict
 
 def find_column_distribution(fileName, priority, networkDevices):

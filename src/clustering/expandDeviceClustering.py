@@ -8,7 +8,7 @@ from File_writer import File_writer
 from ClusteringHandler import ClusterHandler
 from DataError import DataError
 from datetime import timedelta
-import config 
+import config
 
 def compareChosenDevicesByAlarmPriority(cursor):
     #chosenDevices = ['EHS60/BE', 'EXS4/8X', 'EMC001*9', 'EXS106/2X', 'ESS1*84',
@@ -48,10 +48,10 @@ def compareChosenDevicesByAlarmPriority(cursor):
                     # 1) OFFLINE AVERAGE
                     #clusterHandler.findClustersOfflineAverage(fw2, debug=True)
                     # 2) STATIC DISTANCE
-                    #timeDelta = timedelta(minutes = 5)
-                    #clusterHandler.findClustersStaticDistance(fw2, timeDelta, debug=True)
+                    timeDelta = timedelta(seconds = 5)
+                    clusterHandler.findClustersStaticDistance(fw2, timeDelta, debug=True)
                     # 3) DBSCAN
-                    clusterHandler.findClustersDBSCAN(fw2, debug=True)
+                    #clusterHandler.findClustersDBSCAN(fw2, debug=True)
                     # 4) MEAN SHIFT
                     #clusterHandler.findClustersMeanShift(fw2, debug=True)
                     

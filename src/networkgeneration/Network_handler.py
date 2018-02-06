@@ -154,7 +154,7 @@ class Network_handler:
         # Extract color based on the building
         if location_choice:
             
-            devices = self.variables_names
+            devices = self.best_model.nodes()
             device_location = dict()
             device_locationH1 = dict()
             
@@ -195,6 +195,13 @@ class Network_handler:
         if location_choice:
             for loc in loc_subgraphs:
                 bn_graph.subgraph(loc_subgraphs[loc])
+                
+        # Legenda:
+        if location_choice:
+            legend = ""
+            for loc in location_colorH1:
+                legend = legend + location_colorH1[loc] + " --> " + loc + "\n"
+            bn_graph.node(legend, shape="box")
         
         # Create and color edges
         for edge in self.best_model.edges_iter():

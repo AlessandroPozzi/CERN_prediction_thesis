@@ -51,11 +51,11 @@ def compareChosenDevicesByAlarmPriority(cursor):
                     if ea not in markedEvents: #CONDIZIONE per rimuovere i DUPLICATI
                         markedEvents.append(ea)
                         if ea[4] != d: #CONDIZIONE per evitare problemi con il device di riferimento e l'aggiunta di stati, tag o descr.
-                            extraColumn = ea[6].encode('ascii', 'ignore').decode('ascii')
+                            extraColumn = ea[5].encode('ascii', 'ignore').decode('ascii')
                             extraColumn.replace("'", "")
                             extraColumn = re.escape(extraColumn)
-                            #devicesAfter.append(ea[4] + "--" + extraColumn)
-                            devicesAfter.append(ea[4])
+                            devicesAfter.append(ea[4] + "--" + extraColumn)
+                            #devicesAfter.append(ea[4])
                 if devicesAfter != []:
                     afterSequence.append(devicesAfter) # Contiene tutte le liste di deviceAfter (con duplicati). E' una lista di liste
                     devicesAfter=list(set(devicesAfter)) #Lista non ordinata di distinct devices

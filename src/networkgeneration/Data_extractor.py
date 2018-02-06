@@ -102,7 +102,7 @@ class Data_extractor:
             processed_findings.append(f.replace("'", ""))
         return processed_findings
     
-    def prepare_candidates(self):
+    def prepare_candidates(self, var_type):
         '''
         Extracts occurrences and frequency of the devices (i.e. the candidate for becoming variables of the network).
         This data is stored in ranked_devices, as a tuple of the kind (device, frequency, occurrences).
@@ -125,11 +125,18 @@ class Data_extractor:
                 allDevices.add(d)
 
         devicesColumnDict = colAnal.find_column_distribution(self.true_file_names[0], self.priority_selected, allDevices)
-        
-        for d in frequency_by_device:
-            tupl = (d, frequency_by_device[d], occurrences[d], 
-                    devicesColumnDict[d].msAverage, devicesColumnDict[d].msStandDev)
-            self.ranked_devices.append(tupl)
+
+        if var_type == "occurrences" or var_type == "frequency":
+            for d in frequency_by_device:
+                tupl = (d, frequency_by_device[d], occurrences[d], -1, -1)
+                self.ranked_devices.append(tupl)
+        elif var_type == "variance_only" or var_type == "support_variance":
+            for d in frequency_by_device:
+                tupl = (d, frequency_by_device[d], occurrences[d],
+                        devicesColumnDict[d].msAverage, devicesColumnDict[d].msStandDev)
+                self.ranked_devices.append(tupl)
+
+                
             
         
     def select_candidates(self, var_type, support, MIN, MAX):

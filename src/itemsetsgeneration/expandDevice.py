@@ -54,8 +54,8 @@ def compareChosenDevicesByAlarmPriority(cursor):
                             extraColumn = ea[5].encode('ascii', 'ignore').decode('ascii')
                             extraColumn.replace("'", "")
                             extraColumn = re.escape(extraColumn)
-                            devicesAfter.append(ea[4] + "--" + extraColumn)
-                            #devicesAfter.append(ea[4])
+                            #devicesAfter.append(ea[4] + "--" + extraColumn)
+                            devicesAfter.append(ea[4])
                 if devicesAfter != []:
                     afterSequence.append(devicesAfter) # Contiene tutte le liste di deviceAfter (con duplicati). E' una lista di liste
                     devicesAfter=list(set(devicesAfter)) #Lista non ordinata di distinct devices

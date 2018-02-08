@@ -5,4 +5,4 @@ Config file
 '''
 
 CORRELATION_MINUTES = 5
-FILE_SUFFIX = "afterTagNoDup" #clusters_dbscan, afterNoDup, afterStateNodup...
+FILE_SUFFIX = "afterNoDup" #clusters_dbscan, afterNoDup, afterStateNodup, clusters_offline_average1x, clusters_static_distance12sec..

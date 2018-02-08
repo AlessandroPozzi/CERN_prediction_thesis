@@ -68,6 +68,8 @@ class Pre_network_handler(object):
             
         self.extractor.prepare_candidates(var_type) #computes occurrences and frequency of the devices
         self.extractor.select_candidates(var_type, support, MIN, MAX)
+        self.devicesColumnDict = self.extractor.get_columnAnalysis()
+        self.occurrences = self.extractor.get_occurrences()
         
         if self.general_handler:
             self.general_handler.add_devices(self.extractor.get_variable_names())
@@ -121,6 +123,12 @@ class Pre_network_handler(object):
     
     def get_file_suffix(self):
         return self.file_suffix
+    
+    def get_column_analysis(self):
+        return self.devicesColumnDict
+    
+    def get_occurrences(self):
+        return self.occurrences
     
     def log(self, text, log):
         ''' Prints the text in the console, if the "log" condition is True. '''

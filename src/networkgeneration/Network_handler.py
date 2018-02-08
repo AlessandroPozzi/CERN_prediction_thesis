@@ -47,7 +47,8 @@ class Network_handler:
         self.data = pnh.get_dataframe()
         self.file_writer = pnh.get_file_writer()
         self.file_suffix = pnh.get_file_suffix()
-
+        self.devicesColumnDict = pnh.get_column_analysis()
+        self.occurrences = pnh.get_occurrences()
         
     def learn_structure(self, method, scoring_method, log = True):
         ''' (4)
@@ -141,38 +142,32 @@ class Network_handler:
             '''
                         
                                             
-    def draw_network(self, label_choice, location_choice, location, variance, log):
+    def draw_network(self, label_choice, location_choice, info_choice, variance, log):
         ''' (7) 
         Draws the bayesian network.
         ----
         location_choice = True iff we want to show the location of devices in the graph.
         label_choice = "single" if we want to show single label, "double" for double label of arcs
-        location = 0,1,2 depending by the location (H0, H1, H2)
         '''
-        bn_graph = gv.Digraph(format = "png")
         
-        # Extract color based on the building
+        if location_choice and info_choice:
+            DataError("location_choice and info_choice can't be both True")
+            return
+        bn_graph = gv.Digraph(format = "png")
+        devices = self.best_model.nodes()
+        
+        # Create subgraph for the locations
         if location_choice:
-            
-            devices = self.best_model.nodes()
             device_location = dict()
             device_locationH1 = dict()
             
-            #For H0
+            #For H0 and H1:
             for d in devices:
                 allDevicesLocations = self.general_handler.get_device_locations()
-                device_location[d] = allDevicesLocations[d][0]
-                device_locationH1[d] = allDevicesLocations[d][1] #temp for H1
+                device_location[d] = allDevicesLocations[d][0] #H0
+                device_locationH1[d] = allDevicesLocations[d][1] #H1
             location_color = self.assign_color(device_location)
             location_colorH1 = self.assign_color(device_locationH1)
-        
-            '''
-            # Logging and saving info
-            self.log(device_location, log)
-            self.log(location_color, log)
-            self.file_writer.write_txt(device_location, newline = True)
-            self.file_writer.write_txt(location_color, newline = True)
-            '''
             
             # Creating the subgraphs, one for each location:
             loc_subgraphs = dict()
@@ -181,6 +176,21 @@ class Network_handler:
                 loc_subgraphs[loc] = gv.Digraph(name) 
                 loc_subgraphs[loc].graph_attr['label'] = loc #Label with name to be visualized in the image
                         
+        # Create subgraphs for occurrences, average and standard deviation:
+        if info_choice:
+            info_subgraphs = dict()
+            # there's one subgraph for each node:
+            id = 0
+            for d in devices:
+                name = "dev" + str(id)
+                info_subgraphs[d] = gv.Digraph(name)
+                id += 1
+                lb = "AAA"
+                #lb = "Occurrences: " + str(self.occurrences[d]) + "\n"
+                #lb = label + "Average: " + str(self.devicesColumnDict[d].msAverage) + "\n"
+                #lb = label + "Standard deviation: " + str(self.devicesColumnDict[d].msStandDev)
+                info_subgraphs[d].graph_attr['label'] = lb #Label with name to be visualized in the image
+    
         # Create nodes
         for node in self.best_model.nodes():
             if location_choice:
@@ -188,15 +198,20 @@ class Network_handler:
                 locationH1 = device_locationH1[node]
                 loc_subgraphs[locationH0].node(node, style='filled',fillcolor=location_colorH1[locationH1]) #add the node to the right subgraph
                 #loc_subgraphs[locationH0].node(node) #USE THIS TO ADD ONLY H0
-            else:
+            elif info_choice:
+                info_subgraphs[node].node(node)
+            else: #add the node directly to the graph
                 bn_graph.node(node)
             
         # Add all subgraphs in the final graph:
         if location_choice:
             for loc in loc_subgraphs:
                 bn_graph.subgraph(loc_subgraphs[loc])
+        elif info_choice:
+            for dev in info_subgraphs:
+                bn_graph.subgraph(info_subgraphs[dev])
                 
-        # Legenda:
+        # Legend for color:
         if location_choice:
             legend = ""
             for loc in location_colorH1:
@@ -246,9 +261,9 @@ class Network_handler:
                 var = "Var"
             else:
                 var = ""
-            imgPath = '../../output/' + self.device_considered + '_' + self.priority_considered + locat + var + "Tag"
+            imgPath = '../../output/' + self.device_considered + '_' + self.priority_considered + locat + var 
         bn_graph.render(imgPath)
-        os.remove(imgPath) #remove the source code generated by graphviz
+        #os.remove(imgPath) #remove the source code generated by graphviz
 
 
     def data_info(self, selection, log):

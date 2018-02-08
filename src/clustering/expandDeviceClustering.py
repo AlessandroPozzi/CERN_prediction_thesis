@@ -49,10 +49,10 @@ def compareChosenDevicesByAlarmPriority(cursor):
                     # 1) OFFLINE AVERAGE
                     #clusterHandler.findClustersOfflineAverage(fw2, debug=True)
                     # 2) STATIC DISTANCE
-                    timeDelta = timedelta(seconds = 5)
-                    clusterHandler.findClustersStaticDistance(fw2, timeDelta, debug=True)
+                    #timeDelta = timedelta(seconds = 5)
+                    #clusterHandler.findClustersStaticDistance(fw2, timeDelta, debug=True)
                     # 3) DBSCAN
-                    #clusterHandler.findClustersDBSCAN(fw2, debug=True)
+                    clusterHandler.findClustersDBSCAN(fw2, debug=True)
                     # 4) MEAN SHIFT
                     #clusterHandler.findClustersMeanShift(fw2, debug=True)
                     

@@ -73,10 +73,10 @@ def create_network(pnh, gh, log):
     
     # 7) DRAW THE NETWORK
     label = "double" # none, single, double
-    location_choice = False # True, False
+    location_choice = True # True, False
+    info_choice = False 
     variance_filter = False # True, False
-    location = 1 # 0, 1, 2 (i.e. H0, H1, H2)
-    network_handler.draw_network(label, location_choice, location, variance_filter, log)
+    network_handler.draw_network(label, location_choice, info_choice, variance_filter, log)
     
     # 8 ) DATA INFO
     selection = [1, 2] #Put in the list what you want to show

@@ -118,7 +118,7 @@ class ClusterHandler(object):
             # Now, divide the groups of events based on the average:
             j = 0 # "j" indicates the first element from which we'll start the next cluster
             for i in range(1, len(esl)):
-                if esl[i].getTimeDelta() > 2 * average:
+                if esl[i].getTimeDelta() > 1 * average:
                     newCluster = esl[j:i]
                     self.clustersList.append(newCluster)
                     if debug:
@@ -187,8 +187,8 @@ class ClusterHandler(object):
         if data.shape[1] == 0: #if the data is not a square matrix (i.e. there are no events)
             return
         else:
-            eps = 20000 # neighbor distance (in milliseconds) 
-            min_samples = 2
+            eps = 12000 # neighbor distance (in milliseconds) 
+            min_samples = 3 #CORE SAMPLE INCLUDED! i.e. if min_samples=2 THEN the minimun dimension of the cluster is 2
             db = DBSCAN(eps=eps, min_samples=min_samples, metric="precomputed").fit(data)
             core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
             core_samples_mask[db.core_sample_indices_] = True

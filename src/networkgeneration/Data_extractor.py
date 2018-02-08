@@ -124,7 +124,8 @@ class Data_extractor:
                 frequency_by_device[d] = round( occurrences[d] / float(total_events) , 2)
                 allDevices.add(d)
 
-        devicesColumnDict = colAnal.find_column_distribution(self.true_file_names[0], self.priority_selected, allDevices)
+        self.devicesColumnDict = colAnal.find_column_distribution(self.true_file_names[0], self.priority_selected, allDevices)
+        self.occurrences = occurrences
 
         if var_type == "occurrences" or var_type == "frequency":
             for d in frequency_by_device:
@@ -133,7 +134,7 @@ class Data_extractor:
         elif var_type == "variance_only" or var_type == "support_variance":
             for d in frequency_by_device:
                 tupl = (d, frequency_by_device[d], occurrences[d],
-                        devicesColumnDict[d].msAverage, devicesColumnDict[d].msStandDev)
+                        self.devicesColumnDict[d].msAverage, self.devicesColumnDict[d].msStandDev)
                 self.ranked_devices.append(tupl)
 
                 
@@ -271,4 +272,10 @@ class Data_extractor:
     def add_variable_names(self, names):
         for n in names:   
             self.variable_names.append(n)
+            
+    def get_columnAnalysis(self):
+        return self.devicesColumnDict
+    
+    def get_occurrences(self):
+        return self.occurrences
                 

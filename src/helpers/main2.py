@@ -10,8 +10,8 @@ from datetime import timedelta
 import numpy as np
 
 
-stringa = "B14-4ASD"
-print(stringa.encode('ascii', 'ignore').decode('ascii'))
+
+
 
 '''
 mydate = "2016-01-10 23:49:21.678"

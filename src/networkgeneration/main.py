@@ -73,8 +73,8 @@ def create_network(pnh, gh, log):
     
     # 7) DRAW THE NETWORK
     label = "double" # none, single, double
-    location_choice = True # True, False
-    info_choice = False 
+    location_choice = False # True, False
+    info_choice = True 
     variance_filter = False # True, False
     network_handler.draw_network(label, location_choice, info_choice, variance_filter, log)
     
@@ -136,5 +136,17 @@ def run_script(mode):
     
 if __name__ == "__main__":
     # stuff only to run when not called via 'import' here
+    # delete all file in output:
+    import os, shutil
+    folder = '../../output/'
+    for the_file in os.listdir(folder):
+        file_path = os.path.join(folder, the_file)
+        try:
+            if os.path.isfile(file_path):
+                os.unlink(file_path)
+        #elif os.path.isdir(file_path): shutil.rmtree(file_path) #per pulire anche le sottocartelle
+        except Exception as e:
+            print(e)
+    # run the network creation:
     run_script(mode)
 

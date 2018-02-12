@@ -7,12 +7,7 @@ Running this module will start the processing of one - or all - the file/priorit
 You can change some the parameters in this module in order to see how the output varies.
 Parameters that can be changed usually have a comment that shows which values can be selected.
 '''
-'''
-from networkgeneration.Network_handler import Network_handler
-from networkgeneration.Pre_network_handler import Pre_network_handler
-from helpers.DataError import DataError
-from networkgeneration.General_handler import General_handler
-'''
+
 from General_handler import General_handler
 from DataError import DataError
 from Network_handler import Network_handler

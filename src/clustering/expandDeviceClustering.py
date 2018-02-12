@@ -38,11 +38,11 @@ def compareChosenDevicesByAlarmPriority(cursor):
             for e in events:
                 query = ("select * from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
                 cursor.execute(query, (e[0], e[0], config.CORRELATION_MINUTES))
-                clusterHandler = ClusterHandler(e)
+                clusterHandler = ClusterHandler(e) #Initialize the ClusterHandler with the reference event
                 eventsAfter = cursor.fetchall()
                 
                 for ea in eventsAfter:
-                    if ea != e:
+                    if ea != e: #Ensures the reference event is not considered as a clustering point
                         clusterHandler.addEvent(ea)
                 
                 try:
@@ -52,9 +52,11 @@ def compareChosenDevicesByAlarmPriority(cursor):
                     #timeDelta = timedelta(seconds = 5)
                     #clusterHandler.findClustersStaticDistance(fw2, timeDelta, debug=True)
                     # 3) DBSCAN
-                    clusterHandler.findClustersDBSCAN(fw2, debug=True)
+                    #clusterHandler.findClustersDBSCAN(fw2, debug=True)
                     # 4) MEAN SHIFT
                     #clusterHandler.findClustersMeanShift(fw2, debug=True)
+                    # 5) AVERAGE + STANDARD DEVIATION
+                    clusterHandler.findClustersAverageDeviation(fw2, debug = True)
                     
                 except DataError as e:
                     pass

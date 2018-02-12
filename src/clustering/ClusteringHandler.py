@@ -19,6 +19,7 @@ from sklearn import metrics
 from sklearn.preprocessing import StandardScaler
 from comtypes.npsupport import numpy
 from sklearn.cluster import MeanShift, estimate_bandwidth
+import math
 
 markedEvents = [] # a global list that contains all the events that have been already processed (i.e. "marked")
 
@@ -32,14 +33,16 @@ class EventState(object):
         self.timestamp = datetime.strptime(event[0], '%Y-%m-%d %H:%M:%S.%f')
         self.device = event[4]
         if previous_event == None: #i.e. this is the case of the first event
-            self.timeDelta = None
+            self.timeDelta = None #time elapsed since PREVIOUS event
+            self.timeDelta_ms = None
         else:
             previousTimestamp = datetime.strptime(previous_event[0], '%Y-%m-%d %H:%M:%S.%f')
-            self.timeDelta = self.timestamp - previousTimestamp
-        timeElapsed = (self.timestamp - datetime.strptime(initTime, '%Y-%m-%d %H:%M:%S.%f'))
+            self.timeDelta = self.timestamp - previousTimestamp #time elapsed since PREVIOUS event
+            self.timeDelta_ms = self.timeDelta.total_seconds() * 1000 + self.timeDelta.microseconds / 1000
+        timeElapsed = (self.timestamp - datetime.strptime(initTime, '%Y-%m-%d %H:%M:%S.%f')) #time elapsed since REFERENCE event
         seconds = timeElapsed.total_seconds()
         milliseconds = timeElapsed.microseconds / 1000
-        self.millisecondsElapsed = seconds * 1000 + milliseconds #millseconds elapsed since starting event
+        self.millisecondsElapsed = seconds * 1000 + milliseconds #millseconds elapsed since REFERENCE event
         
     def getEvent(self):
         return self.rawEvent
@@ -135,6 +138,74 @@ class ClusterHandler(object):
                     fw.write_txt("CLUSTER:")
                     for s in newCluster:
                         fw.write_txt(str(s.getTimestamp()) + " - " + s.getDevice())
+                        
+    def findClustersAverageDeviation(self, fw, debug = False):
+        '''
+        Tries to find the clusters in the previously stored events using the "average deviation" technique,
+        i.e. it computes the average and the standard deviation of the temporal difference between each event and then
+        separates groups of events that have a temporal difference higher than the average + standard deviation
+        NOTA: questo metodo non guarda il distacco temporale tra l'evento di riferimento e il primo evento incontrato.
+        '''
+        if self.eventStateList == []:
+            raise DataError("No events in this sequence")
+        else:
+            if debug:
+                fw.write_txt("STARTING EVENT: " + self.startingEvent[0] + " - " + self.startingEvent[4], newline=True)
+            esl = self.eventStateList
+            if len(esl) == 1: # Single event in 5 minutes, i.e. no need to do clustering
+                if debug:
+                    fw.write_txt("Single event " + str(esl[0].getTimestamp()) + " - " + esl[0].getDevice())
+                self.clustersList.append([esl[0]])
+                return
+            # Now the real clustering starts.
+            # First, get all the temporal differences between consecutive events and compute SUM, AVERAGE and ST.DEV.
+
+            # SUM and AVERAGE:
+            timeSum = 0
+            for es in esl:
+                delta = es.timeDelta_ms
+                if delta != None: #delta is equal to None for the first event in 5 minutes
+                    timeSum += delta
+            average_ms = timeSum / (len(esl)-1) 
+
+            # STANDARD DEVIATION:
+            totalNumerator = 0 # SUM_i{(x_i - average)^2}
+            for es in esl:
+                delta = es.timeDelta_ms
+                if delta != None: #delta is equal to None for the first event in 5 minutes
+                    gap = delta - average_ms # (x_i - average)
+                    totalNumerator = gap * gap + totalNumerator
+            stDev_ms = math.sqrt(totalNumerator / (len(esl)-1)) #standard deviation in milliseconds
+            
+            # Now, divide the groups of events based on the average + standard deviation:
+            j = 0 # "j" indicates the first element from which we'll start the next cluster
+            for i in range(1, len(esl)):
+                if esl[i].timeDelta_ms > average_ms + stDev_ms:
+                    newCluster = esl[j:i]
+                    self.clustersList.append(newCluster)
+                    j = i
+            l = len(esl) # "l" = total number of events in this 5 minutes
+            
+            # Add the last cluster (if left):
+            if l <> j:
+                newCluster = esl[j:l]
+                self.clustersList.append(newCluster)
+            
+            # Print "debug" info in the txt file:    
+            if debug:
+                # Show average and standard deviation
+                fw.write_txt("AVERAGE = " + self.roundToStr(average_ms / 1000) + " seconds")
+                fw.write_txt("STANDARD DEVIATION = " + self.roundToStr(stDev_ms / 1000) + " seconds")
+                fw.write_txt("AVERAGE + ST.DEV. = " + self.roundToStr((average_ms + stDev_ms) / 1000) + " seconds")
+                # Show the clusters 
+                for cluster in self.clustersList:
+                    fw.write_txt("CLUSTER:")
+                    for s in cluster:
+                        addition = ""
+                        if s.timeDelta_ms != None:
+                            addition = " (+" + self.roundToStr(s.timeDelta_ms / 1000) + "s)"
+                        fw.write_txt(str(s.getTimestamp()) + " - " + s.getDevice() + addition)
+                        
                         
     def findClustersStaticDistance(self, fw, timeDelta, debug = False):
         '''
@@ -261,6 +332,10 @@ class ClusterHandler(object):
             sampleLine = [event.getMilliSecondsElapsed()]
             featureArray.append(sampleLine)
         return np.array(featureArray)
+    
+    def roundToStr(self, x):
+        ''' Rounds to 2 significant digits the passed number. Return a string of the number '''
+        return str(round(x,2))
     
     def getClusters(self):
         '''

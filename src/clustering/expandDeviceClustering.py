@@ -54,9 +54,9 @@ def compareChosenDevicesByAlarmPriority(cursor):
                     # 3) DBSCAN
                     #clusterHandler.findClustersDBSCAN(fw2, debug=True)
                     # 4) MEAN SHIFT
-                    #clusterHandler.findClustersMeanShift(fw2, debug=True)
+                    clusterHandler.findClustersMeanShift(fw2, debug=True)
                     # 5) AVERAGE + STANDARD DEVIATION
-                    clusterHandler.findClustersAverageDeviation(fw2, debug = True)
+                    #clusterHandler.findClustersAverageDeviation(fw2, debug = True)
                     
                 except DataError as e:
                     pass

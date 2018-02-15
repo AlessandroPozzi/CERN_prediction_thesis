@@ -291,11 +291,33 @@ class ClusterHandler(object):
                     previousLabel = labels[i]
     
     def findClustersMeanShift(self, fw, debug=False):
+        '''
+        This method finds clusters in the data by using the Mean Shift clustering technique.
+        --- Notes ---
+        The bandwidth of the gaussian kernels used by this method is computed using sklearn's utility
+        function estimate_bandwidth. Estimate_bandwidth finds the bandwidth value with the following steps:
+        1) Finds the number of neighbors k to be used in a K-NN algorithm as (quantile * numberOfSamples)
+        2) Applies the K-NN and finds the distance of each point from its k neighbors
+        3) Finds the max of these distances for each point and sums the them
+        4) The summed (max) distances are added to the bandwidth (which starts from zero). Steps 2,3,4 are done 
+        for each batch of 500 samples.
+        Unfortunately our data set may have to cluster a very low number of data points. Because of this, we may
+        have some issues.
+        - Since the quantile is (by default) 0.3, doing (quantile * numberOfsamples) may result in a value equal
+          to zero. 
+        - If the points are all close to each other, the distance from their k-NN neighbor may be zero, and 
+          therefore even the bandwidth may be zero.
+        In this cases, we have decided to apply the clustering with average deviation instead.
+        '''
         featureArray = self.buildFeatureArray()
         nsamples = featureArray.shape[0]
-        if nsamples <= 1:
+        if nsamples <= 3: #with quantile=0.3 (by default)
+            self.findClustersAverageDeviation(fw, debug)
             return
         bandwidth = estimate_bandwidth(featureArray, n_samples=nsamples)
+        if bandwidth == 0:
+            self.findClustersAverageDeviation(fw, debug)
+            return
         ms = MeanShift(bandwidth=bandwidth, bin_seeding=True)
         ms.fit(featureArray)
         labels = ms.labels_
@@ -308,10 +330,28 @@ class ClusterHandler(object):
             fw.write_txt('Estimated number of clusters: %d' % n_clusters_)
             for i in range(0, len(self.eventStateList)):
                 events = self.eventStateList
-                fw.write_txt(str(events[i].getTimestamp()) + " - " + events[i].getDevice() + " --> " + str(labels[i]))
+                addition = ""
+                if events[i].timeDelta_ms != None:
+                    addition = " (+" + self.roundToStr(events[i].timeDelta_ms / 1000) + "s)"
+                fw.write_txt(str(events[i].getTimestamp()) + " - " + events[i].getDevice() + " --> " + str(labels[i]) + addition)
+                
             fw.write_txt('Labelling of clusters: ' + str(labels))
+            
+        #Saving the clusters in the list:
+        cluster = []
+        cluster.append(self.eventStateList[0])
+        previousLabel = labels[0]
+        for i in range(1, len(self.eventStateList)):
+            if labels[i] == previousLabel:
+                #the event is in the same cluster
+                cluster.append(self.eventStateList[i])
+            else:
+                #the event is in another cluster
+                self.clustersList.append(cluster)
+                cluster = []
+                cluster.append(self.eventStateList[i])
+                previousLabel = labels[i]
         
-    
     def buildDistanceMatrix(self):
         # Build the matrix of distances between events:
         matrix = []
@@ -328,7 +368,8 @@ class ClusterHandler(object):
     def buildFeatureArray(self):
         # build an array with shape=[n_samples, n_features]. In this case we have only 1 feature (temporal distance)
         featureArray = [] # a list for each sample, containing the value of the only feature we have
-        for event in self.eventStateList:
+        for i in range(0, len(self.eventStateList)):
+            event = self.eventStateList[i]
             sampleLine = [event.getMilliSecondsElapsed()]
             featureArray.append(sampleLine)
         return np.array(featureArray)

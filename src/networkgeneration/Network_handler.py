@@ -10,12 +10,6 @@ from pgmpy.estimators import ConstraintBasedEstimator
 from pgmpy.inference import VariableElimination
 from pgmpy.estimators.ExhaustiveSearch import ExhaustiveSearch
 from pgmpy.models import MarkovModel
-'''
-from networkgeneration.Data_extractor import Data_extractor
-from helpers.DataError import DataError
-from helpers.File_writer import File_writer
-from networkgeneration.Log_extractor import Log_extractor
-'''
 from Log_extractor import Log_extractor
 from DataError import DataError
 from File_writer import File_writer
@@ -39,9 +33,11 @@ class Network_handler:
         self.best_model = BayesianModel()
         self.training_instances = ""
         self.device_considered = pnh.get_device()
+        self.device_considered_realName = pnh.device_considered_realName
         self.priority_considered = pnh.get_priority()
         self.markov = MarkovModel()
         self.general_handler = gh
+        self.devicesColumnDict = extractor.devicesColumnDict
         self.variables_names = extractor.get_variable_names()
         self.rankedDevices = extractor.get_ranked_devices()
         self.data = pnh.get_dataframe()
@@ -155,6 +151,7 @@ class Network_handler:
             return
         bn_graph = gv.Digraph(format = "png")
         devices = self.best_model.nodes()
+        self.edgeLabels = []
         
         # Create subgraph for the locations
         if location_choice:
@@ -243,11 +240,15 @@ class Network_handler:
                 value_inv = phi_query[edge[0]].values[1]
                 value_inv = round(value_inv, 2)
                 label = str(value) + "|" + str(value_inv)
+                
+            # Save a list of tuples with edge-label data (will be used in post-processing):
+            self.edgeLabels.append((edge[0], edge[1], value, value_inv))
             
             if value >= 0.75:
                 bn_graph.edge(edge[0], edge[1], color = "red", label = label)
             else:
                 bn_graph.edge(edge[0], edge[1], color = "black", label = label)
+                
         
         # Save the .png graph
         if self.device_considered=="CUSTOM":
@@ -275,8 +276,8 @@ class Network_handler:
             i = 1
             for dr in self.rankedDevices:
                 self.file_writer.write_txt(dr[0] + "             \t" + str(dr[1]) + 
-                                  "\t" + str(dr[2]) + "\t" + str(dr[3]/1000) + 
-                                  "            \t" + str(dr[4]/1000))
+                                  "\t" + str(dr[2]) + "\t" + str(dr[3]) + 
+                                  "            \t" + str(dr[4]))
                 i = i + 1
                 if i == 30:
                     break                    
@@ -386,7 +387,7 @@ class Network_handler:
         '''
         Returns a dictionary with the location as key and the assigned colour as value (WORKS WITH MAX 10 DIFFERENT LOCATIONS)
         '''
-        system_color = ['Blue', 'Green', 'Red', 'Purple', 'Yellow', 'Red', 'Grey', 'Light Red', 'Light Blue', 'Light Green']
+        system_color = ['Blue', 'Green', 'Red', 'Purple', 'Yellow', 'Red', 'Grey', 'Aqua', 'Light Red', 'Light Blue', 'Light Green']
         location_color = dict() # key = location; value = color
         for dev, loc in device_location.items():
             if loc not in location_color:

@@ -3,6 +3,7 @@ from File_writer import File_writer
 from datetime import datetime
 from datetime import timedelta
 import math
+import config
 
 class ColumnStats(object):
     ''' Deals with columns statistics of 1 device '''
@@ -108,7 +109,7 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_filtering, cu
         
         allSeenEvents.append((e[0], e[1]))
         query = ("select Device, Time, State, Tag, Description from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
-        cursor.execute(query, (e[1], e[1], 10))
+        cursor.execute(query, (e[1], e[1], config.CORRELATION_MINUTES))
         eventsAfter = cursor.fetchall()
         
         if (e[0], e[1]) not in allSeenEvents:
@@ -145,10 +146,13 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_filtering, cu
         devicesDict[k].writeTemporalPosition(fw)
         #devicesDict[k].writeDuplicates(fw)
         
-        
     return devicesDict
 
 def find_column_distribution(fileName, priority, networkDevices):
+    ''' 
+    Finds average and standard deviation (in milliseconds) of the "networkDevices" passed as parameter,
+    w.r.t. to the given fileName and priority.
+    '''
     cnx = mysql.connector.connect(host='127.0.0.1', user='root', password='password', database='cern')
     cursor = cnx.cursor()
     devicesDict = compareChosenDevicesByAlarmPriority(fileName, priority, networkDevices, cursor)

@@ -10,7 +10,7 @@ from datetime import timedelta
 import numpy as np
 
 
-
+print(str(float(72/142)))
 
 
 '''

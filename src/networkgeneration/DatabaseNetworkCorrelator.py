@@ -83,14 +83,25 @@ class DatabaseNetworkCorrelator(object):
             tpl = (e[0], e[0], config.CORRELATION_MINUTES) + tuple(devices)
             cursor.execute(query, tpl)
             eventsAfter = cursor.fetchall()
+            uniqueness = []
             # Now we count a device occurrence without duplicating events 
             for ea in eventsAfter:
                 if ea not in allSeenEvents: #each event will be considered exactly once
                     allSeenEvents.append(ea)
-                    if ea[0] not in self.noDupItemsetOccurrences: #key already present
-                        self.noDupItemsetOccurrences[ea[0]] = 1
+                    if config.CORRELATION_UNIQUENESS:
+                        if ea[0] not in uniqueness:
+                            uniqueness.append(ea[0])
+                            if ea[0] not in self.noDupItemsetOccurrences: #key already present
+                                self.noDupItemsetOccurrences[ea[0]] = 1
+                            else:
+                                self.noDupItemsetOccurrences[ea[0]] = self.noDupItemsetOccurrences[ea[0]] + 1
                     else:
-                        self.noDupItemsetOccurrences[ea[0]] = self.noDupItemsetOccurrences[ea[0]] + 1
+                        if ea[0] not in self.noDupItemsetOccurrences: #key already present
+                            self.noDupItemsetOccurrences[ea[0]] = 1
+                        else:
+                            self.noDupItemsetOccurrences[ea[0]] = self.noDupItemsetOccurrences[ea[0]] + 1
+                        
+
         # Compute the lift:
         lift = dict()
         for d in devices:

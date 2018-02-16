@@ -6,6 +6,7 @@ Created on 14 feb 2018
 import mysql.connector
 from File_writer import File_writer
 import config
+import columnAnalyzer as colAnal
 
 class DatabaseNetworkCorrelator(object):
         
@@ -24,10 +25,10 @@ class DatabaseNetworkCorrelator(object):
         self.log = log
         self.devicesColumnDict = nh.devicesColumnDict #key=device, value=an object of the class ColumnStats in the columnAnalyzer
         self.referenceDevice = nh.device_considered_realName
-        self.rankedDevices = nh.rankedDevices #tuple (device, occurrences, frequency, average, stand.dev.)
+        self.rankedDevices = nh.rankedDevices #tuple (device, occurrences, frequency, average, stand.dev.) or (device, occurrences, frequency, "lift:", lift)
         self.priority = nh.priority_considered
         self.devices = nh.best_model.nodes() #the nodes of the network (already created)
-        self.itemsetOccurrences = nh.occurrences #it may include duplicates (depeds by the itemset generation method)
+        self.itemsetOccurrences = nh.occurrences #it may include duplicates (depends by the itemset generation method)
         self.noDupItemsetOccurrences = dict() #occurrences in the 5 min itemsets without duplicates
         self.fw = File_writer(self.referenceDevice, self.priority, "postProcessingAnalysis")
         self.fw.create_txt("../../output/postProcessingAnalysis/")
@@ -108,7 +109,7 @@ class DatabaseNetworkCorrelator(object):
             lift[d] = round(self.noDupItemsetOccurrences[d] / float(self.occurrencesDB[d]), 2) * 100
                  
         #Save the data in the txt file:
-        self.fw.write_txt("Analysis of the occurrences of the devices: " + str(devices))
+        self.fw.write_txt("Analysis of the occurrences of the devices: " + str(devices), True)
         self.fw.write_txt("DEVICE | PARTIAL | TOTAL | LIFT")
         rankings = []
         for d in devices:
@@ -142,9 +143,24 @@ class DatabaseNetworkCorrelator(object):
     
     def checkGeneralCorrelation(self):
         ''' Checks if the devices in the network are correlated (i.e. appear together) also in the rest of the DB '''
+        # First, we must find the set of devices that are correlated by an high single (or double) activation
+        self.fw.write_txt("GENERAL CORRELATIONS:", True)
+        self.fw.write_txt("Node1 --> label1 | label2 --> Node2: AVG & ST.DEV. of Node2 w.r.t. Node1 (reference events)")
         for d in self.devices:
             correlationSet = set()
-                
+            for el in self.edgeLabels:
+                if (el[0]==d) and (el[2] >= 0.70):
+                    correlationSet.add(el[0])
+                    correlationSet.add(el[1])
+                    # Check if this correlation also exists in general in the DB:
+                    if len(correlationSet) != 0:
+                        devicesDict = colAnal.find_column_distribution(el[0], ["L0", "L1", "L2", "L3"], el[1])
+                        # SHOW CORRELATIONS IN TXT
+                        self.fw.write_txt(el[0] + "--> " + str(el[2]) + "|" + str(el[3]) + " --> " + el[1] + ": " + 
+                                            str(round(devicesDict[el[1]].msAverage,2)) + " " + 
+                                            str(round(devicesDict[el[1]].msStandDev,2)))
+                        
+            
         
         
         

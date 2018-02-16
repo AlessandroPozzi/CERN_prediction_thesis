@@ -32,7 +32,7 @@ def preprocess_network(select_priority, file_selection, gh, log):
     pre_network_handler.process_files(select_priority, file_selection, file_suffix, log)
     
     # 2) SELECT VARIABLES
-    var_type = "lift" #occurrences, frequency, variance_only, support_variance, lift
+    var_type = "frequency" #occurrences, frequency, variance_only, support_variance, lift
     support = 0.4
     MIN = 4
     MAX = 10
@@ -89,7 +89,10 @@ def post_processing(nh, gh, log):
     dnc = DatabaseNetworkCorrelator()
     dnc.initAsPostProcessor(nh, gh, log)
     
-    # 9) TOTAL OCCURRENCES ANALYSIS
+    # 9) CHECK GENERAL CORRELATIONS
+    dnc.checkGeneralCorrelation()
+    
+    # 10) TOTAL OCCURRENCES ANALYSIS
     dnc.totalOccurrencesNetworkAnalysis()
     
     

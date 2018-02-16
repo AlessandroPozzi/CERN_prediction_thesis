@@ -7,11 +7,13 @@ import config
 
 class ColumnStats(object):
     ''' Deals with columns statistics of 1 device '''
-    def __init__(self):
+    def __init__(self, write, fw):
         self.statesDict = dict() #key = state, value = occurrences
         self.tagsDict = dict() 
         self.descriptionDict = dict()
         self.duplicates = 0
+        self.fw = fw
+        self.write = write
         self.deltaTimestamps = [] #list of temporal differences between the events of this device and the reference device
         self.msAverage = 99999999999999999
         self.msStandDev = 99999999999999999
@@ -46,29 +48,33 @@ class ColumnStats(object):
     def addDuplicate(self):
         self.duplicates += 1
         
-    def writeState(self, fw):
+    def writeState(self):
         for k in self.statesDict:
             result = str(self.statesDict[k]) + " - [  State   ] " + k
             result = result.encode('ascii', 'ignore').decode('ascii')
-            fw.write_txt(result)
+            if self.write:
+                self.fw.write_txt(result)
             
-    def writeTag(self, fw):
+    def writeTag(self):
         for k in self.tagsDict:
             result = str(self.tagsDict[k]) + " - [   Tag    ] " + k
             result = result.encode('ascii', 'ignore').decode('ascii')
-            fw.write_txt(result)
+            if self.write:
+                self.fw.write_txt(result)
             
-    def writeDescr(self, fw):
+    def writeDescr(self):
         for k in self.descriptionDict:
             result = str(self.descriptionDict[k]) + " - [Description] " + k
             result = result.encode('ascii', 'ignore').decode('ascii')
-            fw.write_txt(result)
+            if self.write:
+                self.fw.write_txt(result)
         
-    def writeDuplicates(self, fw):
+    def writeDuplicates(self):
         result = "Numero di dati falsati dalla doppia query (duplicati): " + str(self.duplicates)
-        fw.write_txt(result)
+        if self.write:
+            self.fw.write_txt(result)
         
-    def writeTemporalPosition(self, fw):
+    def writeTemporalPosition(self):
         if len(self.deltaTimestamps) <= 1:
             return #no reason to compute average and variance
         tsum = timedelta()
@@ -84,15 +90,17 @@ class ColumnStats(object):
         variancems = numerator / (len(self.deltaTimestamps) - 1) #variance in milliseconds
         standDev = timedelta(milliseconds = math.sqrt(variancems)) #standard deviation as a timedelta
         self.msStandDev = math.sqrt(variancems) #standard deviation in milliseconds
-        resultAvg = "AVERAGE appearance after: " + str(average)
-        resultVar = "STANDARD DEVIATION of appearances: " + str(standDev)
-        fw.write_txt(resultAvg)
-        fw.write_txt(resultVar)
+        if self.write:
+            resultAvg = "AVERAGE appearance after: " + str(average)
+            resultVar = "STANDARD DEVIATION of appearances: " + str(standDev)
+            self.fw.write_txt(resultAvg)
+            self.fw.write_txt(resultVar)
 
 def compareChosenDevicesByAlarmPriority(fileName, priority, device_filtering, cursor, write):
           
     d = fileName
     l = priority
+    fw = None
     if write:
         fw = File_writer(d, priority, "column", "analysis")
         fw.create_txt("../../output/columnAnalysis/")
@@ -112,7 +120,7 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_filtering, cu
     
     for e in events:
         if e[0] not in devicesDict:
-            devicesDict[e[0]] = ColumnStats()
+            devicesDict[e[0]] = ColumnStats(write, fw)
         
         allSeenEvents.append((e[0], e[1]))
         query = ("select Device, Time, State, Tag, Description from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
@@ -131,7 +139,7 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_filtering, cu
             
             if ea[0] in device_filtering or ea[0] == d:
                 if ea[0] not in devicesDict:
-                    devicesDict[ea[0]] = ColumnStats()
+                    devicesDict[ea[0]] = ColumnStats(write, fw)
                     
                 if (ea[0], ea[1]) not in allSeenEvents:
                     allSeenEvents.append((ea[0], ea[1]))
@@ -142,15 +150,15 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_filtering, cu
                 #else:
                 #    devicesDict[ea[0]].addDuplicate()
                     
-    # PUT EVERYTHING IN THE TXT FILE
-    if write:
+    # COMPUTE OCCURRENCES, AVERAGE...
         for k in devicesDict:
-            fw.write_txt("DEVICE " + k + ":", newline=True)
-            devicesDict[k].writeState(fw)
-            devicesDict[k].writeTag(fw)
-            devicesDict[k].writeDescr(fw)
-            devicesDict[k].writeTemporalPosition(fw)
-            #devicesDict[k].writeDuplicates(fw)
+            if write:
+                fw.write_txt("DEVICE " + k + ":", newline=True)
+            devicesDict[k].writeState()
+            devicesDict[k].writeTag()
+            devicesDict[k].writeDescr()
+            devicesDict[k].writeTemporalPosition()
+            #devicesDict[k].writeDuplicates()
         
     return devicesDict
 

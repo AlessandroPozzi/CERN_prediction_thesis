@@ -7,7 +7,6 @@ from helpers.DataError import DataError
 from File_writer import File_writer
 from ClusteringHandler import ClusterHandler
 from DataError import DataError
-from datetime import timedelta
 import config
 
 def compareChosenDevicesByAlarmPriority(cursor):

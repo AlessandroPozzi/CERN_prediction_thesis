@@ -6,9 +6,7 @@ Created on 15 nov 2017
 import re
 import pandas as pd
 import columnAnalyzer as colAnal
-from datetime import datetime
-from datetime import timedelta
-from sympy.core.compatibility import ordered
+from DatabaseNetworkCorrelator import DatabaseNetworkCorrelator
 
 class Data_extractor:
     '''
@@ -109,7 +107,7 @@ class Data_extractor:
         '''
         self.ranked_devices = []
         frequency_by_device = dict() # key = device, value = sum of frequencies of device
-        allDevices = set()
+        allDevices = []
 
         for key in self.events_by_file:
             occurrences = dict() #key = device; value = number of occurrences in SINGLE FILE
@@ -122,7 +120,7 @@ class Data_extractor:
                         occurrences[d] = occurrences[d] + 1
             for d in occurrences:
                 frequency_by_device[d] = round( occurrences[d] / float(total_events) , 2)
-                allDevices.add(d)
+                allDevices.append(d)
 
         self.devicesColumnDict = colAnal.find_column_distribution(self.true_file_names[0], self.priority_selected, allDevices)
         self.occurrences = occurrences
@@ -134,11 +132,17 @@ class Data_extractor:
         elif var_type == "variance_only" or var_type == "support_variance":
             for d in frequency_by_device:
                 tupl = (d, frequency_by_device[d], occurrences[d],
-                        self.devicesColumnDict[d].msAverage, self.devicesColumnDict[d].msStandDev)
+                        self.devicesColumnDict[d].msAverage / 1000, self.devicesColumnDict[d].msStandDev / 1000)
                 self.ranked_devices.append(tupl)
-
+        elif var_type == "lift":
+            dnc = DatabaseNetworkCorrelator()
+            dnc.initAsPreProcessor(self.true_file_names[0], self.priority_selected, log = True)
+            lift = dnc.totalOccurrencesCandidatesAnalysis(allDevices)
+            for d in lift:
+                tupl = (d, frequency_by_device[d], occurrences[d],
+                        "lift:", lift[d])
+                self.ranked_devices.append(tupl)
                 
-            
         
     def select_candidates(self, var_type, support, MIN, MAX):
         '''
@@ -157,17 +161,19 @@ class Data_extractor:
         elif var_type == "frequency" or var_type == "support_variance":
             self.ranked_devices.sort(key = lambda tup: tup[1], reverse=True) #order by support
         elif var_type == "variance_only":
-            self.ranked_devices.sort(key = lambda tup: tup[4]) #order by variance
+            self.ranked_devices.sort(key = lambda tup: tup[4]) #order by variance (actually, standard deviation) O
+        elif var_type == "lift":
+            self.ranked_devices.sort(key = lambda tup: tup[4], reverse=True) #order by lift
             
         ordered_ranking = [i for i in self.ranked_devices if i[0] != self.true_file_names[0]] # helper list with no file device in it
-        if var_type == "variance_only":
+        if var_type == "variance_only" or var_type == "lift":
             ordered_ranking = [tup for tup in ordered_ranking if tup[2] > 5] #remove devices with less than n occurrences
 
         for i in range(len(ordered_ranking)):
             NUM = len(self.variable_names)
             device = ordered_ranking[i][0]
             frequency = ordered_ranking[i][1]
-            variance = ordered_ranking[i][4]
+            stDev = ordered_ranking[i][4] * 1000
 
             if NUM < MIN:
                 self.variable_names.append(device)
@@ -178,14 +184,17 @@ class Data_extractor:
                 elif var_type == "occurrences":
                     self.variable_names.append(device)
                 elif var_type =="variance_only":
-                    if variance < 1000 * 30:
+                    if stDev < 1000 * 30:
                         self.variable_names.append(device)
                 elif var_type == "support_variance":
                     ordered_ranking = [x for x in ordered_ranking if x[0] not in self.variable_names] #remove devices already added
                     ordered_ranking.sort(key = lambda tup: tup[4]) #order by variance
                     for j in range(NUM, MAX):
                         self.variable_names.append(ordered_ranking[j - NUM][0])
-                    break    
+                    break
+                elif var_type == "lift":
+                    if (stDev / 100) >= 0.5: #stDev here is actually the lift in %
+                        self.variable_names.append(device)
             else:
                 break
             

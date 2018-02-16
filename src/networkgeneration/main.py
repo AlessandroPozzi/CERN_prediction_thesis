@@ -12,6 +12,7 @@ from General_handler import General_handler
 from DataError import DataError
 from Network_handler import Network_handler
 from Pre_network_handler import Pre_network_handler
+from DatabaseNetworkCorrelator import DatabaseNetworkCorrelator
 import config
 
 priority = ('L0', 'L1', 'L2', 'L3') # Hard coded priority, do NOT change
@@ -31,7 +32,7 @@ def preprocess_network(select_priority, file_selection, gh, log):
     pre_network_handler.process_files(select_priority, file_selection, file_suffix, log)
     
     # 2) SELECT VARIABLES
-    var_type = "frequency" #occurrences, frequency, variance_only, support_variance
+    var_type = "frequency" #occurrences, frequency, variance_only, support_variance, lift
     support = 0.4
     MIN = 4
     MAX = 10
@@ -73,7 +74,7 @@ def create_network(pnh, gh, log):
     variance_filter = False # True, False
     network_handler.draw_network(label, location_choice, info_choice, variance_filter, log)
     
-    # 8 ) DATA INFO
+    # 8) DATA INFO
     selection = [1, 2] #Put in the list what you want to show
     # 1: Device frequency and occurrences
     # 2: Edges of the network
@@ -81,7 +82,19 @@ def create_network(pnh, gh, log):
     # 4: Inference network
     network_handler.data_info(selection, log)
     
-
+    return network_handler
+    
+def post_processing(nh, gh, log):
+    
+    dnc = DatabaseNetworkCorrelator()
+    dnc.initAsPostProcessor(nh, gh, log)
+    
+    # 9) CHECK GENERAL CORRELATIONS
+    dnc.checkGeneralCorrelation()
+    
+    # 10) TOTAL OCCURRENCES ANALYSIS
+    dnc.totalOccurrencesNetworkAnalysis()
+    
     
 ''' The main script to create the BNs '''
 def run_script(mode):
@@ -93,7 +106,8 @@ def run_script(mode):
             print("Location search started...")
             gh.getLocations() # LOCATION SEARCH
             print("Location search completed.")
-            create_network(pnh, gh, log = False)
+            nh = create_network(pnh, gh, log = False)
+            post_processing(nh, gh, log = False)
         except DataError as e:
             print(e.args[0])
     elif mode == "all":
@@ -114,13 +128,14 @@ def run_script(mode):
             i = i + 1
         print("Location search started...")
         gh.getLocations() # LOCATION SEARCH
-        print("Location search completed.") 
+        print("Location search completed.")
         
         for pnh in pnhs:
             print("Network creation for file " + pnh.get_device() + 
                   " and priority " + pnh.get_priority() + " started...")
             try:
-                create_network(pnh, gh, log = False)
+                nh = create_network(pnh, gh, log = False)
+                post_processing(nh, gh, log = False)
             except DataError as e:
                 print(e.args[0])
             else:
@@ -131,7 +146,7 @@ def run_script(mode):
     
 if __name__ == "__main__":
     # stuff only to run when not called via 'import' here
-    # delete all file in output:
+    # Delete all file in output:
     import os, shutil
     folder = '../../output/'
     for the_file in os.listdir(folder):

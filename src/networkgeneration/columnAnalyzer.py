@@ -3,6 +3,7 @@ from File_writer import File_writer
 from datetime import datetime
 from datetime import timedelta
 import math
+import config
 
 class ColumnStats(object):
     ''' Deals with columns statistics of 1 device '''
@@ -88,16 +89,23 @@ class ColumnStats(object):
         fw.write_txt(resultAvg)
         fw.write_txt(resultVar)
 
-def compareChosenDevicesByAlarmPriority(fileName, priority, device_filtering, cursor):
+def compareChosenDevicesByAlarmPriority(fileName, priority, device_filtering, cursor, write):
           
     d = fileName
     l = priority
-    fw = File_writer(d, priority, "column", "analysis")
-    fw.create_txt("../../output/columnAnalysis/")
-    fw.write_txt('\nDEVICE '+ str(d) + ': ')
-    fw.write_txt('\n\tPRIORITY ' + str(l) + ':')
-    query = ("select Device, Time, State, Tag, Description from electric where device=%s and livellopriorita=%s and action='Alarm CAME'")
-    cursor.execute(query, (d,l))
+    if write:
+        fw = File_writer(d, priority, "column", "analysis")
+        fw.create_txt("../../output/columnAnalysis/")
+        fw.write_txt('\nDEVICE '+ str(d) + ': ')
+        fw.write_txt('\n\tPRIORITY ' + str(map("_".join(), l)) + ':')
+    if len(priority)==1:
+        priorCond = "and livellopriorita=%s"
+        query = ("select Device, Time, State, Tag, Description from electric where device=%s " + priorCond + " and action='Alarm CAME' order by time")
+        cursor.execute(query, (d,l[0]))
+    else:
+        query = ("select Device, Time, State, Tag, Description from electric where device=%s and action='Alarm CAME' order by time")
+        cursor.execute(query, (d,))
+   
     events = cursor.fetchall()
     allSeenEvents = []
     devicesDict = dict() # key = device, value = an object of the class "columnStats"
@@ -108,7 +116,7 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_filtering, cu
         
         allSeenEvents.append((e[0], e[1]))
         query = ("select Device, Time, State, Tag, Description from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
-        cursor.execute(query, (e[1], e[1], 10))
+        cursor.execute(query, (e[1], e[1], config.CORRELATION_MINUTES))
         eventsAfter = cursor.fetchall()
         
         if (e[0], e[1]) not in allSeenEvents:
@@ -134,22 +142,27 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_filtering, cu
                 #else:
                 #    devicesDict[ea[0]].addDuplicate()
                     
-                
-    
     # PUT EVERYTHING IN THE TXT FILE
-    for k in devicesDict:
-        fw.write_txt("DEVICE " + k + ":", newline=True)
-        devicesDict[k].writeState(fw)
-        devicesDict[k].writeTag(fw)
-        devicesDict[k].writeDescr(fw)
-        devicesDict[k].writeTemporalPosition(fw)
-        #devicesDict[k].writeDuplicates(fw)
-        
+    if write:
+        for k in devicesDict:
+            fw.write_txt("DEVICE " + k + ":", newline=True)
+            devicesDict[k].writeState(fw)
+            devicesDict[k].writeTag(fw)
+            devicesDict[k].writeDescr(fw)
+            devicesDict[k].writeTemporalPosition(fw)
+            #devicesDict[k].writeDuplicates(fw)
         
     return devicesDict
 
-def find_column_distribution(fileName, priority, networkDevices):
+def find_column_distribution(fileName, priority, networkDevices, write = False):
+    ''' 
+    Finds average and standard deviation (in milliseconds) of the "networkDevices" passed as parameter,
+    w.r.t. to the given fileName and priority.
+    write = True if you want to write in the txt file
+    '''
     cnx = mysql.connector.connect(host='127.0.0.1', user='root', password='password', database='cern')
     cursor = cnx.cursor()
-    devicesDict = compareChosenDevicesByAlarmPriority(fileName, priority, networkDevices, cursor)
+    if not isinstance(priority, list):
+        priority = [priority]
+    devicesDict = compareChosenDevicesByAlarmPriority(fileName, priority, networkDevices, cursor, write)
     return devicesDict

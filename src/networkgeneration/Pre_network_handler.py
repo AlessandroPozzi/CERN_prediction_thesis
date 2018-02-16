@@ -61,7 +61,7 @@ class Pre_network_handler(object):
         MIN: Minimum number of variables to take
         MAX: Maximum number of variables to take
         support   : Minimum support to consider the device in the final Bayesian Network
-        log       : "True" if you want to print debug information in the console    
+        log       : "True" if you want to print debug information in the console
         '''
         if self.extractor.nodata():
             raise DataError("No data in this file - priority")

@@ -151,14 +151,14 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_filtering, cu
                 #    devicesDict[ea[0]].addDuplicate()
                     
     # COMPUTE OCCURRENCES, AVERAGE...
-        for k in devicesDict:
-            if write:
-                fw.write_txt("DEVICE " + k + ":", newline=True)
-            devicesDict[k].writeState()
-            devicesDict[k].writeTag()
-            devicesDict[k].writeDescr()
-            devicesDict[k].writeTemporalPosition()
-            #devicesDict[k].writeDuplicates()
+    for k in devicesDict:
+        if write:
+            fw.write_txt("DEVICE " + k + ":", newline=True)
+        devicesDict[k].writeState()
+        devicesDict[k].writeTag()
+        devicesDict[k].writeDescr()
+        devicesDict[k].writeTemporalPosition()
+        #devicesDict[k].writeDuplicates()
         
     return devicesDict
 

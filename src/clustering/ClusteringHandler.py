@@ -280,7 +280,7 @@ class ClusterHandler(object):
             cluster.append(self.eventStateList[0])
             previousLabel = labels[0]
             for i in range(1, len(self.eventStateList)):
-                if labels[i] == previousLabel:
+                if labels[i] == previousLabel and labels[i] != -1:
                     #the event is in the same cluster
                     cluster.append(self.eventStateList[i])
                 else:

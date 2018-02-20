@@ -289,6 +289,8 @@ class ClusterHandler(object):
                     cluster = []
                     cluster.append(self.eventStateList[i])
                     previousLabel = labels[i]
+            if cluster != []:
+                cluster.append(self.eventStateList[i])
     
     def findClustersMeanShift(self, fw, debug=False):
         '''
@@ -336,21 +338,23 @@ class ClusterHandler(object):
                 fw.write_txt(str(events[i].getTimestamp()) + " - " + events[i].getDevice() + " --> " + str(labels[i]) + addition)
                 
             fw.write_txt('Labelling of clusters: ' + str(labels))
-            
-        #Saving the clusters in the list:
+
+        # Saving the clusters in the list:
         cluster = []
         cluster.append(self.eventStateList[0])
         previousLabel = labels[0]
         for i in range(1, len(self.eventStateList)):
-            if labels[i] == previousLabel:
-                #the event is in the same cluster
+            if labels[i] == previousLabel and labels[i] != -1:
+                # the event is in the same cluster
                 cluster.append(self.eventStateList[i])
             else:
-                #the event is in another cluster
+                # the event is in another cluster
                 self.clustersList.append(cluster)
                 cluster = []
                 cluster.append(self.eventStateList[i])
                 previousLabel = labels[i]
+        if cluster != []:
+            cluster.append(self.eventStateList[i])
         
     def buildDistanceMatrix(self):
         # Build the matrix of distances between events:

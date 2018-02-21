@@ -8,6 +8,10 @@ import graphviz as gv
 from datetime import datetime
 from datetime import timedelta
 import numpy as np
+from DatabaseNetworkCorrelator import DatabaseNetworkCorrelator as DNC
+
+dnc = DNC()
+dnc.findInterestingDevices()
 
 
 print(str(float(72/142)))

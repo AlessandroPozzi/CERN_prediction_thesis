@@ -14,14 +14,12 @@ from Network_handler import Network_handler
 from Pre_network_handler import Pre_network_handler
 from DatabaseNetworkCorrelator import DatabaseNetworkCorrelator
 import config
+import os
 
 priority = ('L0', 'L1', 'L2', 'L3') # Hard coded priority, do NOT change
-select_priority = 'L1' # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE"
-file_selection = 1  # 1 to 11 -->  ("EMC0019", "EHS60BE", "ES115H", "ESS184", "EXS48X", "EXS1062X", 
-                                #   'ESS406/E91', 'ESS407/E91', 'ESS520/E91', 'ESS11*84', "CUSTOM"]
-                    # use "CUSTOM" (file number 11) in mode="one" to generate a custom network from expandDevice2 (SET PRIORITY L0)
-mode = "all" #one, all  | "one" to do the single file-priority selected above; 
-                        # "all" to do all the possible files and priorities
+select_priority = config.selectPriority
+file_selection = config.file_selection
+mode = config.mode
 
 def preprocess_network(select_priority, file_selection, gh, log):
     
@@ -32,7 +30,7 @@ def preprocess_network(select_priority, file_selection, gh, log):
     pre_network_handler.process_files(select_priority, file_selection, file_suffix, log)
     
     # 2) SELECT VARIABLES
-    var_type = "variance_only" #occurrences, frequency, variance_only, support_variance, lift
+    var_type = "frequency" #occurrences, frequency, variance_only, support_variance, lift
     support = 0.4
     MIN = 4
     MAX = 10
@@ -90,7 +88,7 @@ def post_processing(nh, gh, log):
     dnc.initAsPostProcessor(nh, gh, log)
     
     # 9) CHECK GENERAL CORRELATIONS
-    #dnc.checkGeneralCorrelation()
+    dnc.checkGeneralCorrelation()
     
     # 10) TOTAL OCCURRENCES ANALYSIS
     dnc.totalOccurrencesNetworkAnalysis()
@@ -101,8 +99,12 @@ def run_script(mode):
     
     if mode == "one":
         try:
+            if config.unitePriorities:
+                newPriority = "L0" #everything is united in L0
+            else:
+                newPriority = config.selectPriority
             gh = General_handler()
-            pnh = preprocess_network(select_priority, file_selection, gh, log = True)
+            pnh = preprocess_network(newPriority, file_selection, gh, log = True)
             print("Location search started...")
             gh.getLocations() # LOCATION SEARCH
             print("Location search completed.")
@@ -115,7 +117,7 @@ def run_script(mode):
         gh = General_handler()
         pnhs = [] # LIST OF THE PRE-NETWORK HANDLERS
         i = 1
-        while i <= 6:
+        while i <= len(config.true_device_names):
             for p in priority:
                 print("File " + str(i) + " with priority " + p + ":")
                 try:
@@ -144,19 +146,22 @@ def run_script(mode):
         #gh.save_to_file()        
     print("RUN completed")
     
-if __name__ == "__main__":
-    # stuff only to run when not called via 'import' here
+def clearDirectory(folder):
     # Delete all file in output:
-    import os, shutil
-    folder = '../../output/'
     for the_file in os.listdir(folder):
         file_path = os.path.join(folder, the_file)
         try:
             if os.path.isfile(file_path):
                 os.unlink(file_path)
-        #elif os.path.isdir(file_path): shutil.rmtree(file_path) #per pulire anche le sottocartelle
         except Exception as e:
             print(e)
+    
+if __name__ == "__main__":
+    # stuff only to run when not called via 'import' here
+    clearDirectory("../../output/")
+    clearDirectory("../../output/columnAnalysis/")
+    clearDirectory("../../output/postProcessingAnalysis/")
+    clearDirectory("../../output/preProcessingAnalysis/")
     # run the network creation:
     run_script(mode)
 

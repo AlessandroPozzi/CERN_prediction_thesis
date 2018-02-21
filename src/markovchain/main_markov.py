@@ -22,7 +22,7 @@ select_priority = 'L1'  # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE"
 file_selection = 1  # 1 to 11 -->  ("EMC0019", "EHS60BE", "ES115H", "ESS184", "EXS48X", "EXS1062X",
 #   'ESS406/E91', 'ESS407/E91', 'ESS520/E91', 'ESS11*84', "CUSTOM"]
 # use "CUSTOM" (file number 11) in mode="one" to generate a custom network from expandDevice2 (SET PRIORITY L0)
-mode = "all"  # one, all  | "one" to do the single file-priority selected above;
+mode = "one"  # one, all  | "one" to do the single file-priority selected above;
 # "all" to do all the possible files and priorities
 
 def preprocess_network(select_priority, file_selection, gh, log):
@@ -54,7 +54,8 @@ def create_markov_chain(pnh, gh):
     # 5) DRAW THE NETWORK
     location_choice = False  # True, False
     info_choice = True  # True, False
-    markov_handler.draw_mc_model(location_choice, info_choice)
+    avg_var_edges = True # True, False
+    markov_handler.draw_mc_model(location_choice, info_choice, avg_var_edges)
 
 
 ''' The main script to create the BNs '''

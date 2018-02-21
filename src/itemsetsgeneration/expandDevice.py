@@ -15,18 +15,13 @@ id, LivelloPriorita
 21,              22
 '''
 import mysql.connector  # pip install mysql-connector-python
-#from helpers.File_writer import File_writer
 from File_writer import File_writer
 import re
 import config
 
 def compareChosenDevicesByAlarmPriority(cursor):
-    #chosenDevices = ['EHS60/BE', 'EXS4/8X', 'EMC001*9', 'EXS106/2X', 'ESS1*84',
-    #                 'ESS11/5H', 'ESS406/E91', 'ESS407/E91', 'ESS520/E91', 'ESS11*84']
-    chosenDevices = ['ECD1*62']
-    # our devices: ['EMC001*9', 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X']
-    #chosenDevices = ['EMC001*9', 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X']
-    levelsOfPriority = ['L0', 'L1', 'L2', 'L3']
+    chosenDevices = config.chosenDevices
+    levelsOfPriority = config.levelsOfPriority
 
     for d in chosenDevices:
         fw = File_writer(d, config.FILE_SUFFIX)
@@ -80,12 +75,16 @@ def compareChosenDevicesByAlarmPriority(cursor):
                 fw.write_txt('], ')
             fw.write_txt(']')
             
-            print("==>")
-            fw.write_txt('==>', newline = True) #KEEP THIS!
+            if config.unitePriorities: #put everything in the same "L0" priority
+                pass
+            else:
+                print("==>")
+                fw.write_txt('==>', newline = True) #KEEP THIS!
 
 def searchItemsets():
     cnx = mysql.connector.connect(host='127.0.0.1', user='root', password='password', database='cern')
     cursor = cnx.cursor()
     compareChosenDevicesByAlarmPriority(cursor)
 
-searchItemsets()
+if __name__ == "__main__":
+    searchItemsets()

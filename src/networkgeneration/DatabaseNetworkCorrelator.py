@@ -131,11 +131,16 @@ class DatabaseNetworkCorrelator(object):
         return occurrencesDB
     
 
-    def __relativeOccurrences(self, devices, refDevice = None, priorityCond = True):
+    def __relativeOccurrences(self, devices, refDevice = None, priorityCond = True, moreThanOnce = False):
         '''
         Find the real itemset occurrences (with no duplicates) of the devices after n (config.CORRELATION_MINUTES) minutes.
         Basically, it is how many times each given device (in devices list) was found n minutes (config.CORRELATION_MINUTES) 
         after the reference device.
+        Notes:
+        - If onlyOnce = True then each event AFTER is considered only once.
+        - If config.CORRELATION_UNIQUENESS is True each AFTER event is counted only once per reference event
+        - Tn order to compute correctly the "relevance" (i.e. #eventsOfD2afterRefDevice / #eventsOfRefDevice) you should have 
+          moreThanOnce = True and config.CORRELATION_UNIQUENESS = True
         '''
         cnx = mysql.connector.connect(host='127.0.0.1', user='root', password='password', database='cern')
         cursor = cnx.cursor()
@@ -164,9 +169,9 @@ class DatabaseNetworkCorrelator(object):
             uniqueness = []
             # Now we count a device occurrence without duplicating events 
             for ea in eventsAfter:
-                if ea not in allSeenEvents: #each event will be considered exactly once
+                if ea not in allSeenEvents or moreThanOnce: #each event will be considered exactly once (unless moreThanOnce is True)
                     allSeenEvents.append(ea)
-                    if config.CORRELATION_UNIQUENESS:
+                    if config.CORRELATION_UNIQUENESS: #if we want to count the event after only once per reference event
                         if ea[0] not in uniqueness:
                             uniqueness.append(ea[0])
                             if ea[0] not in noDupItemsetOccurrences: #key already present
@@ -204,9 +209,9 @@ class DatabaseNetworkCorrelator(object):
             # Average and standard deviation w.r.t. el[1] (ref.device):
             devicesDict1 = colAnal.find_column_distribution(el[1], ["L0", "L1", "L2", "L3"], el[0])
             # Relative events n minutes after el[0] (ref.device):
-            noDupItemsetOccurrences0 = self.__relativeOccurrences([el[1]], el[0], priorityCond = False)
+            noDupItemsetOccurrences0 = self.__relativeOccurrences([el[1]], el[0], priorityCond = False, moreThanOnce = True)
             # Relative events n minutes after el[1] (ref.device):
-            noDupItemsetOccurrences1 = self.__relativeOccurrences([el[0]], el[1], priorityCond = False)
+            noDupItemsetOccurrences1 = self.__relativeOccurrences([el[0]], el[1], priorityCond = False, moreThanOnce = True)
             if not noDupItemsetOccurrences0 or not noDupItemsetOccurrences1:
                 self.fw.write_txt("No correlations between this two devices.")
                 self.fw.write_txt("")

@@ -100,4 +100,5 @@ def searchItemsets():
     cursor = cnx.cursor()
     compareChosenDevicesByAlarmPriority(cursor)
 
-searchItemsets()
+if __name__ == "__main__":
+    searchItemsets()

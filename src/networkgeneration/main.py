@@ -30,7 +30,7 @@ def preprocess_network(select_priority, file_selection, gh, log):
     pre_network_handler.process_files(select_priority, file_selection, file_suffix, log)
     
     # 2) SELECT VARIABLES
-    var_type = "frequency" #occurrences, frequency, variance_only, support_variance, lift
+    var_type = "lift" #occurrences, frequency, variance_only, support_variance, lift
     support = 0.4
     MIN = 4
     MAX = 10
@@ -96,7 +96,10 @@ def post_processing(nh, gh, log):
     
 ''' The main script to create the BNs '''
 def run_script(mode):
-    
+    clearDirectory("../../output/")
+    clearDirectory("../../output/columnAnalysis/")
+    clearDirectory("../../output/postProcessingAnalysis/")
+    clearDirectory("../../output/preProcessingAnalysis/")
     if mode == "one":
         try:
             if config.unitePriorities:
@@ -158,10 +161,6 @@ def clearDirectory(folder):
     
 if __name__ == "__main__":
     # stuff only to run when not called via 'import' here
-    clearDirectory("../../output/")
-    clearDirectory("../../output/columnAnalysis/")
-    clearDirectory("../../output/postProcessingAnalysis/")
-    clearDirectory("../../output/preProcessingAnalysis/")
     # run the network creation:
     run_script(mode)
 

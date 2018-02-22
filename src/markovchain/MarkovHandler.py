@@ -33,14 +33,15 @@ class MarkovHandler:
         self.occurrences = pnh.get_occurrences()
 
     def create_mc_model(self):
-        self.mc = expandDeviceMarkov.create_mc_model(self.device_considered_realName, self.priority_considered, self.variables_names)
+        (self.mc, self.avg_var_list) = expandDeviceMarkov.create_mc_model(self.device_considered_realName, self.priority_considered, self.variables_names)
 
 
-    def draw_mc_model(self, location_choice, info_choice):
+    def draw_mc_model(self, location_choice, info_choice, avg_var_edges):
         if location_choice and info_choice:
             DataError("location_choice and info_choice can't be both True")
             return
         mc_graph = gv.Digraph(format="png")
+        mc_graph.graph_attr['overlap'] = "false"
 
         devices = self.variables_names
 
@@ -63,6 +64,7 @@ class MarkovHandler:
                 name = "cluster_" + loc  # SE IL NOME DEL SOTTOGRAFO NON INIZIA PER "cluster_" NON FUNZIONERA'
                 loc_subgraphs[loc] = gv.Digraph(name)
                 loc_subgraphs[loc].graph_attr['label'] = loc  # Label with name to be visualized in the image
+                loc_subgraphs[loc].graph_attr['overlap'] = "false"
 
         # Create subgraphs for occurrences, average and standard deviation:
         if info_choice:
@@ -77,6 +79,7 @@ class MarkovHandler:
                 #label = label + "Avg: " + str(round(self.devicesColumnDict[d].msAverage / 1000, 2)) + "s\n"
                 #label = label + "St.Dev.: " + str(round(self.devicesColumnDict[d].msStandDev / 1000, 2)) + "s"
                 info_subgraphs[d].graph_attr['label'] = label  # Label with name to be visualized in the image
+                info_subgraphs[d].graph_attr['overlap'] = "false"
                 # info_subgraphs[d].graph_attr['penwidth'] = 0
 
         # Create nodes
@@ -84,8 +87,8 @@ class MarkovHandler:
             if location_choice:
                 locationH0 = device_location[node]
                 locationH1 = device_locationH1[node]
-                loc_subgraphs[locationH0].node(node, style='filled', fillcolor=location_colorH1[
-                    locationH1])  # add the node to the right subgraph
+                loc_subgraphs[locationH0].node(node, style='filled',
+                    fillcolor=location_colorH1[locationH1])# add the node to the right subgraph
                 # loc_subgraphs[locationH0].node(node) #USE THIS TO ADD ONLY H0
             elif info_choice:
                 info_subgraphs[node].node(node)
@@ -109,14 +112,31 @@ class MarkovHandler:
 
         # Create edges
         cpt = self.mc.distributions[1].parameters[0]
-        for i in range(0, len(cpt)):
-            prob = round(cpt[i][2], 2)
-            if(prob >= 0.5):
-                mc_graph.edge(cpt[i][0], cpt[i][1], color="red", label=str(prob))
-            elif(prob >= 0.1 and prob < 0.5):
-                mc_graph.edge(cpt[i][0], cpt[i][1], color="black", label=str(prob))
-            elif(prob < 0.1 and prob > 0.0):
-                mc_graph.edge(cpt[i][0], cpt[i][1], color="Grey")
+        if avg_var_edges:
+            for i in range(0, len(cpt)):
+                prob = round(cpt[i][2], 2)
+                if (prob < 0.1 and prob > 0.0):
+                    mc_graph.edge(cpt[i][0], cpt[i][1], color="Grey")
+                    pass
+                else:
+                    avg, var = self.find_avg_var(cpt[i][0], cpt[i][1])
+                    if(avg == None or var == None):
+                        lab = str(prob)
+                    else:
+                        lab = str(prob) + " | (" + str(avg) + "," + str(var) + ")"
+                    if (prob >= 0.1 and prob < 0.5):
+                        mc_graph.edge(cpt[i][0], cpt[i][1], color="black", label=lab)
+                    elif (prob >= 0.5):
+                        mc_graph.edge(cpt[i][0], cpt[i][1], color="red", label=lab)
+        else:
+            for i in range(0, len(cpt)):
+                prob = round(cpt[i][2], 2)
+                if(prob >= 0.5):
+                    mc_graph.edge(cpt[i][0], cpt[i][1], color="red", label=str(prob))
+                elif(prob >= 0.1 and prob < 0.5):
+                    mc_graph.edge(cpt[i][0], cpt[i][1], color="black", label=str(prob))
+                elif(prob < 0.1 and prob > 0.0):
+                    mc_graph.edge(cpt[i][0], cpt[i][1], color="Grey")
 
 
         # save the .png graph
@@ -128,9 +148,13 @@ class MarkovHandler:
             info = "_Info"
         else:
             info = ""
+        if avg_var_edges:
+            avg_var = "_Var"
+        else:
+            avg_var = ""
 
         device_name = "".join(x for x in self.device_considered if x.isalnum())  # it eliminate characters not valid for filenames
-        imgPath = '../../output/' + str(device_name) + '_' + str(self.priority_considered) + '_' + 'MC' + locat + info
+        imgPath = '../../output/' + str(device_name) + '_' + str(self.priority_considered) + '_' + 'MC' + locat + info + avg_var
         mc_graph.render(imgPath)
         os.remove(imgPath)  # remove the source code generated by graphviz
 
@@ -146,6 +170,18 @@ class MarkovHandler:
                 system_color.remove(color)
                 location_color[loc] = color
         return location_color
+
+    def find_avg_var(self, sourceDev, destDev):
+        for item in self.avg_var_list:
+            if(sourceDev == item[0] and destDev == item[1]):
+                avg = item[2]
+                var = item[3]
+                avg = avg / 1000
+                var = var / 1000
+                avg = round(avg, 1)
+                var = round(var, 1)
+                return avg, var
+        return None, None
 
 
 

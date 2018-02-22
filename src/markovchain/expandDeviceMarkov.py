@@ -20,13 +20,12 @@ from File_writer import File_writer
 from ClusteringHandler import ClusterHandler
 from DataError import DataError
 import re
-import pomegranate as pomgr
 import graphviz as gv
 import config
 import numpy as np
 import pomegranate as pomgr
-import graphviz as gv
 import os
+import columnAnalyzer
 
 
 def create_sequences_txt(device):
@@ -40,8 +39,8 @@ def create_sequences_txt(device):
 def create_mc_model(device, priority, consideredDevices):
     cnx = mysql.connector.connect(host='127.0.0.1', user='root', password='password', database='cern')
     cursor = cnx.cursor()
-    mc = __get_markov_chain_model(cursor, device, priority, consideredDevices)
-    return mc
+    (mc, avg_var_list) = __get_markov_chain_model(cursor, device, priority, consideredDevices)
+    return (mc, avg_var_list)
 
 
 def __create_txt_noClusters(cursor, d):
@@ -139,9 +138,9 @@ def __create_txt_clusters(cursor, d):
                 # 3) DBSCAN
                 # clusterHandler.findClustersDBSCAN(fw2, debug=True)
                 # 4) MEAN SHIFT
-                # clusterHandler.findClustersMeanShift(fw2, debug=True)
+                clusterHandler.findClustersMeanShift(fw2, debug=True)
                 # 5) AVERAGE + STANDARD DEVIATION
-                clusterHandler.findClustersAverageDeviation(fw2, debug = True)
+                #clusterHandler.findClustersAverageDeviation(fw2, debug = True)
 
             except DataError as e:
                 pass
@@ -224,5 +223,13 @@ def __get_markov_chain_model(cursor, d, l, consideredDevices):
         print '], '
     print ']'
 
+    avg_var_list = []
+    if "var" in config.FILE_SUFFIX:
+        for sourceDev in consideredDevices:
+            var_one_vs_all_full = columnAnalyzer.find_column_distribution(sourceDev, ['L0','L1','L2','L3'], consideredDevices)
+            for destDev in var_one_vs_all_full:
+                avg_var_list.append((sourceDev, destDev, var_one_vs_all_full[destDev].msAverage, var_one_vs_all_full[destDev].msStandDev))
+
+
     mc = pomgr.MarkovChain.from_samples(afterSeq)
-    return mc
+    return (mc, avg_var_list)

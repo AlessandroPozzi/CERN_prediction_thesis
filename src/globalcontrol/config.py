@@ -7,7 +7,7 @@ Config file. Can also run the entire system
 
 ''' GENERAL settings '''
 CORRELATION_MINUTES = 5
-FILE_SUFFIX = "MC_clusters_ms_var" #clusters_dbscan, afterNoDup, afterStateNodup, clusters_offline_average1x, clusters_static_distance12sec
+FILE_SUFFIX = "afterNoDup" #clusters_dbscan, afterNoDup, afterStateNodup, clusters_offline_average1x, clusters_static_distance12sec
                             #clusters_offline_average1x, clusters_static_distance12sec, clusters_meanShift, clusters_averageDeviation...
 CORRELATION_UNIQUENESS = True # Used when computing the LIFT, in DatabaseNetworkCorrelator. If True, will consider only ONCE events
                                 # happened multiple times after each "n" minutes block. In general, leave this True
@@ -16,7 +16,7 @@ CORRELATION_UNIQUENESS = True # Used when computing the LIFT, in DatabaseNetwork
 #chosenDevices = ['EHS60/BE', 'EXS4/8X', 'EMC001*9', 'EXS106/2X', 'ESS1*84', 'ESS11/5H']
 #                 'ESS11/5H', 'ESS406/E91', 'ESS407/E91', 'ESS520/E91', 'ESS11*84']
 #chosenDevices = ['ECD1*62','EMD101/8E','EMD102/8E','EMD103/8E','EMD407/8E','EMD202/8E','EMD301/8E','EMD206/8E','EKC200/8U']
-#chosenDevices = ['ECD1*62']
+chosenDevices = ['ECD1*62']
 #chosenDevices = ['EMC001*9', 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X'] #our devices
 levelsOfPriority = ['L0', 'L1', 'L2', 'L3']
 unitePriorities = False #If this is true, all the priority above will be put together (automatically even in the main if mode="one")

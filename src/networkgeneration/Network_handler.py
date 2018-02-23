@@ -139,7 +139,7 @@ class Network_handler:
             '''
                         
                                             
-    def draw_network(self, label_choice, location_choice, info_choice, variance, log):
+    def draw_network(self, label_choice, location_choice, info_choice, variance, refDevice):
         ''' (7) 
         Draws the bayesian network.
         ----
@@ -165,13 +165,17 @@ class Network_handler:
                 allDevicesLocations = self.general_handler.get_device_locations()
                 device_location[d] = allDevicesLocations[d][0] #H0
                 device_locationH1[d] = allDevicesLocations[d][1] #H1
+            if refDevice:
+                ref = self.device_considered_realName
+                device_location[ref] = allDevicesLocations[ref][0] #H0
+                device_locationH1[ref] = allDevicesLocations[ref][1] #H1
             location_color = self.assign_color(device_location)
             location_colorH1 = self.assign_color(device_locationH1)
             
             # Creating the subgraphs, one for each location:
             loc_subgraphs = dict()
             for loc in location_color:
-                name = "cluster_" + loc #SE IL NOME DEL SOTTOGRAFO NON INIZIA PER "cluster_" NON FUNZIONERA'
+                name = "cluster_" + loc #IL NOME DEL SOTTOGRAFO DEVE INIZIARE PER "cluster_" 
                 loc_subgraphs[loc] = gv.Digraph(name) 
                 loc_subgraphs[loc].graph_attr['label'] = loc #Label with name to be visualized in the image
                         
@@ -181,7 +185,7 @@ class Network_handler:
             # there's one subgraph for each node:
             id = 0
             for d in devices:
-                name = "cluster_" + str(id) #SE IL NOME DEL SOTTOGRAFO NON INIZIA PER "cluster_" NON FUNZIONERA'
+                name = "cluster_" + str(id) #IL NOME DEL SOTTOGRAFO DEVE INIZIARE "cluster_" 
                 id += 1
                 info_subgraphs[d] = gv.Digraph(name)
                 label = "Tot: " + str(round(self.occurrences[d], 2)) + " | "
@@ -201,6 +205,16 @@ class Network_handler:
                 info_subgraphs[node].node(node)
             else: #add the node directly to the graph
                 bn_graph.node(node)
+                
+        # Reference device
+        if refDevice and location_choice:
+            ref = self.device_considered_realName
+            locationH0 = device_location[ref]
+            locationH1 = device_locationH1[ref]
+            loc_subgraphs[locationH0].node(ref, style='filled',fillcolor=location_colorH1[locationH1])
+        else:
+            ref = self.device_considered_realName
+            bn_graph.node(ref)
             
         # Add all subgraphs in the final graph:
         if location_choice:
@@ -250,6 +264,14 @@ class Network_handler:
                 bn_graph.edge(edge[0], edge[1], color = "red", label = label)
             else:
                 bn_graph.edge(edge[0], edge[1], color = "black", label = label)
+                
+        if refDevice:
+            for node in self.best_model.nodes():
+                for tpl in self.rankedDevices:
+                    if tpl[0] == node:
+                        supp = tpl[1]
+                        break
+                bn_graph.edge(self.device_considered_realName, node, color = "blue", label = str(supp))
                 
         
         # Save the .png graph

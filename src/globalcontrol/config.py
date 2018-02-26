@@ -24,23 +24,24 @@ unitePriorities = False #If this is true, all the priority above will be put tog
 ''' main settings '''
 file_selection = 1  # 1 to the len of the lists below (only for "one" mode. Select in the lists below)
 selectPriority = 'L0' # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE". If unitePriorities = True --> this will be forced to "L0"
-escaped_file_names = ["EMC0019", "EHS60BE", "ESS115H", "ESS184","EXS48X", "EXS1062X"]
+#escaped_file_names = ["EMC0019", "EHS60BE", "ESS115H", "ESS184","EXS48X", "EXS1062X"]
 #                    'ESS406E91', 'ESS407E91', 'ESS520E91', 'ESS1184', "CUSTOM"]
-#escaped_file_names = ['EMD1018E','EMD1028E','EMD1038E','EMD4078E','EMD2028E','EMD3018E','EMD2068E','EKC2008U']
-true_device_names = ["EMC001*9", 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X'] 
+escaped_file_names = ['EMD1018E','EMD1028E','EMD1038E','EMD4078E','EMD2028E','EMD3018E','EMD2068E','EKC2008U']
+#true_device_names = ["EMC001*9", 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X'] 
 #                    'ESS406/E91', 'ESS407/E91', 'ESS520/E91', 'ESS11*84', 'CUSTOM']
-#true_device_names = ['EMD101/8E','EMD102/8E','EMD103/8E','EMD407/8E','EMD202/8E','EMD301/8E','EMD206/8E','EKC200/8U']
+true_device_names = ['EMD101/8E','EMD102/8E','EMD103/8E','EMD407/8E','EMD202/8E','EMD301/8E','EMD206/8E','EKC200/8U']
 mode = "all" #one, all  | "one" to do the single file-priority selected above; 
                         # "all" to do all the possible files and priorities in the lists above
 
-import main
-import expandDevice, expandDeviceClustering
+#import main
+#import expandDevice, expandDeviceClustering
 
 
 def runAll():
     #expandDevice.searchItemsets()
     #expandDeviceClustering.searchItemsets()
-    main.run_script(mode)
+    #main.run_script(mode)
+    pass
 
 
 if __name__ == "__main__":

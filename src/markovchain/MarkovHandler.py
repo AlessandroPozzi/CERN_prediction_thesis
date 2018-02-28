@@ -32,8 +32,12 @@ class MarkovHandler:
         self.devicesColumnDict = pnh.get_column_analysis()
         self.occurrences = pnh.get_occurrences()
 
-    def create_mc_model(self):
-        (self.mc, self.avg_var_list) = expandDeviceMarkov.create_mc_model(self.device_considered_realName, self.priority_considered, self.variables_names)
+    def create_mc_model(self, seqWithPriority):
+
+        sequences = self.getSequencesOfPriority(seqWithPriority)
+        seqWithDevConsideredOnly = self.getOnlyDevConsidered(sequences)
+        (self.mc, self.avg_var_list) = expandDeviceMarkov.create_mc_model(self.device_considered_realName, self.priority_considered,
+                                        self.variables_names, seqWithDevConsideredOnly)
 
 
     def draw_mc_model(self, location_choice, info_choice, avg_var_edges):
@@ -41,8 +45,7 @@ class MarkovHandler:
             DataError("location_choice and info_choice can't be both True")
             return
         mc_graph = gv.Digraph(format="png")
-        mc_graph.graph_attr['overlap'] = "false"
-
+        mc_graph.graph_attr['decorate'] = "true"
         devices = self.variables_names
 
         # Create subgraph for the locations
@@ -64,7 +67,7 @@ class MarkovHandler:
                 name = "cluster_" + loc  # SE IL NOME DEL SOTTOGRAFO NON INIZIA PER "cluster_" NON FUNZIONERA'
                 loc_subgraphs[loc] = gv.Digraph(name)
                 loc_subgraphs[loc].graph_attr['label'] = loc  # Label with name to be visualized in the image
-                loc_subgraphs[loc].graph_attr['overlap'] = "false"
+                loc_subgraphs[loc].graph_attr['overlap'] = "scale"
 
         # Create subgraphs for occurrences, average and standard deviation:
         if info_choice:
@@ -79,7 +82,7 @@ class MarkovHandler:
                 #label = label + "Avg: " + str(round(self.devicesColumnDict[d].msAverage / 1000, 2)) + "s\n"
                 #label = label + "St.Dev.: " + str(round(self.devicesColumnDict[d].msStandDev / 1000, 2)) + "s"
                 info_subgraphs[d].graph_attr['label'] = label  # Label with name to be visualized in the image
-                info_subgraphs[d].graph_attr['overlap'] = "false"
+                info_subgraphs[d].graph_attr['overlap'] = 'scale'
                 # info_subgraphs[d].graph_attr['penwidth'] = 0
 
         # Create nodes
@@ -138,7 +141,6 @@ class MarkovHandler:
                 elif(prob < 0.1 and prob > 0.0):
                     mc_graph.edge(cpt[i][0], cpt[i][1], color="Grey")
 
-
         # save the .png graph
         if location_choice:
             locat = "_H0H1"
@@ -182,6 +184,27 @@ class MarkovHandler:
                 var = round(var, 1)
                 return avg, var
         return None, None
+
+    def getSequencesOfPriority(self, sequencesInTuples):
+        cleanedSeq = [] #sequences without priority indication and without tuples surrounding them
+        for tup in sequencesInTuples:
+            if tup[1] == self.priority_considered:
+                cleanedSeq.append(tup[0])
+        return cleanedSeq
+
+    def getOnlyDevConsidered(self, sequences):
+        finalSeq = []
+        for seq in sequences:
+            seq = [dev for dev in seq if dev in self.variables_names]
+            if seq:
+                finalSeq.append(seq)
+        return finalSeq
+
+
+
+
+
+
 
 
 

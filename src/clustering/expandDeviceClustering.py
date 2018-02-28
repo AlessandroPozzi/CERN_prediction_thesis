@@ -7,7 +7,9 @@ from helpers.DataError import DataError
 from File_writer import File_writer
 from ClusteringHandler import ClusterHandler
 from DataError import DataError
+from datetime import timedelta
 import config
+import columnAnalyzer
 
 def compareChosenDevicesByAlarmPriority(cursor):
     #chosenDevices = ['EHS60/BE', 'EXS4/8X', 'EMC001*9', 'EXS106/2X', 'ESS1*84',
@@ -42,18 +44,20 @@ def compareChosenDevicesByAlarmPriority(cursor):
                         clusterHandler.addEvent(ea)
                 
                 try:
-                    # 1) OFFLINE AVERAGE
-                    #clusterHandler.findClustersOfflineAverage(fw2, debug=True)
-                    # 2) STATIC DISTANCE
-                    #timeDelta = timedelta(seconds = 5)
-                    #clusterHandler.findClustersStaticDistance(fw2, timeDelta, debug=True)
-                    # 3) DBSCAN
-                    #clusterHandler.findClustersDBSCAN(fw2, debug=True)
-                    # 4) MEAN SHIFT
-                    clusterHandler.findClustersMeanShift(fw2, debug=True)
-                    # 5) AVERAGE + STANDARD DEVIATION
-                    #clusterHandler.findClustersAverageDeviation(fw2, debug = True)
-                    
+                    if config.clustering == "offline_average":
+                        clusterHandler.findClustersOfflineAverage(fw2, debug=True)
+                    elif config.clustering == "static_distance":
+                        timeDelta = timedelta(seconds=5)
+                        clusterHandler.findClustersStaticDistance(fw2, timeDelta, debug=True)
+                    elif config.clustering == "db_scan":
+                        clusterHandler.findClustersDBSCAN(fw2, debug=True)
+                    elif config.clustering == "mean_shift":
+                        clusterHandler.findClustersMeanShift(fw2, debug=True)
+                    elif config.clustering == "avg_plus_stdev":
+                        clusterHandler.findClustersAverageDeviation(fw2, debug=True)
+                    else:
+                        print "\nNON EXISTENT CLUSTERING METHOD\n"
+
                 except DataError as e:
                     pass
                 newClusters = clusterHandler.getClusters()

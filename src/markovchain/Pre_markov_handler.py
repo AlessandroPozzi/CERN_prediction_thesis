@@ -14,7 +14,7 @@ from File_writer import File_writer
 
 
 class Pre_markov_handler(object):
-    def __init__(self, gh):
+    def __init__(self, gh, seqFromFile):
 
         self.file_names = ["EMC0019", "EHS60BE", "ESS115H", "ESS184", "EXS48X", "EXS1062X",
                            'ESS406E91', 'ESS407E91', 'ESS520E91', 'ESS1184', "CUSTOM"]
@@ -22,6 +22,7 @@ class Pre_markov_handler(object):
                                   'ESS406/E91', 'ESS407/E91', 'ESS520/E91', 'ESS11*84', 'CUSTOM']
         self.extractor = Data_extractor()
         self.general_handler = gh
+        self.sequences = seqFromFile
 
     def process_files(self, select_priority, file_selection, file_suffix, log=True):
         '''  (1)

@@ -26,31 +26,35 @@ import numpy as np
 import pomegranate as pomgr
 import os
 import columnAnalyzer
+from datetime import timedelta
 
 
 def create_sequences_txt(device):
     cnx = mysql.connector.connect(host='127.0.0.1', user='root', password='password', database='cern')
     cursor = cnx.cursor()
-    if "cluster" in config.FILE_SUFFIX:
-        __create_txt_clusters(cursor, device)
+    if config.clustering != "no_clustering":
+       sequences = __create_txt_clusters(cursor, device)
     else:
-        __create_txt_noClusters(cursor, device)
+       sequences = __create_txt_noClusters(cursor, device)
+    return sequences
 
-def create_mc_model(device, priority, consideredDevices):
+def create_mc_model(device, priority, consideredDevices, sequences):
     cnx = mysql.connector.connect(host='127.0.0.1', user='root', password='password', database='cern')
     cursor = cnx.cursor()
-    (mc, avg_var_list) = __get_markov_chain_model(cursor, device, priority, consideredDevices)
+    (mc, avg_var_list) = __get_markov_chain_model(cursor, device, priority, consideredDevices, sequences)
     return (mc, avg_var_list)
 
 
 def __create_txt_noClusters(cursor, d):
-    levelsOfPriority = ['L0', 'L1', 'L2', 'L3']
 
-    fw = File_writer(d, "MC")
+    print '\n\nYou are not using clustering\n'
+    levelsOfPriority = ['L0', 'L1', 'L2', 'L3']
+    fw = File_writer(d, config.FILE_SUFFIX)
     fw.create_txt("../../res/")
     markedEvents = []
     print '\nDEVICE ' + str(d) + ': '
     fw.write_txt('\nDEVICE ' + str(d) + ': ')
+    afterSeqPriority = [] # Contiene tuple di liste con priorita associata
     for l in levelsOfPriority:
         print '\n\tPRIORITY ' + str(l) + ':'
         fw.write_txt('\n\tPRIORITY ' + str(l) + ':')
@@ -76,6 +80,7 @@ def __create_txt_noClusters(cursor, d):
                         devicesAfter.append(ea[4])
             if devicesAfter != []:
                 afterSeq.append(devicesAfter)  # Lista di liste (i.e. tutto quello dopo "distinct device after 5 min")
+                afterSeqPriority.append((devicesAfter, l))
 
         # CONSOLE
         print '\n\t\tSequences of activated devices after 5 minutes: [ '
@@ -98,17 +103,19 @@ def __create_txt_noClusters(cursor, d):
         print("==>")
         fw.write_txt('==>', newline=True)  # KEEP THIS!
 
+    return afterSeqPriority
+
 
 def __create_txt_clusters(cursor, d):
-
+    print 'You have chosen to use clustering'
     levelsOfPriority = ['L0', 'L1', 'L2', 'L3']
-
     fw = File_writer(d, config.FILE_SUFFIX)
     fw.create_txt("../../res/")
     fw2 = File_writer(d, "DEBUG-" + config.FILE_SUFFIX)
     fw2.create_txt("../../res/debug/")
     print '\nDEVICE ' + str(d) + ': '
     fw.write_txt('\nDEVICE ' + str(d) + ': ')
+    clusterListPriority = [] #list of tuples with sequences and priority associated
     for l in levelsOfPriority:
         print '\n\tPRIORITY ' + str(l) + ':'
         fw.write_txt('\n\tPRIORITY ' + str(l) + ':')
@@ -130,17 +137,19 @@ def __create_txt_clusters(cursor, d):
                     clusterHandler.addEvent(ea)
 
             try:
-                # 1) OFFLINE AVERAGE
-                # clusterHandler.findClustersOfflineAverage(fw2, debug=True)
-                # 2) STATIC DISTANCE
-                # timeDelta = timedelta(seconds = 5)
-                # clusterHandler.findClustersStaticDistance(fw2, timeDelta, debug=True)
-                # 3) DBSCAN
-                # clusterHandler.findClustersDBSCAN(fw2, debug=True)
-                # 4) MEAN SHIFT
-                clusterHandler.findClustersMeanShift(fw2, debug=True)
-                # 5) AVERAGE + STANDARD DEVIATION
-                #clusterHandler.findClustersAverageDeviation(fw2, debug = True)
+                if config.clustering == "offline_average":
+                    clusterHandler.findClustersOfflineAverage(fw2, debug=True)
+                elif config.clustering == "static_distance":
+                    timeDelta = timedelta(seconds = 5)
+                    clusterHandler.findClustersStaticDistance(fw2, timeDelta, debug=True)
+                elif config.clustering == "db_scan":
+                    clusterHandler.findClustersDBSCAN(fw2, debug=True)
+                elif config.clustering == "mean_shift":
+                    clusterHandler.findClustersMeanShift(fw2, debug=True)
+                elif config.clustering == "avg_plus_stdev":
+                    clusterHandler.findClustersAverageDeviation(fw2, debug = True)
+                else:
+                    print "\nNON EXISTENT CLUSTERING METHOD\n"
 
             except DataError as e:
                 pass
@@ -152,6 +161,7 @@ def __create_txt_clusters(cursor, d):
                 for evstate in stateList:
                     devices.append(evstate.getDevice())
                 clusterList.append(devices)
+                clusterListPriority.append((devices, l))
 
         # clusterList = a list of clusters, where each cluster is a list of devices
         # stateList = a list of objects "EventState"
@@ -179,9 +189,12 @@ def __create_txt_clusters(cursor, d):
         print("==>")
         fw.write_txt('==>', newline=True)
 
+    return clusterListPriority
 
-def __get_markov_chain_model(cursor, d, l, consideredDevices):
 
+def __get_markov_chain_model(cursor, d, l, consideredDevices, sequences):
+
+    '''
     markedEvents = []
     print '\nDEVICE ' + str(d) + ': '
     print '\n\tPRIORITY ' + str(l) + ':'
@@ -222,14 +235,15 @@ def __get_markov_chain_model(cursor, d, l, consideredDevices):
             print "'" + str(yy) + "', ",
         print '], '
     print ']'
+    '''
 
     avg_var_list = []
-    if "var" in config.FILE_SUFFIX:
+    if config.variance == True:
         for sourceDev in consideredDevices:
             var_one_vs_all_full = columnAnalyzer.find_column_distribution(sourceDev, ['L0','L1','L2','L3'], consideredDevices)
             for destDev in var_one_vs_all_full:
                 avg_var_list.append((sourceDev, destDev, var_one_vs_all_full[destDev].msAverage, var_one_vs_all_full[destDev].msStandDev))
 
 
-    mc = pomgr.MarkovChain.from_samples(afterSeq)
+    mc = pomgr.MarkovChain.from_samples(sequences)
     return (mc, avg_var_list)

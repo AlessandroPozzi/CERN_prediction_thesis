@@ -11,6 +11,9 @@ FILE_SUFFIX = "afterNoDup" #clusters_dbscan, afterNoDup, afterStateNodup, cluste
                             #clusters_offline_average1x, clusters_static_distance12sec, clusters_meanShift, clusters_averageDeviation...
 CORRELATION_UNIQUENESS = True # Used when computing the LIFT, in DatabaseNetworkCorrelator. If True, will consider only ONCE events
                                 # happened multiple times after each "n" minutes block. In general, leave this True
+'''markov settings'''
+clustering = "db_scan" # no_clustering, mean_shift, db_scan, avg_plus_stdev, offline_average, static_distance
+variance = True
 
 ''' expandDevice settings '''
 #chosenDevices = ['EHS60/BE', 'EXS4/8X', 'EMC001*9', 'EXS106/2X', 'ESS1*84', 'ESS11/5H']

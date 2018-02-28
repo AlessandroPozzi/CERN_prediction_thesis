@@ -22,21 +22,21 @@ select_priority = 'L1'  # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE"
 file_selection = 1  # 1 to 11 -->  ("EMC0019", "EHS60BE", "ES115H", "ESS184", "EXS48X", "EXS1062X",
 #   'ESS406/E91', 'ESS407/E91', 'ESS520/E91', 'ESS11*84', "CUSTOM"]
 # use "CUSTOM" (file number 11) in mode="one" to generate a custom network from expandDevice2 (SET PRIORITY L0)
-mode = "one"  # one, all  | "one" to do the single file-priority selected above;
+mode = "all"  # one, all  | "one" to do the single file-priority selected above;
 # "all" to do all the possible files and priorities
 
-def preprocess_network(select_priority, file_selection, gh, log):
-    pre_markov_handler = Pre_markov_handler(gh)
+def preprocess_network(select_priority, file_selection, gh, sequences, log):
+    pre_markov_handler = Pre_markov_handler(gh, sequences)
 
     # 1) PROCESS FILES
     file_suffix = "_" + config.FILE_SUFFIX
     pre_markov_handler.process_files(select_priority, file_selection, file_suffix, log)
 
     # 2) SELECT VARIABLES
-    var_type = "frequency"  # occurrences, frequency, variance_only, support_variance
+    var_type = "frequency"  # occurrences, frequency, variance_only, support_variance, lift, couple_occurrences, couple_variance
     support = 0.4
     MIN = 4
-    MAX = 6
+    MAX = 4
     pre_markov_handler.select_variables(var_type, MIN, MAX, support, log)
 
     # *) COLUMNS INFO (state, tag, description)
@@ -49,7 +49,7 @@ def create_markov_chain(pnh, gh):
     markov_handler = MarkovHandler(pnh, gh)
 
     # 4) LEARN THE MODEL
-    markov_handler.create_mc_model()
+    markov_handler.create_mc_model(pnh.sequences)
 
     # 5) DRAW THE NETWORK
     location_choice = False  # True, False
@@ -66,8 +66,8 @@ def run_script(mode):
         try:
             gh = General_handler()
             file_selected = true_device_names[file_selection - 1]  # true device name
-            expandDeviceMarkov.create_sequences_txt(file_selected)
-            pnh = preprocess_network(select_priority, file_selection, gh, log=True)
+            sequences = expandDeviceMarkov.create_sequences_txt(file_selected)
+            pnh = preprocess_network(select_priority, file_selection, gh, sequences, log=True)
             print("Location search started...")
             gh.getLocations()  # LOCATION SEARCH
             print("Location search completed.")
@@ -81,11 +81,11 @@ def run_script(mode):
         i = 1
         while i <= 6:
             file_selected = true_device_names[i - 1]  # true device name
-            expandDeviceMarkov.create_sequences_txt(file_selected)
+            sequences = expandDeviceMarkov.create_sequences_txt(file_selected)
             for p in priority:
                 print("File " + str(i) + " with priority " + p + ":")
                 try:
-                    pnh = preprocess_network(p, i, gh, log=False)
+                    pnh = preprocess_network(p, i, gh, sequences, log=False)
                     pnhs.append(pnh)
                 except DataError as e:
                     print(e.args[0])

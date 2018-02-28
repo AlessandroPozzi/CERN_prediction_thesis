@@ -68,10 +68,11 @@ def create_network(pnh, gh, log):
     # 7) DRAW THE NETWORK
     label = "double" # none, single, double
     location_choice = False # True, False
-    info_choice = True
+    info_choice = False
     variance_filter = False # True, False
     refDevice = True
-    network_handler.draw_network(label, location_choice, info_choice, variance_filter, refDevice)
+    hideNames = True
+    network_handler.draw_network(label, location_choice, info_choice, variance_filter, refDevice, hideNames)
     
     # 8) DATA INFO
     selection = [1, 2] #Put in the list what you want to show

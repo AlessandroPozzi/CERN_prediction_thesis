@@ -139,7 +139,7 @@ class Network_handler:
             '''
                         
                                             
-    def draw_network(self, label_choice, location_choice, info_choice, variance, refDevice):
+    def draw_network(self, label_choice, location_choice, info_choice, variance, refDevice, hideNames):
         ''' (7) 
         Draws the bayesian network.
         ----
@@ -154,6 +154,11 @@ class Network_handler:
         bn_graph.graph_attr['overlap'] = "false"
         devices = self.best_model.nodes()
         self.edgeLabels = []
+        
+        # Automatically change the names of the nodes
+        if hideNames:
+            #realFakeNamesDict = self.convertNamesInNodes(devices)
+            realFakeNamesDict = self.convertNamesCaesarCipher(devices, 5)
         
         # Create subgraph for the locations
         if location_choice:
@@ -204,6 +209,8 @@ class Network_handler:
             elif info_choice:
                 info_subgraphs[node].node(node)
             else: #add the node directly to the graph
+                if hideNames:
+                    node = realFakeNamesDict[node]
                 bn_graph.node(node)
                 
         # Reference device
@@ -214,7 +221,10 @@ class Network_handler:
             loc_subgraphs[locationH0].node(ref, style='filled',fillcolor=location_colorH1[locationH1])
         else:
             ref = self.device_considered_realName
-            bn_graph.node(ref)
+            if hideNames:
+                bn_graph.node(realFakeNamesDict[ref])
+            else:
+                bn_graph.node(ref)
             
         # Add all subgraphs in the final graph:
         if location_choice:
@@ -260,10 +270,17 @@ class Network_handler:
             # Save a list of tuples with edge-label data (will be used in post-processing):
             self.edgeLabels.append((edge[0], edge[1], value, value_inv))
             
+            edge0 = edge[0]
+            edge1 = edge[1]
+            
+            if hideNames:
+                edge0 = realFakeNamesDict[edge[0]]
+                edge1 = realFakeNamesDict[edge[1]]
+            
             if value >= 0.75:
-                bn_graph.edge(edge[0], edge[1], color = "red", label = label)
+                bn_graph.edge(edge0, edge1, color = "red", label = label)
             else:
-                bn_graph.edge(edge[0], edge[1], color = "black", label = label)
+                bn_graph.edge(edge0, edge1, color = "black", label = label)
                 
         if refDevice:
             for node in self.best_model.nodes():
@@ -271,7 +288,12 @@ class Network_handler:
                     if tpl[0] == node:
                         supp = tpl[1]
                         break
-                bn_graph.edge(self.device_considered_realName, node, color = "blue", label = str(supp))
+                if hideNames:
+                    bn_graph.edge(realFakeNamesDict[self.device_considered_realName], realFakeNamesDict[node], 
+                                  color = "blue", label = str(supp))
+                else:
+                    bn_graph.edge(self.device_considered_realName, node, color = "blue", label = str(supp))
+                
                 
         
         # Save the .png graph
@@ -392,6 +414,40 @@ class Network_handler:
                 nice_graph.write_png('../../output/' + self.device_considered 
                                      + '_' + self.priority_considered + '-inference_network.png')       
         
+    def convertNamesInNodes(self, devices, name = "Node"):
+        i = 0
+        fakeRealDict = dict()
+        for d in devices:
+            fakeRealDict[d] = name + str(i)
+            i += 1
+        fakeRealDict[self.device_considered_realName] = "ReferenceDevice"
+        return fakeRealDict
+    
+    def convertNamesCaesarCipher(self, devices, shift):
+        fakeRealDict = dict()
+        for d in devices:
+            fakeRealDict[d] = self.shift(d, shift)
+        fakeRealDict[self.device_considered_realName] = self.shift(self.device_considered_realName, shift)
+        return fakeRealDict
+    
+    def shift(self, name, shift):
+        alphabetLower = 'abcdefghijklmnopqrstuvwxyz'
+        alphabetUpper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        newName = []
+        for i in name: #iterate over the text
+            if i.strip():                 # if the char is not a space ""
+                if i.isupper():
+                    newName.append(alphabetUpper[(alphabetUpper.index(i) + shift) % 26])    
+                elif i.islower():
+                    newName.append(alphabetLower[(alphabetLower.index(i) + shift) % 26])
+                elif i.isdigit():
+                    newName.append(str((int(i) + shift) % 10))
+                else:
+                    newName.append("_")
+            else:
+                newName.append(i) #if space the simply append it to data
+        output = ''.join(newName)
+        return output
 
     def fix_node_presence(self, nodes, pydot_graph):
         ''' Adds the list of nodes to the graph, if they are not already present '''

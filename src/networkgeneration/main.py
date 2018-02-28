@@ -68,9 +68,10 @@ def create_network(pnh, gh, log):
     # 7) DRAW THE NETWORK
     label = "double" # none, single, double
     location_choice = False # True, False
-    info_choice = True 
+    info_choice = True
     variance_filter = False # True, False
-    network_handler.draw_network(label, location_choice, info_choice, variance_filter, log)
+    refDevice = True
+    network_handler.draw_network(label, location_choice, info_choice, variance_filter, refDevice)
     
     # 8) DATA INFO
     selection = [1, 2] #Put in the list what you want to show
@@ -96,7 +97,10 @@ def post_processing(nh, gh, log):
     
 ''' The main script to create the BNs '''
 def run_script(mode):
-    
+    clearDirectory("../../output/")
+    clearDirectory("../../output/columnAnalysis/")
+    clearDirectory("../../output/postProcessingAnalysis/")
+    clearDirectory("../../output/preProcessingAnalysis/")
     if mode == "one":
         try:
             if config.unitePriorities:
@@ -106,6 +110,7 @@ def run_script(mode):
             gh = General_handler()
             pnh = preprocess_network(newPriority, file_selection, gh, log = True)
             print("Location search started...")
+            gh.add_devices([pnh.device_considered_realName])
             gh.getLocations() # LOCATION SEARCH
             print("Location search completed.")
             nh = create_network(pnh, gh, log = False)
@@ -122,6 +127,7 @@ def run_script(mode):
                 print("File " + str(i) + " with priority " + p + ":")
                 try:
                     pnh = preprocess_network(p, i, gh, log = False)
+                    gh.add_devices([pnh.device_considered_realName])
                     pnhs.append(pnh)
                 except DataError as e:
                     print(e.args[0])
@@ -158,10 +164,6 @@ def clearDirectory(folder):
     
 if __name__ == "__main__":
     # stuff only to run when not called via 'import' here
-    clearDirectory("../../output/")
-    clearDirectory("../../output/columnAnalysis/")
-    clearDirectory("../../output/postProcessingAnalysis/")
-    clearDirectory("../../output/preProcessingAnalysis/")
     # run the network creation:
     run_script(mode)
 

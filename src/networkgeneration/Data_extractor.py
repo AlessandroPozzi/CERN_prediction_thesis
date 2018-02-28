@@ -103,6 +103,7 @@ class Data_extractor:
     def prepare_candidates(self, var_type):
         '''
         Extracts occurrences and frequency of the devices (i.e. the candidate for becoming variables of the network).
+        Occurrences and frequency are computed by looking ONLY at the txt itemsets.
         This data is stored in ranked_devices, as a tuple of the kind (device, frequency, occurrences).
         '''
         self.ranked_devices = []

@@ -313,10 +313,12 @@ class ClusterHandler(object):
         '''
         featureArray = self.buildFeatureArray()
         nsamples = featureArray.shape[0]
-        if nsamples <= 3: #with quantile=0.3 (by default)
+        quantile = 0.1
+        limit = 1 / quantile
+        if nsamples <= limit: #with quantile=0.3 (by default)
             self.findClustersAverageDeviation(fw, debug)
             return
-        bandwidth = estimate_bandwidth(featureArray, n_samples=nsamples)
+        bandwidth = estimate_bandwidth(featureArray, n_samples=nsamples, quantile = quantile)
         if bandwidth == 0:
             self.findClustersAverageDeviation(fw, debug)
             return
@@ -328,8 +330,9 @@ class ClusterHandler(object):
         n_clusters_ = len(labels_unique)
         if debug:
             fw.write_txt("STARTING EVENT: " + self.startingEvent[0] + " - " + self.startingEvent[4], newline=True)
+            fw.write_txt('Bandwidth: ' + str(bandwidth) + " Quantile: " + str(quantile) + " Number of samples: " + str(nsamples))
             fw.write_txt("Number of events: " + str(self.eventStateList.__len__()))
-            fw.write_txt('Estimated number of clusters: %d' % n_clusters_)
+            fw.write_txt('Number of clusters: %d' % n_clusters_)
             for i in range(0, len(self.eventStateList)):
                 events = self.eventStateList
                 addition = ""
@@ -337,7 +340,7 @@ class ClusterHandler(object):
                     addition = " (+" + self.roundToStr(events[i].timeDelta_ms / 1000) + "s)"
                 fw.write_txt(str(events[i].getTimestamp()) + " - " + events[i].getDevice() + " --> " + str(labels[i]) + addition)
                 
-            fw.write_txt('Labelling of clusters: ' + str(labels))
+            fw.write_txt(str(labels))
 
         # Saving the clusters in the list:
         cluster = []

@@ -17,9 +17,6 @@ def compareChosenDevicesByAlarmPriority(cursor):
     levelsOfPriority = ['L0', 'L1', 'L2', 'L3']
 
     for d in chosenDevices:
-        # clusters-offlineAverage
-        # clusters-staticDistance
-        # clusters-dbscan
         fw = File_writer(d, config.FILE_SUFFIX)
         fw.create_txt("../../res/")
         fw2 = File_writer(d, "DEBUG-" + config.FILE_SUFFIX)

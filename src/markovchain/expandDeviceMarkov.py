@@ -26,12 +26,13 @@ import numpy as np
 import pomegranate as pomgr
 import os
 import columnAnalyzer
+from datetime import timedelta
 
 
 def create_sequences_txt(device):
     cnx = mysql.connector.connect(host='127.0.0.1', user='root', password='password', database='cern')
     cursor = cnx.cursor()
-    if "cluster" in config.FILE_SUFFIX:
+    if config.clustering != "no_clustering":
        sequences = __create_txt_clusters(cursor, device)
     else:
        sequences = __create_txt_noClusters(cursor, device)
@@ -136,17 +137,19 @@ def __create_txt_clusters(cursor, d):
                     clusterHandler.addEvent(ea)
 
             try:
-                # 1) OFFLINE AVERAGE
-                # clusterHandler.findClustersOfflineAverage(fw2, debug=True)
-                # 2) STATIC DISTANCE
-                # timeDelta = timedelta(seconds = 5)
-                # clusterHandler.findClustersStaticDistance(fw2, timeDelta, debug=True)
-                # 3) DBSCAN
-                # clusterHandler.findClustersDBSCAN(fw2, debug=True)
-                # 4) MEAN SHIFT
-                clusterHandler.findClustersMeanShift(fw2, debug=True)
-                # 5) AVERAGE + STANDARD DEVIATION
-                #clusterHandler.findClustersAverageDeviation(fw2, debug = True)
+                if config.clustering == "offline_average":
+                    clusterHandler.findClustersOfflineAverage(fw2, debug=True)
+                elif config.clustering == "static_distance":
+                    timeDelta = timedelta(seconds = 5)
+                    clusterHandler.findClustersStaticDistance(fw2, timeDelta, debug=True)
+                elif config.clustering == "db_scan":
+                    clusterHandler.findClustersDBSCAN(fw2, debug=True)
+                elif config.clustering == "mean_shift":
+                    clusterHandler.findClustersMeanShift(fw2, debug=True)
+                elif config.clustering == "avg_plus_stdev":
+                    clusterHandler.findClustersAverageDeviation(fw2, debug = True)
+                else:
+                    print "\nNON EXISTENT CLUSTERING METHOD\n"
 
             except DataError as e:
                 pass
@@ -235,7 +238,7 @@ def __get_markov_chain_model(cursor, d, l, consideredDevices, sequences):
     '''
 
     avg_var_list = []
-    if "var" in config.FILE_SUFFIX:
+    if config.variance == True:
         for sourceDev in consideredDevices:
             var_one_vs_all_full = columnAnalyzer.find_column_distribution(sourceDev, ['L0','L1','L2','L3'], consideredDevices)
             for destDev in var_one_vs_all_full:

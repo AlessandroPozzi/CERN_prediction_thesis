@@ -26,14 +26,18 @@ def preprocess_network(select_priority, file_selection, gh, log):
     pre_network_handler = Pre_network_handler(gh)
     
     # 1) PROCESS FILES
-    file_suffix = "_" + config.FILE_SUFFIX
+    if config.EXTRA:
+        extra = "_" + config.EXTRA
+    else:
+        extra = ""
+    file_suffix = "_" + config.FILE_SUFFIX + extra
     pre_network_handler.process_files(select_priority, file_selection, file_suffix, log)
     
     # 2) SELECT VARIABLES
     var_type = "frequency" #occurrences, frequency, variance_only, support_variance, lift
-    support = 0.4
+    support = 0.3
     MIN = 4
-    MAX = 10
+    MAX = 8
     pre_network_handler.select_variables(var_type, MIN, MAX, support, log)
     
     # 3) BUILD DATA
@@ -67,12 +71,12 @@ def create_network(pnh, gh, log):
     
     # 7) DRAW THE NETWORK
     label = "double" # none, single, double
-    location_choice = True # True, False
-    onlyH0 = True
-    info_choice = False
+    location_choice = False # True, False
+    onlyH0 = False
+    info_choice = True
     variance_filter = False # True, False
     refDevice = True
-    hideNames = True
+    hideNames = False
     network_handler.draw_network(label, location_choice, onlyH0, info_choice, variance_filter, refDevice, hideNames)
     
     # 8) DATA INFO
@@ -94,7 +98,7 @@ def post_processing(nh, gh, log):
     dnc.checkGeneralCorrelation()
     
     # 10) TOTAL OCCURRENCES ANALYSIS
-    dnc.totalOccurrencesNetworkAnalysis()
+    #dnc.totalOccurrencesNetworkAnalysis()
     
     
 ''' The main script to create the BNs '''

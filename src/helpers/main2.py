@@ -8,8 +8,29 @@ import graphviz as gv
 from datetime import datetime
 from datetime import timedelta
 import numpy as np
-from DatabaseNetworkCorrelator import DatabaseNetworkCorrelator as DNC
+#from DatabaseNetworkCorrelator import DatabaseNetworkCorrelator as DNC
 
+str1 = "saltello"
+str2 = "salt"
+if str2 in str1:
+    print("ok!")
+
+
+'''
+st = [(1,9), (2,9), (3,9)]
+st2 = [x[0] for x in st]
+print(st2)
+'''
+
+
+
+
+
+
+
+
+
+'''
 dnc = DNC()
 dnc.findInterestingDevices()
 
@@ -17,7 +38,7 @@ dnc.findInterestingDevices()
 print(str(float(72/142)))
 
 
-'''
+
 mydate = "2016-01-10 23:49:21.678"
 mydate2 = "2016-01-10 23:43:59.741"
 

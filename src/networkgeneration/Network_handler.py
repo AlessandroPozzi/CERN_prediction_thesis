@@ -18,6 +18,7 @@ import pydot
 import graphviz as gv
 import os
 import config
+import re
 
 class Network_handler:
     '''
@@ -152,13 +153,19 @@ class Network_handler:
             return
         bn_graph = gv.Digraph(format = "png")
         bn_graph.graph_attr['overlap'] = "false"
-        devices = self.best_model.nodes()
+        devicesExtraString = self.best_model.nodes() #format string: "device--extra"
+        devicesExtraCouple = [] #format couple: (device, extra)
+        for de in devicesExtraString:
+            devName = re.compile('(.*?)\-\-').findall(de)
+            extraName = re.compile('\-\-(.*?)\Z').findall(de)
+            devicesExtraCouple.append((devName[0],extraName[0]))
+        
         self.edgeLabels = []
         
         # Automatically change the names of the nodes
         if hideNames:
             #realFakeNamesDict = self.convertNames(devices)
-            realFakeNamesDict = self.convertNamesCaesarCipher(devices, 5)
+            realFakeNamesDict = self.convertNamesCaesarCipher(devicesExtraString, 5)
         
         # Create subgraph for the locations
         if location_choice:
@@ -168,12 +175,12 @@ class Network_handler:
             allLocH1 = []
             
             #For H0 and H1:
-            allDevicesLocations = self.general_handler.get_device_locations()
-            for d in devices:
-                device_location[d] = allDevicesLocations[d][0] #H0
-                allLocH0.append(device_location[d])
-                device_locationH1[d] = allDevicesLocations[d][1] #H1
-                allLocH1.append(device_locationH1[d])
+            allDevicesLocations = self.general_handler.get_device_locations() #key=device name (no extra!)
+            for de in devicesExtraCouple:
+                device_location[de[0]] = allDevicesLocations[de[0]][0] #H0
+                allLocH0.append(device_location[de[0]])
+                device_locationH1[de[0]] = allDevicesLocations[de[0]][1] #H1
+                allLocH1.append(device_locationH1[de[0]])
             if refDevice:
                 ref = self.device_considered_realName
                 device_location[ref] = allDevicesLocations[ref][0] #H0
@@ -203,35 +210,38 @@ class Network_handler:
             info_subgraphs = dict()
             # there's one subgraph for each node:
             id = 0
-            for d in devices:
-                name = "cluster_" + str(id) #IL NOME DEL SOTTOGRAFO DEVE INIZIARE "cluster_" 
+            for de in devicesExtraString:
+                name = "cluster_" + str(id) #IL NOME DEL SOTTOGRAFO DEVE INIZIARE PER "cluster_" 
                 id += 1
-                info_subgraphs[d] = gv.Digraph(name)
-                label = "Tot: " + str(round(self.occurrences[d], 2)) + " | "
-                label = label + "Avg: " + str(round(self.devicesColumnDict[d].msAverage / 1000, 2)) + "s\n"
-                label = label + "St.Dev.: " + str(round(self.devicesColumnDict[d].msStandDev / 1000, 2)) + "s"
-                info_subgraphs[d].graph_attr['label'] = label #Label with name to be visualized in the image
-                #info_subgraphs[d].graph_attr['penwidth'] = 0
+                info_subgraphs[de] = gv.Digraph(name)
+                label = "Tot: " + str(round(self.occurrences[de], 2)) + " | "
+                label = label + "Avg: " + str(round(self.devicesColumnDict[de].msAverage / 1000, 2)) + "s\n"
+                label = label + "St.Dev.: " + str(round(self.devicesColumnDict[de].msStandDev / 1000, 2)) + "s"
+                info_subgraphs[de].graph_attr['label'] = label #Label with name to be visualized in the image
     
         # Create nodes
-        for node in self.best_model.nodes():
+        for de in devicesExtraCouple:
+            nodeName = de[0] + "--" + de[1]
+            devName = de[0]
             if location_choice:
-                locationH0 = device_location[node]
-                locationH1 = device_locationH1[node]
+                locationH0 = device_location[devName]
+                locationH1 = device_locationH1[devName]
                 if hideNames:
-                    nodeName = realFakeNamesDict[node]
-                else:
-                    nodeName = node
+                    nodeName = realFakeNamesDict[nodeName]
                 if not onlyH0:
                     loc_subgraphs[locationH0].node(nodeName, style='filled',
                                                 fillcolor=location_colorH1[locationH1]) #add the node to the right subgraph
                 else: # Add only the H0 locations
                     loc_subgraphs[locationH0].node(nodeName)
             elif info_choice:
-                info_subgraphs[node].node(node)
+                if hideNames:
+                    fakeName = realFakeNamesDict[nodeName]
+                    info_subgraphs[nodeName].node(fakeName)
+                else:
+                    info_subgraphs[nodeName].node(nodeName)
             else: #add the node directly to the graph
                 if hideNames:
-                    node = realFakeNamesDict[node]
+                    node = realFakeNamesDict[nodeName]
                 bn_graph.node(node)
                 
         # Reference device
@@ -248,7 +258,7 @@ class Network_handler:
                                                 fillcolor=location_colorH1[locationH1]) #add the node to the right subgraph
             else: # Add only the H0 location
                 loc_subgraphs[locationH0].node(nodeName)
-        else:
+        elif refDevice:
             ref = self.device_considered_realName
             if hideNames:
                 bn_graph.node(realFakeNamesDict[ref])

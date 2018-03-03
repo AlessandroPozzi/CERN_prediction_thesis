@@ -1,9 +1,12 @@
+'''
+Note: The following are my database columns (+ index). The order of columns you have must be the same.
+Time, H0, H1, H2, Device, Tag, Description, PrevValue, Value, Unit, State, Action, Type, AlarmPriority, Week, Device_FirstLetter, 
+   0,  1,  2,  3,      4,    5,          6,         7,      8,   9,    10,     11,   12,            13,   14,                 15,           
+
+Device_SecondLetter_LevelOfTension, Device_ThirdLetter_Type, Device_Forth_Number, Device_Fifth_LHCspsMeyrin, Device_Sixth_Position, id, LivelloPriorita
+                                16,                      17,                  18,                        19,                    20, 21,              22
+'''
 import mysql.connector  # pip install mysql-connector-python
-'''
-from helpers.File_writer import File_writer
-from clustering.ClusteringHandler import ClusterHandler
-from helpers.DataError import DataError
-'''
 from File_writer import File_writer
 from ClusteringHandler import ClusterHandler
 from DataError import DataError

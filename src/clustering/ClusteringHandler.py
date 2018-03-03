@@ -12,12 +12,9 @@ Device_SecondLetter_LevelOfTension, Device_ThirdLetter_Type, Device_Forth_Number
 from datetime import datetime
 from datetime import timedelta
 import numpy as np
-#from helpers.DataError import DataError
+import config
 from DataError import DataError
 from sklearn.cluster import DBSCAN
-from sklearn import metrics
-from sklearn.preprocessing import StandardScaler
-from comtypes.npsupport import numpy
 from sklearn.cluster import MeanShift, estimate_bandwidth
 import math
 

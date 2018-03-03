@@ -9,6 +9,7 @@ Created on 03 gen 2018
 from Log_extractor import Log_extractor
 from File_writer import File_writer
 import copy
+import re
 
 class General_handler(object):
     '''
@@ -23,8 +24,13 @@ class General_handler(object):
     def add_devices(self, device_list):
         ''' Adds all the unique devices to the self list '''
         for d in device_list:
-            if d not in self.unique_devices:
-                self.unique_devices.append(d)
+            if "--" in d:
+                dev = re.compile('(.*?)\-\-').findall(d)
+                dev = dev[0].replace("--", "")
+            else:
+                dev = d
+            if dev not in self.unique_devices:
+                self.unique_devices.append(dev)
                 
     def save_to_file(self):
         ''' Saves the list of all the selected variables in a txt file '''

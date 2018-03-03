@@ -12,7 +12,8 @@ class File_writer(object):
     def __init__(self, *args):
         ''' Creates a File_writer object. Each argument you pass will be concatenated 
         with a "_" and will compose the name of the file '''
-        self.file_name =  "_".join(args)
+        names = [x for x in args if x != ""]
+        self.file_name =  "_".join(names)
         self.file_name = self.file_name.replace("/", "")
         self.file_name = self.file_name.replace("*", "")
         self.created = False

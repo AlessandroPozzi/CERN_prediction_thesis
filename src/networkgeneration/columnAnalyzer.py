@@ -97,31 +97,57 @@ class ColumnStats(object):
             self.fw.write_txt(resultAvg)
             self.fw.write_txt(resultVar)
 
-def compareChosenDevicesByAlarmPriority(fileName, priority, device_filtering, cursor, write):
-          
+def compareChosenDevicesByAlarmPriority(fileName, priority, device_extra, cursor, write):
+   
     d = fileName
     l = priority
     fw = None
+    flagCoupleRef = False
     if write:
         fw = File_writer(d, priority, "column", "analysis")
         fw.create_txt("../../output/columnAnalysis/")
         fw.write_txt('\nDEVICE '+ str(d) + ': ')
         fw.write_txt('\n\tPRIORITY ' + str(map("_".join(), l)) + ':')
+    # Create the entries in the dictionary for the device to analyze:
+    devicesDict = dict() # key = device, value = an object of the class "columnStats"
+    for devExtra in device_extra:
+        key = devExtra[0] + "--" + devExtra[1]
+        devicesDict[key] = ColumnStats(write, fw) #create new object for the analysis
+    #Check the extra in the config to select the proper index
+    if config.EXTRA == "state":
+        extraIndex = 2
+    elif config.EXTRA == "tag":
+        extraIndex = 3
+    elif config.EXTRA == "description":
+        extraIndex = 4
+    # 3 cases for the query:
     if len(priority)==1:
         priorCond = "and livellopriorita=%s"
         query = ("select Device, Time, State, Tag, Description from electric where device=%s " + priorCond + " and action='Alarm CAME' order by time")
         cursor.execute(query, (d,l[0]))
+    elif isinstance(fileName, tuple):
+        #The reference device has the format (device,extra)
+        extraCond = " and state=%s"
+        query = ("select Device, Time, State, Tag, Description from electric where device=%s " + extraCond + " and action='Alarm CAME' order by time")
+        cursor.execute(query, (fileName[0],fileName[1]))
+        flagCoupleRef = True
     else:
         query = ("select Device, Time, State, Tag, Description from electric where device=%s and action='Alarm CAME' order by time")
         cursor.execute(query, (d,))
    
     events = cursor.fetchall()
     allSeenEvents = []
-    devicesDict = dict() # key = device, value = an object of the class "columnStats"
+    
     
     for e in events:
-        if e[0] not in devicesDict:
-            devicesDict[e[0]] = ColumnStats(write, fw)
+        if flagCoupleRef:
+            #if the reference device is a couple (device, extra)
+            keyName = fileName[0] + "--" + fileName[1]
+        else:
+            #if the reference device is a standard string
+            keyName = fileName[0] + "--"
+        if keyName not in devicesDict:
+            devicesDict[keyName] = ColumnStats(write, fw)
         
         allSeenEvents.append((e[0], e[1]))
         query = ("select Device, Time, State, Tag, Description from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
@@ -130,27 +156,33 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_filtering, cu
         
         if (e[0], e[1]) not in allSeenEvents:
             allSeenEvents.append((e[0], e[1]))
-            devicesDict[e[0]].updateState(e[2])
-            devicesDict[e[0]].updateTag(e[3])
-            devicesDict[e[0]].updateDescr(e[4])
+            devicesDict[keyName].updateState(e[2])
+            devicesDict[keyName].updateTag(e[3])
+            devicesDict[keyName].updateDescr(e[4])
         #else:
         #    devicesDict[e[0]].addDuplicate()
             
         for ea in eventsAfter:
-            
-            if ea[0] in device_filtering or ea[0] == d:
-                if ea[0] not in devicesDict:
-                    devicesDict[ea[0]] = ColumnStats(write, fw)
-                    
-                if (ea[0], ea[1]) not in allSeenEvents:
+            if config.EXTRA: #create the names with the "--"
+                extraAscii = ea[extraIndex].encode('ascii', 'ignore').decode('ascii')
+                extraAscii.replace("'", "")
+                couple = (ea[0], extraAscii)
+                devExtra = couple[0] + "--" + couple[1]
+            else:
+                couple = (ea[0], "")
+                devExtra = couple[0] + "--"
+            if couple in device_extra: #if the device-state couples is in the list of the device-states to analyze..
+
+                if (ea[0], ea[1]) not in allSeenEvents: #consider each (deviceName,timestamp) couple only once
+                    #Now update all the statistics:
                     allSeenEvents.append((ea[0], ea[1]))
-                    devicesDict[ea[0]].updateState(ea[2])
-                    devicesDict[ea[0]].updateTag(ea[3])
-                    devicesDict[ea[0]].updateDescr(ea[4])
-                    devicesDict[ea[0]].addTimestamp(e[1], ea[1])
-                #else:
-                #    devicesDict[ea[0]].addDuplicate()
-                    
+                    devicesDict[devExtra].updateState(ea[2])
+                    devicesDict[devExtra].updateTag(ea[3])
+                    devicesDict[devExtra].updateDescr(ea[4])
+                    devicesDict[devExtra].addTimestamp(e[1], ea[1])
+                    #else:
+                    #    devicesDict[ea[0]].addDuplicate()
+                        
     # COMPUTE OCCURRENCES, AVERAGE...
     for k in devicesDict:
         if write:
@@ -163,15 +195,20 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_filtering, cu
         
     return devicesDict
 
-def find_column_distribution(fileName, priority, networkDevices, write = False):
+def find_column_distribution(fileName, priority, device_extra, write = False):
     ''' 
     Finds average and standard deviation (in milliseconds) of the "networkDevices" passed as parameter,
     w.r.t. to the given fileName and priority.
+    fileName can be a string or a tuple (device,extra)
+    device_extra is a list that contain couples (device, extra)
     write = True if you want to write in the txt file
+    ----
+    Returns a dictionary with "device--extra" as keys. The values are objects of the class "ColumnStats".
     '''
     cnx = mysql.connector.connect(host='127.0.0.1', user='root', password='password', database='cern')
     cursor = cnx.cursor()
     if not isinstance(priority, list):
         priority = [priority]
-    devicesDict = compareChosenDevicesByAlarmPriority(fileName, priority, networkDevices, cursor, write)
+    devicesDict = compareChosenDevicesByAlarmPriority(fileName, priority, device_extra, cursor, write)
+    cursor.close()
     return devicesDict

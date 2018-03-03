@@ -7,6 +7,7 @@ import re
 import pandas as pd
 import columnAnalyzer as colAnal
 from DatabaseNetworkCorrelator import DatabaseNetworkCorrelator
+import config
 
 class Data_extractor:
     '''
@@ -83,65 +84,77 @@ class Data_extractor:
 
     def store_line(self, line, file_name, p):
         ''' 
-        Stores the devices in the given line (which should be found in the "Distinct devices after 5 minutes" set for later use 
+        Stores the devices and extra in the given line (which should be found in the "Distinct devices after 5 minutes" set for later use 
         and also stores the priority
         '''
-        devices_found = self.find_devices(line)
-        if devices_found:
-            tupl = (devices_found, p)
+        devices_extra_found = self.find_devices(line)
+        if devices_extra_found:
+            tupl = (devices_extra_found, p)
             self.events_by_file[file_name].append(tupl)
             self.totalRows = self.totalRows + 1
             
     def find_devices(self, line):
-        ''' Finds all the devices ID in the given line '''
-        findings = re.compile('\'\S+\'').findall(line)
+        ''' 
+        Finds all the devices ID in the given line. Returns a list of tuples (device, extra) 
+        '''
+        #findings = re.compile('\'\S+\'').findall(line)
+        findings = re.compile('\'(.*?)\'').findall(line)
         processed_findings = []
         for f in findings:
-            processed_findings.append(f.replace("'", ""))
+            device = re.compile('(.*?)\-\-').findall(f)
+            extra = [""]
+            #device[0].replace("--", "")
+            #device[0].replace("'", "")
+            if config.EXTRA:
+                extra = re.compile('\-\-(.*?)\Z').findall(f)
+                #extra[0].replace("--", "")
+                #extra[0].replace("'", "")
+            processed_findings.append((device[0], extra[0]))
         return processed_findings
     
     def prepare_candidates(self, var_type):
         '''
         Extracts occurrences and frequency of the devices (i.e. the candidate for becoming variables of the network).
         Occurrences and frequency are computed by looking ONLY at the txt itemsets.
-        This data is stored in ranked_devices, as a tuple of the kind (device, frequency, occurrences).
+        This data is stored in ranked_devices, as a tuple of the kind (device--extra), frequency, occurrences, average, st.dev.).
         '''
         self.ranked_devices = []
         frequency_by_device = dict() # key = device, value = sum of frequencies of device
-        allDevices = []
+        allDevicesExtra = set() #contain couples (device, extra)
 
         for key in self.events_by_file:
             occurrences = dict() #key = device; value = number of occurrences in SINGLE FILE
             total_events = len(self.events_by_file[key])
             for tupl in self.events_by_file[key]: # each tuple is: (device_list, priority)
-                for d in tupl[0]: 
-                    if d not in occurrences: #create new key
-                        occurrences[d] = 1
+                for couple in tupl[0]:
+                    devExtra = couple[0] + "--" + couple[1]
+                    allDevicesExtra.add(couple)
+                    if devExtra not in occurrences: #create new key
+                        occurrences[devExtra] = 1
                     else: #update key
-                        occurrences[d] = occurrences[d] + 1
-            for d in occurrences:
-                frequency_by_device[d] = round( occurrences[d] / float(total_events) , 2)
-                allDevices.append(d)
+                        occurrences[devExtra] = occurrences[devExtra] + 1
+            for devExtra in occurrences:
+                frequency_by_device[devExtra] = round( occurrences[devExtra] / float(total_events) , 2)
 
-        self.devicesColumnDict = colAnal.find_column_distribution(self.true_file_names[0], self.priority_selected, allDevices)
+        self.devicesColumnDict = colAnal.find_column_distribution(self.true_file_names[0], self.priority_selected, list(allDevicesExtra))
         self.occurrences = occurrences
 
         if var_type == "occurrences" or var_type == "frequency":
-            for d in frequency_by_device:
-                tupl = (d, frequency_by_device[d], occurrences[d], -1, -1)
+            for de in frequency_by_device:
+                tupl = (de, frequency_by_device[de], occurrences[de], -1, -1)
                 self.ranked_devices.append(tupl)
         elif var_type == "variance_only" or var_type == "support_variance":
-            for d in frequency_by_device:
-                tupl = (d, frequency_by_device[d], occurrences[d],
-                        self.devicesColumnDict[d].msAverage / 1000, self.devicesColumnDict[d].msStandDev / 1000)
+            for de in frequency_by_device:
+                tupl = (de, frequency_by_device[de], occurrences[de],
+                        self.devicesColumnDict[de].msAverage / 1000, self.devicesColumnDict[de].msStandDev / 1000)
                 self.ranked_devices.append(tupl)
         elif var_type == "lift":
             dnc = DatabaseNetworkCorrelator()
             dnc.initAsPreProcessor(self.true_file_names[0], self.priority_selected, log = True)
-            lift = dnc.totalOccurrencesCandidatesAnalysis(allDevices)
-            for d in lift:
-                tupl = (d, frequency_by_device[d], occurrences[d],
-                        "lift:", lift[d])
+            lift = dnc.totalOccurrencesCandidatesAnalysis(list(allDevicesExtra))
+            for de in lift:
+                tupl = (de, frequency_by_device[de], occurrences[de],
+                        "lift:", lift[de])
                 self.ranked_devices.append(tupl)
                 
         
@@ -165,28 +178,36 @@ class Data_extractor:
             self.ranked_devices.sort(key = lambda tup: tup[4]) #order by variance (actually, standard deviation) O
         elif var_type == "lift":
             self.ranked_devices.sort(key = lambda tup: tup[4], reverse=True) #order by lift
+        
+        #ordered_ranking = [i for i in self.ranked_devices if i[0] not in self.true_file_names[0]] # helper list with no file device in it ----THIS HAS TO BE UPDATED!!!!!!!!!
+        ordered_ranking = []
+        for varRanked in self.ranked_devices:
+            dev = re.compile('(.*?)\-\-').findall(varRanked[0])
+            dev = dev[0].replace("--", "")
+            dev = dev.replace("'", "")
+            if dev not in self.true_file_names[0]:
+                ordered_ranking.append(varRanked)
             
-        ordered_ranking = [i for i in self.ranked_devices if i[0] != self.true_file_names[0]] # helper list with no file device in it
         if var_type == "variance_only" or var_type == "lift":
             ordered_ranking = [tup for tup in ordered_ranking if tup[2] > 5] #remove devices with less than n occurrences
 
         for i in range(len(ordered_ranking)):
             NUM = len(self.variable_names)
-            device = ordered_ranking[i][0]
+            deviceExtra = ordered_ranking[i][0]
             frequency = ordered_ranking[i][1]
             stDev = ordered_ranking[i][4] * 1000
 
             if NUM < MIN:
-                self.variable_names.append(device)
+                self.variable_names.append(deviceExtra)
             elif NUM < MAX:
                 if var_type == "frequency":
                     if frequency > support:
-                        self.variable_names.append(device)
+                        self.variable_names.append(deviceExtra)
                 elif var_type == "occurrences":
-                    self.variable_names.append(device)
+                    self.variable_names.append(deviceExtra)
                 elif var_type =="variance_only":
                     if stDev < 1000 * 30:
-                        self.variable_names.append(device)
+                        self.variable_names.append(deviceExtra)
                 elif var_type == "support_variance":
                     ordered_ranking = [x for x in ordered_ranking if x[0] not in self.variable_names] #remove devices already added
                     ordered_ranking.sort(key = lambda tup: tup[4]) #order by variance
@@ -195,7 +216,7 @@ class Data_extractor:
                     break
                 elif var_type == "lift":
                     if (stDev / 100) >= 0.5: #stDev here is actually the lift in %
-                        self.variable_names.append(device)
+                        self.variable_names.append(deviceExtra)
             else:
                 break
             
@@ -215,8 +236,9 @@ class Data_extractor:
         for key in self.events_by_file:
             for tupl in self.events_by_file[key]: #each "line" is a list of an event sequence (+ priority as the other element of the tuple) to be turned into a training instance
                 if self.not_empty_check(tupl[0]): #i.e. consider only events lines that generate a NON-EMPTY training instance
+                    deviceExtraList = [x[0]+"--"+x[1] for x in tupl[0]] #build the "device--state" string
                     for ud in self.variable_names:
-                        if ud in tupl[0] or ud==key:
+                        if ud in deviceExtraList or ud==key:
                             if training_instances == "all_events_priority":
                                 value = tupl[1]
                             else:
@@ -239,14 +261,14 @@ class Data_extractor:
         return data
 
         
-    def not_empty_check(self, device_list):
-        ''' Takes a list of devices and checks if at least one variable is present in that list.
+    def not_empty_check(self, tuples_list):
+        ''' Takes a list of devices + extras and checks if at least one variable is present in that list.
         If the priority node is not present, will required that at least 2 devices are present
         '''
-
+        deviceExtra_list = [(x[0] + "--" + x[1]) for x in tuples_list]
         i = 0
         for d in self.variable_names:
-            if d in device_list:
+            if d in deviceExtra_list:
                 i += 1
                 if i >=1: #i>=x : accepts training instances with at least x "1".
                     return True

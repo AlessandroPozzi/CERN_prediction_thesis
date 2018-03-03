@@ -55,7 +55,9 @@ def create_markov_chain(pnh, gh):
     location_choice = False  # True, False
     info_choice = True  # True, False
     avg_var_edges = True # True, False
-    markov_handler.draw_mc_model(location_choice, info_choice, avg_var_edges)
+    refDevice = True
+    hideNames = True
+    markov_handler.draw_mc_model(location_choice, info_choice, avg_var_edges, refDevice, hideNames)
 
 
 ''' The main script to create the BNs '''
@@ -66,6 +68,7 @@ def run_script(mode):
         try:
             gh = General_handler()
             file_selected = true_device_names[file_selection - 1]  # true device name
+            #file_selected = config.true_device_names[file_selection - 1]
             sequences = expandDeviceMarkov.create_sequences_txt(file_selected)
             pnh = preprocess_network(select_priority, file_selection, gh, sequences, log=True)
             print("Location search started...")
@@ -79,8 +82,8 @@ def run_script(mode):
         gh = General_handler()
         pnhs = []  # LIST OF THE PRE-MARKOV HANDLERS
         i = 1
-        while i <= 6:
-            file_selected = true_device_names[i - 1]  # true device name
+        while i <= len(config.true_device_names):
+            file_selected = config.true_device_names[i - 1]  # true device name
             sequences = expandDeviceMarkov.create_sequences_txt(file_selected)
             for p in priority:
                 print("File " + str(i) + " with priority " + p + ":")

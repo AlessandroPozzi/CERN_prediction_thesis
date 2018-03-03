@@ -41,8 +41,8 @@ def create_sequences_txt(device):
 def create_mc_model(device, priority, consideredDevices, sequences):
     cnx = mysql.connector.connect(host='127.0.0.1', user='root', password='password', database='cern')
     cursor = cnx.cursor()
-    (mc, avg_var_list) = __get_markov_chain_model(cursor, device, priority, consideredDevices, sequences)
-    return (mc, avg_var_list)
+    (mc, avg_var_list, ref_dev_avg_vars) = __get_markov_chain_model(cursor, device, priority, consideredDevices, sequences)
+    return (mc, avg_var_list, ref_dev_avg_vars)
 
 
 def __create_txt_noClusters(cursor, d):
@@ -194,56 +194,19 @@ def __create_txt_clusters(cursor, d):
 
 def __get_markov_chain_model(cursor, d, l, consideredDevices, sequences):
 
-    '''
-    markedEvents = []
-    print '\nDEVICE ' + str(d) + ': '
-    print '\n\tPRIORITY ' + str(l) + ':'
-    query = ("select * from electric where device=%s and livellopriorita=%s and action='Alarm CAME' order by time")
-    cursor.execute(query, (d, l))
-    events = cursor.fetchall()
-    afterSeq = []  # Contiene le liste dei device che vediamo in ogni riga nei file di testo
-
-    for e in events:
-        strList = "%s"
-        for i in range(1, len(consideredDevices)):
-            strList = strList + " OR device=" + "%s"
-        textQuery = "select * from electric where time>=(%s) and time <= (%s + interval %s minute) and (device=" + strList + ") and action='Alarm CAME' order by time;"
-        query = (textQuery)
-        tpl = tuple((e[0], e[0], config.CORRELATION_MINUTES))
-        tpl2 = tuple(consideredDevices)
-        tpl = tpl + tpl2
-        cursor.execute(query, tpl)
-        eventsAfter = cursor.fetchall()
-        devicesAfter = []  # all events that happened 5 min after the event "e"
-        for ea in eventsAfter:
-            if ea not in markedEvents:  # CONDIZIONE per rimuovere i DUPLICATI
-                markedEvents.append(ea)
-                if ea[4] != d:  # CONDIZIONE per evitare problemi con il device di riferimento e l'aggiunta di stati, tag o descr.
-                    extraColumn = ea[22].encode('ascii', 'ignore').decode('ascii')
-                    extraColumn.replace("'", "")
-                    extraColumn = re.escape(extraColumn)
-                    # devicesAfter.append(ea[4] + "--" + extraColumn)
-                    devicesAfter.append(ea[4])
-        if devicesAfter != []:
-            afterSeq.append(devicesAfter)  # Lista di liste (i.e. tutto quello dopo "distinct device after 5 min")
-
-    # CONSOLE
-    print '\n\t\tSequences of activated devices after 5 minutes: [ '
-    for xx in afterSeq:
-        print '\t\t[ ',
-        for yy in xx:
-            print "'" + str(yy) + "', ",
-        print '], '
-    print ']'
-    '''
-
     avg_var_list = []
+    ref_dev_avg_vars = []
     if config.variance == True:
+        #get average and standard deviation for every couple of considered devices
         for sourceDev in consideredDevices:
             var_one_vs_all_full = columnAnalyzer.find_column_distribution(sourceDev, ['L0','L1','L2','L3'], consideredDevices)
             for destDev in var_one_vs_all_full:
                 avg_var_list.append((sourceDev, destDev, var_one_vs_all_full[destDev].msAverage, var_one_vs_all_full[destDev].msStandDev))
 
+        # get average and standard deviation for <reference device - other devices>
+        var_one_vs_all_full = columnAnalyzer.find_column_distribution(d, ['L0', 'L1', 'L2', 'L3'], consideredDevices)
+        for destDev in var_one_vs_all_full:
+            ref_dev_avg_vars.append((d, destDev, var_one_vs_all_full[destDev].msAverage, var_one_vs_all_full[destDev].msStandDev))
 
     mc = pomgr.MarkovChain.from_samples(sequences)
-    return (mc, avg_var_list)
+    return (mc, avg_var_list, ref_dev_avg_vars)

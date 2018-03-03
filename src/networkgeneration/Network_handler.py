@@ -139,7 +139,7 @@ class Network_handler:
             '''
                         
                                             
-    def draw_network(self, label_choice, location_choice, info_choice, variance, refDevice, hideNames):
+    def draw_network(self, label_choice, location_choice, onlyH0, info_choice, variance, refDevice, hideNames):
         ''' (7) 
         Draws the bayesian network.
         ----
@@ -157,32 +157,46 @@ class Network_handler:
         
         # Automatically change the names of the nodes
         if hideNames:
-            #realFakeNamesDict = self.convertNamesInNodes(devices)
+            #realFakeNamesDict = self.convertNames(devices)
             realFakeNamesDict = self.convertNamesCaesarCipher(devices, 5)
         
         # Create subgraph for the locations
         if location_choice:
             device_location = dict()
             device_locationH1 = dict()
+            allLocH0 = []
+            allLocH1 = []
             
             #For H0 and H1:
+            allDevicesLocations = self.general_handler.get_device_locations()
             for d in devices:
-                allDevicesLocations = self.general_handler.get_device_locations()
                 device_location[d] = allDevicesLocations[d][0] #H0
+                allLocH0.append(device_location[d])
                 device_locationH1[d] = allDevicesLocations[d][1] #H1
+                allLocH1.append(device_locationH1[d])
             if refDevice:
                 ref = self.device_considered_realName
                 device_location[ref] = allDevicesLocations[ref][0] #H0
+                allLocH0.append(device_location[ref])
                 device_locationH1[ref] = allDevicesLocations[ref][1] #H1
+                allLocH1.append(device_locationH1[ref])
             location_color = self.assign_color(device_location)
             location_colorH1 = self.assign_color(device_locationH1)
+            
+            # Hide the locations names, if requested:
+            realFakeLocationsH0Dict = self.convertNames(allLocH0, "Location")
+            realFakeLocationsH1Dict = self.convertNames(allLocH1, "Location")
             
             # Creating the subgraphs, one for each location:
             loc_subgraphs = dict()
             for loc in location_color:
                 name = "cluster_" + loc #IL NOME DEL SOTTOGRAFO DEVE INIZIARE PER "cluster_" 
                 loc_subgraphs[loc] = gv.Digraph(name) 
-                loc_subgraphs[loc].graph_attr['label'] = loc #Label with name to be visualized in the image
+                if hideNames:
+                    locatName = realFakeLocationsH0Dict[loc]
+                else:
+                    locatName = loc
+                loc_subgraphs[loc].graph_attr['label'] = locatName #Label with name to be visualized in the image
                         
         # Create subgraphs for occurrences, average and standard deviation:
         if info_choice:
@@ -204,8 +218,15 @@ class Network_handler:
             if location_choice:
                 locationH0 = device_location[node]
                 locationH1 = device_locationH1[node]
-                loc_subgraphs[locationH0].node(node, style='filled',fillcolor=location_colorH1[locationH1]) #add the node to the right subgraph
-                #loc_subgraphs[locationH0].node(node) #USE THIS TO ADD ONLY H0
+                if hideNames:
+                    nodeName = realFakeNamesDict[node]
+                else:
+                    nodeName = node
+                if not onlyH0:
+                    loc_subgraphs[locationH0].node(nodeName, style='filled',
+                                                fillcolor=location_colorH1[locationH1]) #add the node to the right subgraph
+                else: # Add only the H0 locations
+                    loc_subgraphs[locationH0].node(nodeName)
             elif info_choice:
                 info_subgraphs[node].node(node)
             else: #add the node directly to the graph
@@ -218,7 +239,15 @@ class Network_handler:
             ref = self.device_considered_realName
             locationH0 = device_location[ref]
             locationH1 = device_locationH1[ref]
-            loc_subgraphs[locationH0].node(ref, style='filled',fillcolor=location_colorH1[locationH1])
+            if hideNames:
+                nodeName = realFakeNamesDict[ref]
+            else:
+                nodeName = ref
+            if not onlyH0:
+                loc_subgraphs[locationH0].node(nodeName, style='filled',
+                                                fillcolor=location_colorH1[locationH1]) #add the node to the right subgraph
+            else: # Add only the H0 location
+                loc_subgraphs[locationH0].node(nodeName)
         else:
             ref = self.device_considered_realName
             if hideNames:
@@ -235,10 +264,13 @@ class Network_handler:
                 bn_graph.subgraph(info_subgraphs[dev])
                 
         # Legend for color:
-        if location_choice:
+        if location_choice and not onlyH0:
             legend = ""
             for loc in location_colorH1:
-                legend = legend + location_colorH1[loc] + " --> " + loc + "\n"
+                if hideNames:
+                    legend = legend + location_colorH1[loc] + " --> " + realFakeLocationsH1Dict[loc] + "\n"
+                else:
+                    legend = legend + location_colorH1[loc] + " --> " + loc + "\n"
             bn_graph.node(legend, shape="box")
         
         # Create and color edges
@@ -414,35 +446,38 @@ class Network_handler:
                 nice_graph.write_png('../../output/' + self.device_considered 
                                      + '_' + self.priority_considered + '-inference_network.png')       
         
-    def convertNamesInNodes(self, devices, name = "Node"):
+    def convertNames(self, oldNames, newNamePrefix = "Node"):
+        '''Converts the names in the list "oldNames" in strings like "newNamePrefix" + a progressive index.'''
         i = 0
         fakeRealDict = dict()
-        for d in devices:
-            fakeRealDict[d] = name + str(i)
+        for d in oldNames:
+            fakeRealDict[d] = newNamePrefix + str(i)
             i += 1
         fakeRealDict[self.device_considered_realName] = "ReferenceDevice"
         return fakeRealDict
     
-    def convertNamesCaesarCipher(self, devices, shift):
+    def convertNamesCaesarCipher(self, oldNames, shift):
+        ''' Converts the names in the list "oldNames" using a Caesar's Cipher using the given shift value. '''
         fakeRealDict = dict()
-        for d in devices:
+        for d in oldNames:
             fakeRealDict[d] = self.shift(d, shift)
         fakeRealDict[self.device_considered_realName] = self.shift(self.device_considered_realName, shift)
         return fakeRealDict
     
     def shift(self, name, shift):
+        ''' Shifts each character of the given name by the given "shift" value '''
         alphabetLower = 'abcdefghijklmnopqrstuvwxyz'
         alphabetUpper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
         newName = []
         for i in name: #iterate over the text
             if i.strip():                 # if the char is not a space ""
-                if i.isupper():
+                if i.isupper(): #uppercase char
                     newName.append(alphabetUpper[(alphabetUpper.index(i) + shift) % 26])    
-                elif i.islower():
+                elif i.islower(): #lowercase char
                     newName.append(alphabetLower[(alphabetLower.index(i) + shift) % 26])
-                elif i.isdigit():
+                elif i.isdigit(): #number
                     newName.append(str((int(i) + shift) % 10))
-                else:
+                else: # Every special character is replace by a "_"
                     newName.append("_")
             else:
                 newName.append(i) #if space the simply append it to data
@@ -471,7 +506,7 @@ class Network_handler:
         '''
         Returns a dictionary with the location as key and the assigned colour as value (WORKS WITH MAX 10 DIFFERENT LOCATIONS)
         '''
-        system_color = ['Blue', 'Green', 'Red', 'Purple', 'Yellow', 'Red', 'Grey', 'Aqua', 'Light Red', 'Light Blue', 'Light Green']
+        system_color = ['Lightblue', 'Green', 'Red', 'Purple', 'Yellow', 'Red', 'Grey', 'Pink', 'Palegreen', 'Cyan', 'Orange', 'Brown']
         location_color = dict() # key = location; value = color
         for dev, loc in device_location.items():
             if loc not in location_color:

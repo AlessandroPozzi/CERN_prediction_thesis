@@ -340,6 +340,14 @@ class MarkovHandler:
         output = ''.join(newName)
         return output
 
+    def getOnlyDevConsidered(self, sequences):
+        finalSeq = []
+        for seq in sequences:
+            seq = [dev for dev in seq if dev in self.variables_names]
+            if seq:
+                finalSeq.append(seq)
+        return finalSeq
+
     def __find_avg_var(self, item, sourceDev, destDev, hideNames):
         if hideNames:
             src = self.shift(item[0], 5)

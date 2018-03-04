@@ -52,8 +52,8 @@ def create_markov_chain(pnh, gh):
     markov_handler.create_mc_model(pnh.sequences)
 
     # 5) DRAW THE NETWORK
-    location_choice = False  # True, False
-    info_choice = True  # True, False
+    location_choice = True  # True, False
+    info_choice = False  # True, False
     avg_var_edges = True # True, False
     refDevice = True
     hideNames = False

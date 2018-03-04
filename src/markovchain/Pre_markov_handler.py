@@ -39,6 +39,7 @@ class Pre_markov_handler(object):
         self.device_considered_realName = self.true_device_names[num - 1]
         self.priority_considered = select_priority
         self.file_suffix = file_suffix
+        self.general_handler.add_devices([self.true_device_names[num-1]]) #FIX for missing reference device in locations
 
         self.file_writer = File_writer(self.device_considered, self.priority_considered)
         self.log("Priority level considered: " + select_priority, log)

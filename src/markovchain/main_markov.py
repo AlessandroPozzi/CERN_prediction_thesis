@@ -56,7 +56,7 @@ def create_markov_chain(pnh, gh):
     info_choice = True  # True, False
     avg_var_edges = True # True, False
     refDevice = True
-    hideNames = True
+    hideNames = False
     markov_handler.draw_mc_model(location_choice, info_choice, avg_var_edges, refDevice, hideNames)
 
 

@@ -295,7 +295,7 @@ class MarkovHandler:
                 else:
                     newName.append("_")
             else:
-                newName.append(i)  # if space the simply append it to data
+                newName.append(i)  # if space then simply append it to data
         output = ''.join(newName)
         return output
 

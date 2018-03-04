@@ -65,11 +65,26 @@ def compareChosenDevicesByAlarmPriority(cursor):
                     pass
                 newClusters = clusterHandler.getClusters()
                 
+                #Check in the config if extras must be used
+                if config.EXTRA == "state":
+                    index = 10
+                elif config.EXTRA == "tag":
+                    index = 5
+                elif config.EXTRA == "description":
+                    index = 6
+                
+                    
                 #Create the list of itemsets
                 for stateList in newClusters:
                     devices = []
                     for evstate in stateList:
-                        devices.append(evstate.getDevice())
+                        rawEvent = evstate.rawEvent
+                        if config.EXTRA:
+                            extraColumn = rawEvent[index].encode('ascii', 'ignore').decode('ascii')
+                            extraColumn.replace("'", "")
+                        else:
+                            extraColumn = ""
+                        devices.append(evstate.getDevice() + "--" + extraColumn)
                     clusterList.append(list(set(devices)))
 
             #clusterList = a list of clusters, where each cluster is a list of devices

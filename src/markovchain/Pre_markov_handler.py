@@ -11,15 +11,13 @@ from helpers.File_writer import File_writer
 from Data_extractor import Data_extractor
 from DataError import DataError
 from File_writer import File_writer
-
+import config
 
 class Pre_markov_handler(object):
     def __init__(self, gh, seqFromFile):
 
-        self.file_names = ["EMC0019", "EHS60BE", "ESS115H", "ESS184", "EXS48X", "EXS1062X",
-                           'ESS406E91', 'ESS407E91', 'ESS520E91', 'ESS1184', "CUSTOM"]
-        self.true_device_names = ["EMC001*9", 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X',
-                                  'ESS406/E91', 'ESS407/E91', 'ESS520/E91', 'ESS11*84', 'CUSTOM']
+        self.file_names = config.escaped_file_names
+        self.true_device_names = config.true_device_names
         self.extractor = Data_extractor()
         self.general_handler = gh
         self.sequences = seqFromFile
@@ -30,7 +28,6 @@ class Pre_markov_handler(object):
         -----------------
         Parameters:
         select_priority -- A string with the priority level to be considered
-        files_used      -- The number of the file to be used
         log             -- "True" if you want to print debug information in the console
         '''
         if not select_priority or not file_selection:

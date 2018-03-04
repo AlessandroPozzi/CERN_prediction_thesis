@@ -40,9 +40,6 @@ class EventState(object):
         seconds = timeElapsed.total_seconds()
         milliseconds = timeElapsed.microseconds / 1000
         self.millisecondsElapsed = seconds * 1000 + milliseconds #millseconds elapsed since REFERENCE event
-        
-    def getEvent(self):
-        return self.rawEvent
     
     def getDevice(self):
         return self.device

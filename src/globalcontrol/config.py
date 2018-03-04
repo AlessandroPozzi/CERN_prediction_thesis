@@ -14,7 +14,7 @@ CORRELATION_UNIQUENESS = True # Used when computing the LIFT, in DatabaseNetwork
                                 # happened multiple times after each "n" minutes block. In general, leave this True
                                 
 '''markov settings'''
-clustering = "db_scan" # no_clustering, mean_shift, db_scan, avg_plus_stdev, offline_average, static_distance
+clustering = "avg_plus_stdev" # no_clustering, mean_shift, db_scan, avg_plus_stdev, offline_average, static_distance
 variance = True
 
 ''' expandDevice settings '''

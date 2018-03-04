@@ -20,11 +20,8 @@ from File_writer import File_writer
 from ClusteringHandler import ClusterHandler
 from DataError import DataError
 import re
-import graphviz as gv
 import config
-import numpy as np
 import pomegranate as pomgr
-import os
 import columnAnalyzer
 from datetime import timedelta
 
@@ -33,9 +30,9 @@ def create_sequences_txt(device):
     cnx = mysql.connector.connect(host='127.0.0.1', user='root', password='password', database='cern')
     cursor = cnx.cursor()
     if config.clustering != "no_clustering":
-       sequences = __create_txt_clusters(cursor, device)
+        sequences = __create_txt_clusters(cursor, device)
     else:
-       sequences = __create_txt_noClusters(cursor, device)
+        sequences = __create_txt_noClusters(cursor, device)
     return sequences
 
 def create_mc_model(device, priority, consideredDevices, sequences):
@@ -73,11 +70,19 @@ def __create_txt_noClusters(cursor, d):
                 if ea not in markedEvents:  # CONDIZIONE per rimuovere i DUPLICATI
                     markedEvents.append(ea)
                     if ea[4] != d:  # CONDIZIONE per evitare problemi con il device di riferimento e l'aggiunta di stati, tag o descr.
-                        extraColumn = ea[22].encode('ascii', 'ignore').decode('ascii')
-                        extraColumn.replace("'", "")
-                        extraColumn = re.escape(extraColumn)
-                        # devicesAfter.append(ea[4] + "--" + extraColumn)
-                        devicesAfter.append(ea[4])
+                        if config.EXTRA == "state":
+                            index = 10
+                        elif config.EXTRA == "tag":
+                            index = 5
+                        elif config.EXTRA == "description":
+                            index = 6
+                        if config.EXTRA:
+                            extraColumn = ea[index].encode('ascii', 'ignore').decode('ascii')
+                            extraColumn.replace("'", "")
+                            #extraColumn = re.escape(extraColumn)
+                        else:
+                            extraColumn = ""
+                        devicesAfter.append(ea[4] + "--" + extraColumn)
             if devicesAfter != []:
                 afterSeq.append(devicesAfter)  # Lista di liste (i.e. tutto quello dopo "distinct device after 5 min")
                 afterSeqPriority.append((devicesAfter, l))
@@ -154,13 +159,27 @@ def __create_txt_clusters(cursor, d):
             except DataError as e:
                 pass
             newClusters = clusterHandler.getClusters()
-
-            # Create the list of itemsets
+            
+            #Check in the config if extras must be used
+            if config.EXTRA == "state":
+                index = 10
+            elif config.EXTRA == "tag":
+                index = 5
+            elif config.EXTRA == "description":
+                index = 6
+            
+            #Create the list of itemsets
             for stateList in newClusters:
                 devices = []
                 for evstate in stateList:
-                    devices.append(evstate.getDevice())
-                clusterList.append(devices)
+                    rawEvent = evstate.rawEvent
+                    if config.EXTRA:
+                        extraColumn = rawEvent[index].encode('ascii', 'ignore').decode('ascii')
+                        extraColumn.replace("'", "")
+                    else:
+                        extraColumn = ""
+                    devices.append(evstate.getDevice() + "--" + extraColumn)
+                clusterList.append(list(set(devices)))
                 clusterListPriority.append((devices, l))
 
         # clusterList = a list of clusters, where each cluster is a list of devices

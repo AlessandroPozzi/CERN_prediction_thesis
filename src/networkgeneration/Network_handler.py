@@ -197,7 +197,7 @@ class Network_handler:
             # Creating the subgraphs, one for each location:
             loc_subgraphs = dict()
             for loc in location_color:
-                name = "cluster_" + loc #IL NOME DEL SOTTOGRAFO DEVE INIZIARE PER "cluster_" 
+                name = "cluster_" + loc #The subgraph name MUST start with "cluster_" 
                 loc_subgraphs[loc] = gv.Digraph(name) 
                 if hideNames:
                     locatName = realFakeLocationsH0Dict[loc]
@@ -211,7 +211,7 @@ class Network_handler:
             # there's one subgraph for each node:
             id = 0
             for de in devicesExtraString:
-                name = "cluster_" + str(id) #IL NOME DEL SOTTOGRAFO DEVE INIZIARE PER "cluster_" 
+                name = "cluster_" + str(id) #The subgraph name MUST start with "cluster_" 
                 id += 1
                 info_subgraphs[de] = gv.Digraph(name)
                 label = "Tot: " + str(round(self.occurrences[de], 2)) + " | "

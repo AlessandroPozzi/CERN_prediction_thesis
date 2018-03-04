@@ -57,7 +57,8 @@ def create_markov_chain(pnh, gh):
     avg_var_edges = True # True, False
     refDevice = True
     hideNames = False
-    markov_handler.draw_mc_model(location_choice, info_choice, avg_var_edges, refDevice, hideNames)
+    onlyH0 = False
+    markov_handler.draw_mc_model(location_choice, info_choice, avg_var_edges, refDevice, hideNames, onlyH0)
 
 
 ''' The main script to create the BNs '''

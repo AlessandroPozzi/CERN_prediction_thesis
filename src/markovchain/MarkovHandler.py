@@ -38,80 +38,103 @@ class MarkovHandler:
         (self.mc, self.avg_var_list, self.ref_dev_avg_vars) = expandDeviceMarkov.create_mc_model(self.device_considered_realName,
             self.priority_considered, self.variables_names, seqWithDevConsideredOnly)
 
-    def draw_mc_model(self, location_choice, info_choice, avg_var_edges, refDevice, hideNames):
+    def draw_mc_model(self, location_choice, info_choice, avg_var_edges, refDevice, hideNames, onlyH0):
         if location_choice and info_choice:
             DataError("location_choice and info_choice can't be both True")
             return
         mc_graph = gv.Digraph(format="png")
         mc_graph.graph_attr['overlap'] = "false"
         mc_graph.graph_attr['rankdir'] = 'LR'
-        devices = self.variables_names
+        devicesExtraString = self.variables_names #format string: "device--extra"
+        devicesExtraCouple = [] #format couple: (device, extra)
+        for de in devicesExtraString:
+            devName = re.compile('(.*?)\-\-').findall(de)
+            extraName = re.compile('\-\-(.*?)\Z').findall(de)
+            devicesExtraCouple.append((devName[0],extraName[0]))
 
         # Automatically change the names of the nodes
         if hideNames:
-            # realFakeNamesDict = self.convertNamesInNodes(devices)
-            realFakeNamesDict = self.convertNamesCaesarCipher(devices, 5)
+            #realFakeNamesDict = self.convertNames(devices)
+            realFakeNamesDict = self.convertNamesCaesarCipher(devicesExtraString, 5)
 
         # Create subgraph for the locations
         if location_choice:
             device_location = dict()
             device_locationH1 = dict()
+            allLocH0 = []
+            allLocH1 = []
 
             # For H0 and H1:
-            for d in devices:
-                allDevicesLocations = self.general_handler.get_device_locations()
-                device_location[d] = allDevicesLocations[d][0]  # H0
-                device_locationH1[d] = allDevicesLocations[d][1]  # H1
+            allDevicesLocations = self.general_handler.get_device_locations() #key=device name (no extra!)
+            for de in devicesExtraCouple:
+                device_location[de[0]] = allDevicesLocations[de[0]][0] #H0
+                allLocH0.append(device_location[de[0]])
+                device_locationH1[de[0]] = allDevicesLocations[de[0]][1] #H1
+                allLocH1.append(device_locationH1[de[0]])
             if refDevice:
                 ref = self.device_considered_realName
                 device_location[ref] = allDevicesLocations[ref][0] #H0
+                allLocH0.append(device_location[ref])
                 device_locationH1[ref] = allDevicesLocations[ref][1] #H1
+                allLocH1.append(device_locationH1[ref])
             location_color = self.assign_color(device_location)
             location_colorH1 = self.assign_color(device_locationH1)
+            
+            # Hide the locations names, if requested:
+            realFakeLocationsH0Dict = self.convertNames(allLocH0, "Location")
+            realFakeLocationsH1Dict = self.convertNames(allLocH1, "Location")
 
             # Creating the subgraphs, one for each location:
             loc_subgraphs = dict()
             for loc in location_color:
-                name = "cluster_" + loc  # SE IL NOME DEL SOTTOGRAFO NON INIZIA PER "cluster_" NON FUNZIONERA'
+                name = "cluster_" + loc  #The subgraph name MUST start with "cluster_" 
                 loc_subgraphs[loc] = gv.Digraph(name)
-                loc_subgraphs[loc].graph_attr['label'] = loc  # Label with name to be visualized in the image
+                if hideNames:
+                    locatName = realFakeLocationsH0Dict[loc]
+                else:
+                    locatName = loc
+                loc_subgraphs[loc].graph_attr['label'] = locatName  # Label with name to be visualized in the image
                 loc_subgraphs[loc].graph_attr['overlap'] = "false"
-
+                
         # Create subgraphs for occurrences, average and standard deviation:
         if info_choice:
             info_subgraphs = dict()
             # there's one subgraph for each node:
             id = 0
-            for d in devices:
-                name = "cluster_" + str(id)  # SE IL NOME DEL SOTTOGRAFO NON INIZIA PER "cluster_" NON FUNZIONERA'
+            for de in devicesExtraString:
+                name = "cluster_" + str(id)  #The subgraph name MUST start with "cluster_" 
                 id += 1
-                if hideNames:
-                    devName = realFakeNamesDict[d]
-                else:
-                    devName = d
-                info_subgraphs[devName] = gv.Digraph(name)
-                label = "Occurrences: " + str(round(self.occurrences[d], 2)) #+ " | "
-                #label = label + "Avg: " + str(round(self.devicesColumnDict[d].msAverage / 1000, 2)) + "s\n"
-                #label = label + "St.Dev.: " + str(round(self.devicesColumnDict[d].msStandDev / 1000, 2)) + "s"
-                info_subgraphs[devName].graph_attr['label'] = label  # Label with name to be visualized in the image
-                info_subgraphs[devName].graph_attr['overlap'] = 'scale'
+                info_subgraphs[de] = gv.Digraph(name)
+                label = "Occurrences: " + str(round(self.occurrences[de], 2)) #+ " | "
+                label = label + "Avg: " + str(round(self.devicesColumnDict[de].msAverage / 1000, 2)) + "s\n"
+                label = label + "St.Dev.: " + str(round(self.devicesColumnDict[de].msStandDev / 1000, 2)) + "s"
+                info_subgraphs[de].graph_attr['label'] = label  # Label with name to be visualized in the image
+                info_subgraphs[de].graph_attr['overlap'] = 'scale'
 
         # Create nodes
-        for node in devices:
+        for de in devicesExtraCouple:
+            nodeName = de[0] + "--" + de[1]
+            devName = de[0]
             if location_choice:
-                locationH0 = device_location[node]
-                locationH1 = device_locationH1[node]
-                loc_subgraphs[locationH0].node(node, style='filled', fillcolor=location_colorH1[locationH1])# add the node to the right subgraph
+                locationH0 = device_location[devName]
+                locationH1 = device_locationH1[devName]
+                if hideNames:
+                    nodeName = realFakeNamesDict[nodeName]
+                if not onlyH0:
+                    loc_subgraphs[locationH0].node(nodeName, style='filled',
+                                                fillcolor=location_colorH1[locationH1]) #add the node to the right subgraph
+                else: # Add only the H0 locations
+                    loc_subgraphs[locationH0].node(nodeName)
                 # loc_subgraphs[locationH0].node(node) #USE THIS TO ADD ONLY H0
             elif info_choice:
                 if hideNames:
-                    devName = realFakeNamesDict[node]
+                    fakeName = realFakeNamesDict[nodeName]
+                    info_subgraphs[nodeName].node(fakeName)
                 else:
-                    devName = node
-                info_subgraphs[devName].node(devName)
+                    info_subgraphs[nodeName].node(nodeName)
             else:  # add the node directly to the graph
                 if hideNames:
-                    node = realFakeNamesDict[node]
+                    node = realFakeNamesDict[nodeName]
                 mc_graph.node(node)
 
         # Reference device
@@ -119,7 +142,15 @@ class MarkovHandler:
             ref = self.device_considered_realName
             locationH0 = device_location[ref]
             locationH1 = device_locationH1[ref]
-            loc_subgraphs[locationH0].node(ref, style='filled', fillcolor=location_colorH1[locationH1])
+            if hideNames:
+                nodeName = realFakeNamesDict[ref]
+            else:
+                nodeName = ref
+            if not onlyH0:
+                loc_subgraphs[locationH0].node(nodeName, style='filled',
+                                                fillcolor=location_colorH1[locationH1]) #add the node to the right subgraph
+            else: # Add only the H0 location
+                loc_subgraphs[locationH0].node(nodeName)
         else:
             ref = self.device_considered_realName
             if hideNames:
@@ -136,10 +167,13 @@ class MarkovHandler:
                 mc_graph.subgraph(info_subgraphs[dev])
 
         # Legend for color:
-        if location_choice:
+        if location_choice and not onlyH0:
             legend = ""
             for loc in location_colorH1:
-                legend = legend + location_colorH1[loc] + " --> " + loc + "\n"
+                if hideNames:
+                    legend = legend + location_colorH1[loc] + " --> " + realFakeLocationsH1Dict[loc] + "\n"
+                else:
+                    legend = legend + location_colorH1[loc] + " --> " + loc + "\n"
             mc_graph.node(legend, shape="box")
 
         # Create edges
@@ -248,6 +282,9 @@ class MarkovHandler:
                 if hideNames:
                     source = self.shift(sourceDev, 5)
                     destination = self.shift(destDev, 5)
+                else:
+                    source = sourceDev
+                    destination = destDev
                 avg, var = self.__find_avg_var(item, source, destination, hideNames)
                 if avg != None and var != None:
                     return avg, var
@@ -265,22 +302,26 @@ class MarkovHandler:
                 cleanedSeq.append(tup[0])
         return cleanedSeq
 
-    def getOnlyDevConsidered(self, sequences):
-        finalSeq = []
-        for seq in sequences:
-            seq = [dev for dev in seq if dev in self.variables_names]
-            if seq:
-                finalSeq.append(seq)
-        return finalSeq
-
-    def convertNamesCaesarCipher(self, devices, shift):
+    def convertNames(self, oldNames, newNamePrefix = "Node"):
+        '''Converts the names in the list "oldNames" in strings like "newNamePrefix" + a progressive index.'''
+        i = 0
         fakeRealDict = dict()
-        for d in devices:
+        for d in oldNames:
+            fakeRealDict[d] = newNamePrefix + str(i)
+            i += 1
+        fakeRealDict[self.device_considered_realName] = "ReferenceDevice"
+        return fakeRealDict
+
+    def convertNamesCaesarCipher(self, oldNames, shift):
+        ''' Converts the names in the list "oldNames" using a Caesar's Cipher using the given shift value. '''
+        fakeRealDict = dict()
+        for d in oldNames:
             fakeRealDict[d] = self.shift(d, shift)
         fakeRealDict[self.device_considered_realName] = self.shift(self.device_considered_realName, shift)
         return fakeRealDict
 
     def shift(self, name, shift):
+        ''' Shifts each character of the given name by the given "shift" value '''
         alphabetLower = 'abcdefghijklmnopqrstuvwxyz'
         alphabetUpper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
         newName = []

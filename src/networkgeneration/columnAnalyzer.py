@@ -145,7 +145,7 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_extra, cursor
             keyName = fileName[0] + "--" + fileName[1]
         else:
             #if the reference device is a standard string
-            keyName = fileName[0] + "--"
+            keyName = fileName + "--"
         if keyName not in devicesDict:
             devicesDict[keyName] = ColumnStats(write, fw)
         

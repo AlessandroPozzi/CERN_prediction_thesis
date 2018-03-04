@@ -15,15 +15,8 @@ from MarkovHandler import MarkovHandler
 import expandDeviceMarkov
 import config
 
-true_device_names = ["EMC001*9", 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X',
-                                  'ESS406/E91', 'ESS407/E91', 'ESS520/E91', 'ESS11*84', 'CUSTOM']
+
 priority = ('L0', 'L1', 'L2', 'L3')  # Hard coded priority, do NOT change
-select_priority = 'L1'  # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE"
-file_selection = 1  # 1 to 11 -->  ("EMC0019", "EHS60BE", "ES115H", "ESS184", "EXS48X", "EXS1062X",
-#   'ESS406/E91', 'ESS407/E91', 'ESS520/E91', 'ESS11*84', "CUSTOM"]
-# use "CUSTOM" (file number 11) in mode="one" to generate a custom network from expandDevice2 (SET PRIORITY L0)
-mode = "all"  # one, all  | "one" to do the single file-priority selected above;
-# "all" to do all the possible files and priorities
 
 def preprocess_network(select_priority, file_selection, gh, sequences, log):
     pre_markov_handler = Pre_markov_handler(gh, sequences)
@@ -68,10 +61,9 @@ def run_script(mode):
     if mode == "one":
         try:
             gh = General_handler()
-            file_selected = true_device_names[file_selection - 1]  # true device name
-            #file_selected = config.true_device_names[file_selection - 1]
+            file_selected = config.true_device_names[config.file_selection - 1]  # true device name
             sequences = expandDeviceMarkov.create_sequences_txt(file_selected)
-            pnh = preprocess_network(select_priority, file_selection, gh, sequences, log=True)
+            pnh = preprocess_network(config.selectPriority, config.file_selection, gh, sequences, log=True)
             print("Location search started...")
             gh.getLocations()  # LOCATION SEARCH
             print("Location search completed.")
@@ -83,7 +75,7 @@ def run_script(mode):
         gh = General_handler()
         pnhs = []  # LIST OF THE PRE-MARKOV HANDLERS
         i = 1
-        while i <= len(config.true_device_names):
+        while i <= 6:
             file_selected = config.true_device_names[i - 1]  # true device name
             sequences = expandDeviceMarkov.create_sequences_txt(file_selected)
             for p in priority:
@@ -131,5 +123,5 @@ if __name__ == "__main__":
         except Exception as e:
             print(e)
     # run the network creation:
-    run_script(mode)
+    run_script(config.mode)
 

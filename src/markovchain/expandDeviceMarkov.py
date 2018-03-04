@@ -24,6 +24,7 @@ import config
 import pomegranate as pomgr
 import columnAnalyzer
 from datetime import timedelta
+import string
 
 
 def create_sequences_txt(device):
@@ -179,7 +180,7 @@ def __create_txt_clusters(cursor, d):
                     else:
                         extraColumn = ""
                     devices.append(evstate.getDevice() + "--" + extraColumn)
-                clusterList.append(list(set(devices)))
+                clusterList.append(devices)
                 clusterListPriority.append((devices, l))
 
         # clusterList = a list of clusters, where each cluster is a list of devices
@@ -218,7 +219,8 @@ def __get_markov_chain_model(cursor, d, l, consideredDevices, sequences):
     if config.variance == True:
         #get average and standard deviation for every couple of considered devices
         for sourceDev in consideredDevices:
-            var_one_vs_all_full = columnAnalyzer.find_column_distribution(sourceDev, ['L0','L1','L2','L3'], consideredDevices)
+            sourceOnlyDevName, sourceOnlyExtraName = string.split(sourceDev, "--")
+            var_one_vs_all_full = columnAnalyzer.find_column_distribution(sourceOnlyDevName, ['L0','L1','L2','L3'], consideredDevices)
             for destDev in var_one_vs_all_full:
                 avg_var_list.append((sourceDev, destDev, var_one_vs_all_full[destDev].msAverage, var_one_vs_all_full[destDev].msStandDev))
 

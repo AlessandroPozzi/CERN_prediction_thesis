@@ -104,14 +104,21 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_extra, cursor
     fw = None
     flagCoupleRef = False
     if write:
-        fw = File_writer(d, priority, "column", "analysis")
+        priorString = "".join(priority)
+        fw = File_writer(d, priorString, "column", "analysis")
         fw.create_txt("../../output/columnAnalysis/")
         fw.write_txt('\nDEVICE '+ str(d) + ': ')
-        fw.write_txt('\n\tPRIORITY ' + str(map("_".join(), l)) + ':')
+        fw.write_txt('\n\tPRIORITY ' + "".join(priority) + ':')
     # Create the entries in the dictionary for the device to analyze:
     devicesDict = dict() # key = device, value = an object of the class "columnStats"
     for devExtra in device_extra:
-        key = devExtra[0] + "--" + devExtra[1]
+        if isinstance(devExtra, tuple): #list of tuples
+            key = devExtra[0] + "--" + devExtra[1]
+            devicesAreStrings = False
+        else: #list of strings
+            key = devExtra
+            devicesAreStrings = True
+   
         devicesDict[key] = ColumnStats(write, fw) #create new object for the analysis
     #Check the extra in the config to select the proper index
     if config.EXTRA == "state":
@@ -131,7 +138,7 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_extra, cursor
         query = ("select Device, Time, State, Tag, Description from electric where device=%s " + extraCond + " and action='Alarm CAME' order by time")
         cursor.execute(query, (fileName[0],fileName[1]))
         flagCoupleRef = True
-    else:
+    else: 
         query = ("select Device, Time, State, Tag, Description from electric where device=%s and action='Alarm CAME' order by time")
         cursor.execute(query, (d,))
    
@@ -149,7 +156,7 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_extra, cursor
         if keyName not in devicesDict:
             devicesDict[keyName] = ColumnStats(write, fw)
         
-        allSeenEvents.append((e[0], e[1]))
+        #allSeenEvents.append((e[0], e[1]))
         query = ("select Device, Time, State, Tag, Description from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
         cursor.execute(query, (e[1], e[1], config.CORRELATION_MINUTES))
         eventsAfter = cursor.fetchall()
@@ -166,13 +173,21 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_extra, cursor
             if config.EXTRA: #create the names with the "--"
                 extraAscii = ea[extraIndex].encode('ascii', 'ignore').decode('ascii')
                 extraAscii.replace("'", "")
-                couple = (ea[0], extraAscii)
-                devExtra = couple[0] + "--" + couple[1]
+                couple = (ea[0], extraAscii) #the tuple of this event
+                devExtra = couple[0] + "--" + couple[1] #the string for this event
+                if devicesAreStrings:
+                    thisEventDeviceExtra = devExtra #Use the string names if this method was called with a list of strings
+                else:
+                    thisEventDeviceExtra = couple #Use the tuple if this method was called with a list of tuples
             else:
                 couple = (ea[0], "")
                 devExtra = couple[0] + "--"
-            if couple in device_extra: #if the device-state couples is in the list of the device-states to analyze..
-
+                if devicesAreStrings:
+                    thisEventDeviceExtra = devExtra #Use the string names if this method was called with a list of strings
+                else:
+                    thisEventDeviceExtra = couple #Use the tuple if this method was called with a list of tuples
+                
+            if thisEventDeviceExtra in device_extra: #if the device--extr is in the list of the device-states to analyze..
                 if (ea[0], ea[1]) not in allSeenEvents: #consider each (deviceName,timestamp) couple only once
                     #Now update all the statistics:
                     allSeenEvents.append((ea[0], ea[1]))

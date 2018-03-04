@@ -7,7 +7,7 @@ Config file. Can also run the entire system
 
 ''' GENERAL settings '''
 CORRELATION_MINUTES = 5
-FILE_SUFFIX = "clusters_mc_dbscan" #clusters_dbscan, afterNoDup, afterStateNodup, clusters_offline_average1x, clusters_static_distance12sec
+FILE_SUFFIX = "afterNoDup" #clusters_mc_dbscan, afterNoDup, afterStateNodup, clusters_offline_average1x, clusters_static_distance12sec
                             #clusters_offline_average1x, clusters_static_distance12sec, clusters_meanShift, clusters_averageDeviation...
 EXTRA = "state" # state, tag, description, "" : use this to select the extra info to attach to Device (needed also in main).
 CORRELATION_UNIQUENESS = True # Used when computing the LIFT, in DatabaseNetworkCorrelator. If True, will consider only ONCE events

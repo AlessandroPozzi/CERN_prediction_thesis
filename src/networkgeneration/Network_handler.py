@@ -165,7 +165,7 @@ class Network_handler:
         # Automatically change the names of the nodes
         if hideNames:
             #realFakeNamesDict = self.convertNames(devices)
-            realFakeNamesDict = self.convertNamesCaesarCipher(devicesExtraString, 5)
+            realFakeNamesDict = self.convertNamesCaesarCipher(devicesExtraString, 7)
         
         # Create subgraph for the locations
         if location_choice:
@@ -213,21 +213,29 @@ class Network_handler:
             for de in devicesExtraString:
                 name = "cluster_" + str(id) #The subgraph name MUST start with "cluster_" 
                 id += 1
-                info_subgraphs[de] = gv.Digraph(name)
+                if not config.EXTRA and "--" in de: 
+                    deClean, _ = de.split("--")
+                else:
+                    deClean = de
+                info_subgraphs[deClean] = gv.Digraph(name)
                 label = "Tot: " + str(round(self.occurrences[de], 2)) + " | "
                 label = label + "Avg: " + str(round(self.devicesColumnDict[de].msAverage / 1000, 2)) + "s\n"
                 label = label + "St.Dev.: " + str(round(self.devicesColumnDict[de].msStandDev / 1000, 2)) + "s"
-                info_subgraphs[de].graph_attr['label'] = label #Label with name to be visualized in the image
+                info_subgraphs[deClean].graph_attr['label'] = label #Label with name to be visualized in the image
     
         # Create nodes
         for de in devicesExtraCouple:
             nodeName = de[0] + "--" + de[1]
             devName = de[0]
+            if not config.EXTRA and "--" in nodeName: 
+                #remove the "--" from the name since there is no extra
+                nodeName, _ = nodeName.split("--")
             if location_choice:
                 locationH0 = device_location[devName]
                 locationH1 = device_locationH1[devName]
                 if hideNames:
                     nodeName = realFakeNamesDict[nodeName]
+
                 if not onlyH0:
                     loc_subgraphs[locationH0].node(nodeName, style='filled',
                                                 fillcolor=location_colorH1[locationH1]) #add the node to the right subgraph
@@ -319,7 +327,13 @@ class Network_handler:
                 edge0 = realFakeNamesDict[edge[0]]
                 edge1 = realFakeNamesDict[edge[1]]
             
-            if value >= 0.75:
+            if not config.EXTRA and "--" in edge0: 
+                #remove the "--" from the name since there is no extra
+                edge0, _ = edge0.split("--")
+            if not config.EXTRA and "--" in edge1: 
+                #remove the "--" from the name since there is no extra
+                edge1, _ = edge1.split("--")
+            if value >= 0.75: #Add the edges:
                 bn_graph.edge(edge0, edge1, color = "red", label = label)
             else:
                 bn_graph.edge(edge0, edge1, color = "black", label = label)
@@ -334,7 +348,11 @@ class Network_handler:
                     bn_graph.edge(realFakeNamesDict[self.device_considered_realName], realFakeNamesDict[node], 
                                   color = "blue", label = str(supp))
                 else:
-                    bn_graph.edge(self.device_considered_realName, node, color = "blue", label = str(supp))
+                    if not config.EXTRA and "--" in node:
+                        nodeName, _ = node.split("--")
+                    else:
+                        nodeName = node
+                    bn_graph.edge(self.device_considered_realName, nodeName, color = "blue", label = str(supp))
                 
                 
         
@@ -470,7 +488,12 @@ class Network_handler:
         ''' Converts the names in the list "oldNames" using a Caesar's Cipher using the given shift value. '''
         fakeRealDict = dict()
         for d in oldNames:
-            fakeRealDict[d] = self.shift(d, shift)
+            if "--" in d:
+                device, state = d.split("--")
+                nameToConvert = device + state
+            else:
+                nameToConvert = d
+            fakeRealDict[d] = self.shift(nameToConvert, shift)
         fakeRealDict[self.device_considered_realName] = self.shift(self.device_considered_realName, shift)
         return fakeRealDict
     

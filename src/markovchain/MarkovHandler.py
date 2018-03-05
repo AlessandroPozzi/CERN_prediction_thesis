@@ -55,7 +55,7 @@ class MarkovHandler:
         # Automatically change the names of the nodes
         if hideNames:
             #realFakeNamesDict = self.convertNames(devices)
-            realFakeNamesDict = self.convertNamesCaesarCipher(devicesExtraString, 5)
+            realFakeNamesDict = self.convertNamesCaesarCipher(devicesExtraString, 7)
 
         # Create subgraph for the locations
         if location_choice:
@@ -104,17 +104,24 @@ class MarkovHandler:
             for de in devicesExtraString:
                 name = "cluster_" + str(id)  #The subgraph name MUST start with "cluster_" 
                 id += 1
-                info_subgraphs[de] = gv.Digraph(name)
+                if not config.EXTRA and "--" in de: 
+                    deClean, _ = de.split("--")
+                else:
+                    deClean = de
+                info_subgraphs[deClean] = gv.Digraph(name)
                 label = "Occurrences: " + str(round(self.occurrences[de], 2)) #+ " | "
                 label = label + "Avg: " + str(round(self.devicesColumnDict[de].msAverage / 1000, 2)) + "s\n"
                 label = label + "St.Dev.: " + str(round(self.devicesColumnDict[de].msStandDev / 1000, 2)) + "s"
                 info_subgraphs[de].graph_attr['label'] = label  # Label with name to be visualized in the image
-                info_subgraphs[de].graph_attr['overlap'] = 'scale'
+                info_subgraphs[deClean].graph_attr['overlap'] = 'scale'
 
         # Create nodes
         for de in devicesExtraCouple:
             nodeName = de[0] + "--" + de[1]
             devName = de[0]
+            if not config.EXTRA and "--" in nodeName: 
+                #remove the "--" from the name since there is no extra
+                nodeName, _ = nodeName.split("--")
             if location_choice:
                 locationH0 = device_location[devName]
                 locationH1 = device_locationH1[devName]
@@ -186,6 +193,13 @@ class MarkovHandler:
             if hideNames:
                 edge0 = realFakeNamesDict[edge0]
                 edge1 = realFakeNamesDict[edge1]
+                
+            if not config.EXTRA and "--" in edge0: 
+                #remove the "--" from the name since there is no extra
+                edge0, _ = edge0.split("--")
+            if not config.EXTRA and "--" in edge1: 
+                #remove the "--" from the name since there is no extra
+                edge1, _ = edge1.split("--")
 
             prob = round(cpt[i][2], 2)
             if (prob < 0.1 and prob >= 0.0):
@@ -242,7 +256,11 @@ class MarkovHandler:
                             mc_graph.edge(realFakeNamesDict[self.device_considered_realName], realFakeNamesDict[node],
                                           color="blue", label=lab)
                         else:
-                            mc_graph.edge(self.device_considered_realName, node, color="blue", label=lab)
+                            if not config.EXTRA and "--" in node:
+                                nodeName, _ = node.split("--")
+                            else:
+                                nodeName = node
+                            mc_graph.edge(self.device_considered_realName, nodeName, color="blue", label=lab)
 
         # save the .png graph
         if location_choice:

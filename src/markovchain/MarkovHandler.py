@@ -7,6 +7,7 @@ import pomegranate as pomgr
 import graphviz as gv
 import expandDeviceMarkov
 from DataError import DataError
+import string
 
 class MarkovHandler:
     '''
@@ -299,7 +300,8 @@ class MarkovHandler:
             for item in self.ref_dev_avg_vars:
                 if hideNames:
                     source = self.shift(sourceDev, 5)
-                    destination = self.shift(destDev, 5)
+                    dName, eName = string.split(destDev, "--")
+                    destination = self.shift(dName, 5) + "--" + eName
                 else:
                     source = sourceDev
                     destination = destDev
@@ -334,7 +336,9 @@ class MarkovHandler:
         ''' Converts the names in the list "oldNames" using a Caesar's Cipher using the given shift value. '''
         fakeRealDict = dict()
         for d in oldNames:
-            fakeRealDict[d] = self.shift(d, shift)
+            dName, eName = string.split(d, "--")
+            #fakeRealDict[d] = self.shift(dName, shift) + "--" + self.shift(eName, shift)
+            fakeRealDict[d] = self.shift(dName, shift) + "--" + eName
         fakeRealDict[self.device_considered_realName] = self.shift(self.device_considered_realName, shift)
         return fakeRealDict
 
@@ -368,8 +372,13 @@ class MarkovHandler:
 
     def __find_avg_var(self, item, sourceDev, destDev, hideNames):
         if hideNames:
-            src = self.shift(item[0], 5)
-            dst = self.shift(item[1], 5)
+            if not "--" in item[0]:
+                src = self.shift(item[0], 5)
+            else:
+                dName, eName = string.split(item[0], "--")
+                src = self.shift(dName, 5) + "--" + eName
+            dName, eName = string.split(item[1], "--")
+            dst = self.shift(dName, 5) + "--" + eName
         else:
             src = item[0]
             dst = item[1]

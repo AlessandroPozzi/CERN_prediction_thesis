@@ -9,7 +9,7 @@ Config file. Can also run the entire system
 CORRELATION_MINUTES = 5
 FILE_SUFFIX = "afterNoDup" #clusters_mc_dbscan, afterNoDup, afterStateNodup, clusters_offline_average1x, clusters_static_distance12sec
                             #clusters_offline_average1x, clusters_static_distance12sec, clusters_meanShift, clusters_averageDeviation...
-EXTRA = "" # state, tag, description, "" : use this to select the extra info to attach to Device (needed also in main).
+EXTRA = "description" # state, tag, description, "" : use this to select the extra info to attach to Device (needed also in main).
 CORRELATION_UNIQUENESS = True # Used when computing the LIFT, in DatabaseNetworkCorrelator. If True, will consider only ONCE events
                                 # happened multiple times after each "n" minutes block. In general, leave this True
                                 
@@ -26,7 +26,7 @@ levelsOfPriority = ['L0', 'L1', 'L2', 'L3']
 unitePriorities = False #If this is true, all the priority above will be put together (automatically even in the main if mode="one")
 
 ''' main settings '''
-file_selection = 1  # 1 to the len of the lists below (only for "one" mode. Select in the lists below)
+file_selection = 2  # 1 to the len of the lists below (only for "one" mode. Select in the lists below)
 selectPriority = 'L1' # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE". If unitePriorities = True --> this will be forced to "L0"
 escaped_file_names = ["EMC0019", "EHS60BE", "ESS115H", "ESS184", "EXS48X", "EXS1062X"]
 #                    'ESS406E91', 'ESS407E91', 'ESS520E91', 'ESS1184', "CUSTOM"]

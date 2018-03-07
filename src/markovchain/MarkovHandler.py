@@ -52,11 +52,10 @@ class MarkovHandler:
             devName = re.compile('(.*?)\-\-').findall(de)
             extraName = re.compile('\-\-(.*?)\Z').findall(de)
             devicesExtraCouple.append((devName[0],extraName[0]))
-
         # Automatically change the names of the nodes
         if hideNames:
-            #realFakeNamesDict = self.convertNames(devices)
-            realFakeNamesDict = self.convertNamesCaesarCipher(devicesExtraString, 7)
+            #inside this method also the reference device is converted
+            realFakeNamesDict = self.convertNamesCaesarCipher(devicesExtraString, 5)
 
         # Create subgraph for the locations
         if location_choice:
@@ -105,45 +104,45 @@ class MarkovHandler:
             for de in devicesExtraString:
                 name = "cluster_" + str(id)  #The subgraph name MUST start with "cluster_" 
                 id += 1
+                '''
                 if not config.EXTRA and "--" in de: 
                     deClean, _ = de.split("--")
                 else:
                     deClean = de
-                info_subgraphs[deClean] = gv.Digraph(name)
+                '''
+                info_subgraphs[de] = gv.Digraph(name)
                 label = "Occurrences: " + str(round(self.occurrences[de], 2)) #+ " | "
                 label = label + "Avg: " + str(round(self.devicesColumnDict[de].msAverage / 1000, 2)) + "s\n"
                 label = label + "St.Dev.: " + str(round(self.devicesColumnDict[de].msStandDev / 1000, 2)) + "s"
                 info_subgraphs[de].graph_attr['label'] = label  # Label with name to be visualized in the image
-                info_subgraphs[deClean].graph_attr['overlap'] = 'scale'
+                info_subgraphs[de].graph_attr['overlap'] = 'scale'
 
         # Create nodes
         for de in devicesExtraCouple:
             nodeName = de[0] + "--" + de[1]
             devName = de[0]
-            if not config.EXTRA and "--" in nodeName: 
+            if hideNames:
+                nodeName2 = realFakeNamesDict[nodeName]
+            else:
+                nodeName2 = nodeName
+            if not config.EXTRA and "--" in nodeName2:
                 #remove the "--" from the name since there is no extra
-                nodeName, _ = nodeName.split("--")
+                nodeName3, _ = nodeName2.split("--")
+            else:
+                nodeName3 = nodeName2
             if location_choice:
                 locationH0 = device_location[devName]
                 locationH1 = device_locationH1[devName]
-                if hideNames:
-                    nodeName = realFakeNamesDict[nodeName]
                 if not onlyH0:
-                    loc_subgraphs[locationH0].node(nodeName, style='filled',
+                    loc_subgraphs[locationH0].node(nodeName3, style='filled',
                                                 fillcolor=location_colorH1[locationH1]) #add the node to the right subgraph
                 else: # Add only the H0 locations
-                    loc_subgraphs[locationH0].node(nodeName)
+                    loc_subgraphs[locationH0].node(nodeName3)
                 # loc_subgraphs[locationH0].node(node) #USE THIS TO ADD ONLY H0
             elif info_choice:
-                if hideNames:
-                    fakeName = realFakeNamesDict[nodeName]
-                    info_subgraphs[nodeName].node(fakeName)
-                else:
-                    info_subgraphs[nodeName].node(nodeName)
+                info_subgraphs[nodeName].node(nodeName3)
             else:  # add the node directly to the graph
-                if hideNames:
-                    node = realFakeNamesDict[nodeName]
-                mc_graph.node(node)
+                mc_graph.node(nodeName3)
 
         # Reference device
         if refDevice and location_choice:
@@ -159,7 +158,7 @@ class MarkovHandler:
                                                 fillcolor=location_colorH1[locationH1]) #add the node to the right subgraph
             else: # Add only the H0 location
                 loc_subgraphs[locationH0].node(nodeName)
-        else:
+        elif refDevice:
             ref = self.device_considered_realName
             if hideNames:
                 mc_graph.node(realFakeNamesDict[ref])
@@ -194,13 +193,6 @@ class MarkovHandler:
             if hideNames:
                 edge0 = realFakeNamesDict[edge0]
                 edge1 = realFakeNamesDict[edge1]
-                
-            if not config.EXTRA and "--" in edge0: 
-                #remove the "--" from the name since there is no extra
-                edge0, _ = edge0.split("--")
-            if not config.EXTRA and "--" in edge1: 
-                #remove the "--" from the name since there is no extra
-                edge1, _ = edge1.split("--")
 
             prob = round(cpt[i][2], 2)
             if (prob < 0.1 and prob >= 0.0):
@@ -208,6 +200,17 @@ class MarkovHandler:
                 pass
             else:
                 if avg_var_edges:
+                    if not config.EXTRA and "--" in edge0:
+                        # remove the "--" from the name since there is no extra
+                        edgeDraw0, _ = edge0.split("--")
+                    else:
+                        edgeDraw0 = edge0
+                    if not config.EXTRA and "--" in edge1:
+                        # remove the "--" from the name since there is no extra
+                        edgeDraw1, _ = edge1.split("--")
+                    else:
+                        edgeDraw1 = edge1
+
                     avg, var = self.find_avg_var(edge0, edge1, hideNames, False)
                     if(avg == None or var == None):
                         lab = str(prob)
@@ -215,53 +218,65 @@ class MarkovHandler:
                         lab = str(prob) + " | (" + str(avg) + "," + str(var) + ")"
                 else:
                     lab = str(prob)
+                    if not config.EXTRA and "--" in edge0:
+                        # remove the "--" from the name since there is no extra
+                        edgeDraw0, _ = edge0.split("--")
+                    else:
+                        edgeDraw0 = edge0
+                    if not config.EXTRA and "--" in edge1:
+                        # remove the "--" from the name since there is no extra
+                        edgeDraw1, _ = edge1.split("--")
+                    else:
+                        edgeDraw1 = edge1
 
-                if (edge1, edge0) in drawnEdges:
+                if (edgeDraw1, edgeDraw0) in drawnEdges:
                     #oldLink rewriting
-                    oldLink = (edge1, edge0)
+                    oldLink = (edgeDraw1, edgeDraw0)
                     oldLab = drawnEdges[oldLink]
                     if (prob >= 0.1 and prob < 0.5):
-                        mc_graph.edge(edge1, edge0, color="black", label=oldLab, portPos="nw", style="invis")
+                        mc_graph.edge(edgeDraw1, edgeDraw0, color="black", label=oldLab, portPos="nw", style="invis")
                     elif (prob >= 0.5):
-                        mc_graph.edge(edge1, edge0, color="red", label=oldLab, portPos="nw", style="invis")
+                        mc_graph.edge(edgeDraw1, edgeDraw0, color="red", label=oldLab, portPos="nw", style="invis")
                     #new link in opposite direction
                     if (prob >= 0.1 and prob < 0.5):
-                        mc_graph.edge(edge0, edge1, color="black", label=lab, portPos="se")
+                        mc_graph.edge(edgeDraw0, edgeDraw1, color="black", label=lab, portPos="se")
                     elif (prob >= 0.5):
-                        mc_graph.edge(edge0, edge1, color="red", label=lab, portPos="se")
+                        mc_graph.edge(edgeDraw0, edgeDraw1, color="red", label=lab, portPos="se")
                 else:
                     if (prob >= 0.1 and prob < 0.5):
-                        mc_graph.edge(edge0, edge1, color="black", label=lab)
+                        mc_graph.edge(edgeDraw0, edgeDraw1, color="black", label=lab)
                     elif (prob >= 0.5):
-                        mc_graph.edge(edge0, edge1, color="red", label=lab)
+                        mc_graph.edge(edgeDraw0, edgeDraw1, color="red", label=lab)
                 #it is in drawnEdges only if prob > 0.1
-                drawnEdges[(edge0, edge1)] = lab
+                drawnEdges[(edgeDraw0, edgeDraw1)] = lab
 
         if refDevice:
             devProbList = self.mc.distributions[0].parameters
             for i in range(0, len(devProbList)):
                 for node in devProbList[i]:
                     prob = round(devProbList[i][node], 2)
+                    if hideNames:
+                        otherNode = realFakeNamesDict[node]
+                        refNode = realFakeNamesDict[self.device_considered_realName]
+                    else:
+                        otherNode = node
+                        refNode = self.device_considered_realName
                     if prob > 0.1:
                         if avg_var_edges:
-                            avg, var = self.find_avg_var(self.device_considered_realName, node, hideNames, True)
+                            if not config.EXTRA and "--" in node:
+                                # remove the "--" from the name since there is no extra
+                                nodeToDraw, _ = otherNode.split("--")
+                            else:
+                                nodeToDraw = otherNode
+                            avg, var = self.find_avg_var(refNode, otherNode, hideNames, True)
                             if (avg == None or var == None):
                                 lab = str(prob)
                             else:
                                 lab = str(prob) + " | (" + str(avg) + "," + str(var) + ")"
                         else:
+                            nodeToDraw = otherNode
                             lab = str(prob)
-                        if hideNames:
-                            #mc_graph.edge(realFakeNamesDict[self.device_considered_realName], realFakeNamesDict[node],
-                            #              color="blue", taillabel=lab, labeldistance = "2.5")
-                            mc_graph.edge(realFakeNamesDict[self.device_considered_realName], realFakeNamesDict[node],
-                                          color="blue", label=lab)
-                        else:
-                            if not config.EXTRA and "--" in node:
-                                nodeName, _ = node.split("--")
-                            else:
-                                nodeName = node
-                            mc_graph.edge(self.device_considered_realName, nodeName, color="blue", label=lab)
+                        mc_graph.edge(refNode, nodeToDraw, color="blue", label=lab)
 
         # save the .png graph
         if location_choice:
@@ -298,14 +313,7 @@ class MarkovHandler:
     def find_avg_var(self, sourceDev, destDev, hideNames, reference_dev):
         if reference_dev:
             for item in self.ref_dev_avg_vars:
-                if hideNames:
-                    source = self.shift(sourceDev, 5)
-                    dName, eName = string.split(destDev, "--")
-                    destination = self.shift(dName, 5) + "--" + eName
-                else:
-                    source = sourceDev
-                    destination = destDev
-                avg, var = self.__find_avg_var(item, source, destination, hideNames)
+                avg, var = self.__find_avg_var(item, sourceDev, destDev, hideNames)
                 if avg != None and var != None:
                     return avg, var
         else:
@@ -334,6 +342,7 @@ class MarkovHandler:
 
     def convertNamesCaesarCipher(self, oldNames, shift):
         ''' Converts the names in the list "oldNames" using a Caesar's Cipher using the given shift value. '''
+
         fakeRealDict = dict()
         for d in oldNames:
             dName, eName = string.split(d, "--")

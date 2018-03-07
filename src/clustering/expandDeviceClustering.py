@@ -12,19 +12,23 @@ from ClusteringHandler import ClusterHandler
 from DataError import DataError
 from datetime import timedelta
 import config
-import columnAnalyzer
 
 def compareChosenDevicesByAlarmPriority(cursor):
     #chosenDevices = ['EHS60/BE', 'EXS4/8X', 'EMC001*9', 'EXS106/2X', 'ESS1*84',
     #                 'ESS11/5H', 'ESS406/E91', 'ESS407/E91', 'ESS520/E91', 'ESS11*84']
     # our devices: ['EMC001*9', 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X']
-    chosenDevices = ['EMC001*9', 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X']
-    levelsOfPriority = ['L0', 'L1', 'L2', 'L3']
+    chosenDevices = config.chosenDevices
+    levelsOfPriority = config.levelsOfPriority
 
     for d in chosenDevices:
-        fw = File_writer(d, config.FILE_SUFFIX)
+        if config.EXTRA:
+            extra = "_" + config.EXTRA
+        else:
+            extra = ""
+        file_suffix = config.FILE_SUFFIX + extra
+        fw = File_writer(d, file_suffix)
         fw.create_txt("../../res/")
-        fw2 = File_writer(d, "DEBUG-" + config.FILE_SUFFIX)
+        fw2 = File_writer(d, "DEBUG-" + file_suffix)
         fw2.create_txt("../../res/debug/")
         print '\nDEVICE '+ str(d) + ': '
         fw.write_txt('\nDEVICE '+ str(d) + ': ')

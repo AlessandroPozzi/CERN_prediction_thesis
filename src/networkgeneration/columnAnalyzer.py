@@ -82,6 +82,7 @@ class ColumnStats(object):
             tsum += ts
         average = tsum / len(self.deltaTimestamps) #Average as a TimeDelta
         self.msAverage = average.total_seconds() * 1000 + average.microseconds / 1000 #Average in milliseconds
+        standDev = None
         if len(self.deltaTimestamps) > 1: #do not compute variance with only 1 data point:
             numerator = 0.000000000 # numerator of the variance formula
             for ts in self.deltaTimestamps:
@@ -93,9 +94,11 @@ class ColumnStats(object):
             self.msStandDev = math.sqrt(variancems) #standard deviation in milliseconds
         if self.write:
             resultAvg = "AVERAGE appearance after: " + str(average)
-            resultVar = "STANDARD DEVIATION of appearances: " + str(standDev)
             self.fw.write_txt(resultAvg)
-            self.fw.write_txt(resultVar)
+            if standDev != None:
+                resultVar = "STANDARD DEVIATION of appearances: " + str(standDev)
+                self.fw.write_txt(resultVar)
+            
 
 def compareChosenDevicesByAlarmPriority(fileName, priority, device_extra, cursor, write):
    
@@ -111,6 +114,8 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_extra, cursor
         fw.write_txt('\n\tPRIORITY ' + "".join(priority) + ':')
     # Create the entries in the dictionary for the device to analyze:
     devicesDict = dict() # key = device, value = an object of the class "columnStats"
+    if device_extra == []:
+        devicesAreStrings = True
     for devExtra in device_extra:
         if isinstance(devExtra, tuple): #list of tuples
             key = devExtra[0] + "--" + devExtra[1]

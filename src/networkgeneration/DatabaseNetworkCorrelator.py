@@ -129,10 +129,16 @@ class DatabaseNetworkCorrelator(object):
         cnx = mysql.connector.connect(host='127.0.0.1', user='root', password='password', database='cern')
         cursor = cnx.cursor()
         occurrencesDB = dict() #key = device, value = occurrences
-        if config.EXTRA:
-            extraCond = " and state=%s"
-        else:
+        if not config.EXTRA:
             extraCond = ""
+        elif config.EXTRA == "state":
+            extraCond = " and state= %s"
+        elif config.EXTRA == "tag":
+            extraCond = " and tag= %s"
+        elif config.EXTRA == "description":
+            extraCond = " and description= %s"
+        else:
+            extraCond = " and " + config.EXTRA + "= %s"
         for de in devicesExtra:
             if self.log:
                 print("Processing device number " + str(devicesExtra.index(de) + 1) + "/" + str(len(devicesExtra)))
@@ -147,7 +153,10 @@ class DatabaseNetworkCorrelator(object):
                 devExtra = de[0] + "--" + de[1]
             else:
                 devExtra = de[0] + "--"
-            occurrencesDB[devExtra] = events[0][0]
+            if events[0][0] > 0:
+                occurrencesDB[devExtra] = events[0][0]
+            else:
+                print "The device " + devExtra + " has 0 occurrences. The query is " + cursor.statement
         cursor.close()
         return occurrencesDB
     

@@ -45,7 +45,7 @@ class MarkovHandler:
             return
         mc_graph = gv.Digraph(format="png")
         mc_graph.graph_attr['overlap'] = "false"
-        mc_graph.graph_attr['rankdir'] = 'LR'
+        #mc_graph.graph_attr['rankdir'] = 'LR'
         devicesExtraString = self.variables_names #format string: "device--extra"
         devicesExtraCouple = [] #format couple: (device, extra)
         for de in devicesExtraString:
@@ -262,19 +262,18 @@ class MarkovHandler:
                         otherNode = node
                         refNode = self.device_considered_realName
                     if prob > 0.1:
+                        if not config.EXTRA and "--" in node:
+                            # remove the "--" from the name since there is no extra
+                            nodeToDraw, _ = otherNode.split("--")
+                        else:
+                            nodeToDraw = otherNode
                         if avg_var_edges:
-                            if not config.EXTRA and "--" in node:
-                                # remove the "--" from the name since there is no extra
-                                nodeToDraw, _ = otherNode.split("--")
-                            else:
-                                nodeToDraw = otherNode
                             avg, var = self.find_avg_var(refNode, otherNode, hideNames, True)
                             if (avg == None or var == None):
                                 lab = str(prob)
                             else:
                                 lab = str(prob) + " | (" + str(avg) + "," + str(var) + ")"
                         else:
-                            nodeToDraw = otherNode
                             lab = str(prob)
                         mc_graph.edge(refNode, nodeToDraw, color="blue", label=lab)
 

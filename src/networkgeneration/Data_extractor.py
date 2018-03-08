@@ -119,10 +119,80 @@ class Data_extractor:
         This data is stored in ranked_devices, as a tuple of the kind (device--extra), frequency, occurrences, average, st.dev.).
         '''
         self.ranked_devices = []
+        self.mostFrequentDevInCouples = dict()
         frequency_by_device = dict() # key = device, value = sum of frequencies of device
         allDevicesExtra = set() #contain couples (device, extra)
+        couple_occurrences = dict()
 
         for key in self.events_by_file:
+            occurrences = dict() #key = device; value = number of occurrences in SINGLE FILE
+            total_events = len(self.events_by_file[key])
+            for tupl in self.events_by_file[key]: # each tuple is: (device_list, priority)
+                for index, couple in enumerate(tupl[0]):
+                    devExtra = couple[0] + "--" + couple[1]
+                    allDevicesExtra.add(couple)
+                    if devExtra not in occurrences: #create new key
+                        occurrences[devExtra] = 1
+                    else: #update key
+                        occurrences[devExtra] = occurrences[devExtra] + 1
+                    #part related to couple_occurrences criterion
+                    next = index + 1
+                    if next < len(tupl[0]):
+                        futureCouple = (tupl[0][index], tupl[0][next])
+                        if futureCouple not in couple_occurrences:
+                            couple_occurrences[futureCouple] = 1
+                        else:
+                            couple_occurrences[futureCouple] = couple_occurrences[futureCouple] + 1
+            for devExtra in occurrences:
+                frequency_by_device[devExtra] = round( occurrences[devExtra] / float(total_events) , 2)
+
+        self.devicesColumnDict = colAnal.find_column_distribution(self.true_file_names[0], self.priority_selected, list(allDevicesExtra))
+        self.occurrences = occurrences
+
+        if var_type == "occurrences" or var_type == "frequency":
+            for de in frequency_by_device:
+                tupl = (de, frequency_by_device[de], occurrences[de], -1, -1)
+                self.ranked_devices.append(tupl)
+        elif var_type == "variance_only" or var_type == "support_variance":
+            for de in frequency_by_device:
+                tupl = (de, frequency_by_device[de], occurrences[de],
+                        self.devicesColumnDict[de].msAverage / 1000, self.devicesColumnDict[de].msStandDev / 1000)
+                self.ranked_devices.append(tupl)
+        elif var_type == "lift":
+            dnc = DatabaseNetworkCorrelator()
+            dnc.initAsPreProcessor(self.true_file_names[0], self.priority_selected, log = True)
+            lift = dnc.totalOccurrencesCandidatesAnalysis(list(allDevicesExtra))
+            for de in lift:
+                tupl = (de, frequency_by_device[de], occurrences[de],
+                        "lift:", lift[de])
+                self.ranked_devices.append(tupl)
+        elif var_type == "couple_occurrences":
+            couple_occurrences_list = couple_occurrences.items()
+            couple_occurrences_list.sort(key=lambda tup: tup[1],
+                                              reverse=True)  # order by occurrences of consecutive couples
+            couple_occurrences_list_no_self = [fullCouple for fullCouple in couple_occurrences_list if not
+                                               (fullCouple[0][0][0] == fullCouple[0][1][0] and fullCouple[0][0][1] == fullCouple[0][1][1])]
+            couple_occurrences_list_no_self = couple_occurrences_list_no_self[:20]
+            for fullCouple in couple_occurrences_list_no_self:
+                deviceExtra1 = fullCouple[0][0][0] + "--" + fullCouple[0][0][1]
+                deviceExtra2 = fullCouple[0][1][0] + "--" + fullCouple[0][1][1]
+                if deviceExtra1 not in self.mostFrequentDevInCouples:
+                    self.mostFrequentDevInCouples[deviceExtra1] = 1
+                else:
+                    self.mostFrequentDevInCouples[deviceExtra1] = self.mostFrequentDevInCouples[deviceExtra1] + 1
+                if deviceExtra2 not in self.mostFrequentDevInCouples:
+                    self.mostFrequentDevInCouples[deviceExtra2] = 1
+                else:
+                    self.mostFrequentDevInCouples[deviceExtra2] = self.mostFrequentDevInCouples[deviceExtra2] + 1
+            for de in self.mostFrequentDevInCouples:
+                tupl = (de, frequency_by_device[de], occurrences[de],
+                        self.devicesColumnDict[de].msAverage / 1000, self.devicesColumnDict[de].msStandDev / 1000,
+                        self.mostFrequentDevInCouples[de]) #it's a 6-tuple, instead of 5-tuple
+                self.ranked_devices.append(tupl) #not yet ranked
+
+
+        '''
+            for key in self.events_by_file:
             occurrences = dict() #key = device; value = number of occurrences in SINGLE FILE
             total_events = len(self.events_by_file[key])
             for tupl in self.events_by_file[key]: # each tuple is: (device_list, priority)
@@ -156,6 +226,7 @@ class Data_extractor:
                 tupl = (de, frequency_by_device[de], occurrences[de],
                         "lift:", lift[de])
                 self.ranked_devices.append(tupl)
+        '''
                 
         
     def select_candidates(self, var_type, support, MIN, MAX):
@@ -170,6 +241,7 @@ class Data_extractor:
         "support_variance" -- Select the "MIN" variables with highest support plus a number ("MAX"-"MIN") of remaining variables
                               with the highest variance.
         '''
+
         if var_type == "occurrences":
             self.ranked_devices.sort(key = lambda tup: tup[2], reverse=True) #order by occurrences
         elif var_type == "frequency" or var_type == "support_variance":
@@ -178,7 +250,9 @@ class Data_extractor:
             self.ranked_devices.sort(key = lambda tup: tup[4]) #order by variance (actually, standard deviation) O
         elif var_type == "lift":
             self.ranked_devices.sort(key = lambda tup: tup[4], reverse=True) #order by lift
-        
+        elif var_type == "couple_occurrences":
+            self.ranked_devices.sort(key = lambda tup: tup[5], reverse=True)
+
         #ordered_ranking = [i for i in self.ranked_devices if i[0] not in self.true_file_names[0]] # helper list with no file device in it ----THIS HAS TO BE UPDATED!!!!!!!!!
         ordered_ranking = []
         for varRanked in self.ranked_devices:
@@ -187,7 +261,7 @@ class Data_extractor:
             dev = dev.replace("'", "")
             if dev not in self.true_file_names[0]:
                 ordered_ranking.append(varRanked)
-            
+
         if var_type == "variance_only" or var_type == "lift":
             ordered_ranking = [tup for tup in ordered_ranking if tup[2] > 5] #remove devices with less than n occurrences
 
@@ -203,7 +277,7 @@ class Data_extractor:
                 if var_type == "frequency":
                     if frequency > support:
                         self.variable_names.append(deviceExtra)
-                elif var_type == "occurrences":
+                elif var_type == "occurrences" or var_type == "couple_occurrences":
                     self.variable_names.append(deviceExtra)
                 elif var_type =="variance_only":
                     if stDev < 1000 * 30:
@@ -219,9 +293,9 @@ class Data_extractor:
                         self.variable_names.append(deviceExtra)
             else:
                 break
-            
+
         self.ranked_devices = ordered_ranking
-    
+
     
     def build_dataframe(self, training_instances="none"):
         ''' 

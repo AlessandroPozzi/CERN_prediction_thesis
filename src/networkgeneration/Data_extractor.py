@@ -190,43 +190,6 @@ class Data_extractor:
                         self.mostFrequentDevInCouples[de]) #it's a 6-tuple, instead of 5-tuple
                 self.ranked_devices.append(tupl) #not yet ranked
 
-
-        '''
-            for key in self.events_by_file:
-            occurrences = dict() #key = device; value = number of occurrences in SINGLE FILE
-            total_events = len(self.events_by_file[key])
-            for tupl in self.events_by_file[key]: # each tuple is: (device_list, priority)
-                for couple in tupl[0]:
-                    devExtra = couple[0] + "--" + couple[1]
-                    allDevicesExtra.add(couple)
-                    if devExtra not in occurrences: #create new key
-                        occurrences[devExtra] = 1
-                    else: #update key
-                        occurrences[devExtra] = occurrences[devExtra] + 1
-            for devExtra in occurrences:
-                frequency_by_device[devExtra] = round( occurrences[devExtra] / float(total_events) , 2)
-
-        self.devicesColumnDict = colAnal.find_column_distribution(self.true_file_names[0], self.priority_selected, list(allDevicesExtra))
-        self.occurrences = occurrences
-
-        if var_type == "occurrences" or var_type == "frequency":
-            for de in frequency_by_device:
-                tupl = (de, frequency_by_device[de], occurrences[de], -1, -1)
-                self.ranked_devices.append(tupl)
-        elif var_type == "variance_only" or var_type == "support_variance":
-            for de in frequency_by_device:
-                tupl = (de, frequency_by_device[de], occurrences[de],
-                        self.devicesColumnDict[de].msAverage / 1000, self.devicesColumnDict[de].msStandDev / 1000)
-                self.ranked_devices.append(tupl)
-        elif var_type == "lift":
-            dnc = DatabaseNetworkCorrelator()
-            dnc.initAsPreProcessor(self.true_file_names[0], self.priority_selected, log = True)
-            lift = dnc.totalOccurrencesCandidatesAnalysis(list(allDevicesExtra))
-            for de in lift:
-                tupl = (de, frequency_by_device[de], occurrences[de],
-                        "lift:", lift[de])
-                self.ranked_devices.append(tupl)
-        '''
                 
         
     def select_candidates(self, var_type, support, MIN, MAX):

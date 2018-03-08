@@ -10,10 +10,12 @@ from datetime import timedelta
 import numpy as np
 #from DatabaseNetworkCorrelator import DatabaseNetworkCorrelator as DNC
 
-str1 = "saltello"
-str2 = "salt"
-if str2 in str1:
-    print("ok!")
+unicodeString = "טעא+ששששששששט+!£$%"
+unicodeString2 = "טעא+ששששששששט+!£$%"
+
+extraUnicode = unicodeString.encode('ascii', 'ignore').decode('ascii')
+extraString = "hello" + unicodeString2
+
 
 
 '''

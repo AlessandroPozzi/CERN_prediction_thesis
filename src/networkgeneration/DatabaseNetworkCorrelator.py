@@ -79,7 +79,6 @@ class DatabaseNetworkCorrelator(object):
             lift[devExtra] = round(self.noDupItemsetOccurrences[devExtra] / float(self.occurrencesDB[devExtra]), 2) * 100
                  
         #Save the data in the txt file:
-        self.fw.write_txt("Analysis of the occurrences of the devices: " + str(devicesExtra[0] + devicesExtra[1]), True)
         self.fw.write_txt("DEVICE | PARTIAL | TOTAL | LIFT")
         rankings = []
         for de in devicesExtra:
@@ -124,39 +123,47 @@ class DatabaseNetworkCorrelator(object):
     def __countEventDatabase(self, devicesExtra):
         '''
         Counts all the occurrences of the events of the given devices in the database. 
+        devicesExtra = List of tuples 
         Returns a dictionary (key = device--extra, value = occorrences).
         '''
         cnx = mysql.connector.connect(host='127.0.0.1', user='root', password='password', database='cern')
         cursor = cnx.cursor()
         occurrencesDB = dict() #key = device, value = occurrences
-        if not config.EXTRA:
-            extraCond = ""
-        elif config.EXTRA == "state":
-            extraCond = " and state= %s"
-        elif config.EXTRA == "tag":
-            extraCond = " and tag= %s"
-        elif config.EXTRA == "description":
-            extraCond = " and description= %s"
-        else:
-            extraCond = " and " + config.EXTRA + "= %s"
         for de in devicesExtra:
             if self.log:
                 print("Processing device number " + str(devicesExtra.index(de) + 1) + "/" + str(len(devicesExtra)))
             # Find the total occurrences of the (network) devices in the DB:
-            query = "select COUNT(*) from cern.electric where device= %s" +extraCond+ " and action='Alarm CAME'"
-            if extraCond:
-                cursor.execute(query, (de[0],de[1]))
-            else:
-                cursor.execute(query, (de[0],))
+            query = "select Device, Time, Id, State, Tag, Description from cern.electric where device= %s and action='Alarm CAME'"
+            cursor.execute(query, (de[0],))
             events = cursor.fetchall()
+            # If there is an "extra" condition, we must count only the correct events:
+            extraIndex = None
+            if config.EXTRA == "state":
+                extraIndex = 3
+            elif config.EXTRA == "tag":
+                extraIndex = 4
+            elif config.EXTRA == "description":
+                extraIndex = 5
+            # Start the actual count:
+            countEvents = 0
+            for e in events:
+                if extraIndex != None:
+                    extra = e[extraIndex].encode('ascii', 'ignore').decode('ascii')
+                    extra.replace("'", "")
+                    if extra == de[1]:
+                        countEvents += 1
+                else:
+                    countEvents += 1
+                
+            # Create the key for the dictionary in which we will store the count:
             if config.EXTRA:
                 devExtra = de[0] + "--" + de[1]
             else:
                 devExtra = de[0] + "--"
-            if events[0][0] > 0:
-                occurrencesDB[devExtra] = events[0][0]
-            else:
-                print "The device " + devExtra + " has 0 occurrences. The query is " + cursor.statement
+            # Put the result for this device in the dictionary:
+            occurrencesDB[devExtra] = countEvents
+            if countEvents == 0:
+                print "The device " + devExtra + "has 0 occurrences. The query is " + cursor.statement
         cursor.close()
         return occurrencesDB
     
@@ -175,6 +182,7 @@ class DatabaseNetworkCorrelator(object):
         '''
         cnx = mysql.connector.connect(host='127.0.0.1', user='root', password='password', database='cern')
         cursor = cnx.cursor()
+        analysisOfTwoStandardDevices = False
         if refDevice == None:
             refDevice = self.referenceDevice
         # Create the entries in the dictionary for the device to analyze:
@@ -184,31 +192,36 @@ class DatabaseNetworkCorrelator(object):
             noDupItemsetOccurrences[key] = 0
         if correlationUniquness == None:
             correlationUniquness = config.CORRELATION_UNIQUENESS
-        if priorityCond: # Use the query with the priority -- MIGHT BE BROKEN
-            print("THIS SHOULDN'T BE PRINTED (DatabaseNetworkCorrelator, __relativeOccurrences, priorityCond")
+        if priorityCond: # Use the query with the priority (USED when there is a REAL STRING reference device, like in computing the LIFT)
             query = ("select Device, Time, id from electric where device=%s and livellopriorita=%s and action='Alarm CAME' order by time")
             cursor.execute(query, (refDevice, self.priority))
         elif isinstance(refDevice, tuple):
             #The reference device has the format (device,extra)
-            if config.EXTRA:
-                if config.EXTRA == "state":
-                    extraCond = " and State=%s"
-                elif config.EXTRA == "tag":
-                    extraCond = " and Tag=%s"
-                elif config.EXTRA == "description":
-                    extraCond = " and Description=%s"
-                query = ("select Device, Time, State, Tag, Description from electric where device=%s " + extraCond + " and action='Alarm CAME' order by time")
-                cursor.execute(query, (refDevice[0],refDevice[1]))
-            else:
-                query = ("select Device, Time, State, Tag, Description from electric where device=%s and action='Alarm CAME' order by time")
-                cursor.execute(query, (refDevice[0],))
+            query = ("select Device, Time, Id, State, Tag, Description from electric where device=%s and action='Alarm CAME' order by time")
+            cursor.execute(query, (refDevice[0],))
+            analysisOfTwoStandardDevices = True
         else: # ignore priority: select event from all priority levels
             query = ("select Device, Time, id from electric where device=%s and action='Alarm CAME' order by time")
             cursor.execute(query, (refDevice,) )
-                        
+            
+        # Prepare the extraIndex, if needed
+        if config.EXTRA == "state":
+            extraIndex = 3
+        elif config.EXTRA == "tag":
+            extraIndex = 4
+        elif config.EXTRA == "description":
+            extraIndex = 5
+            
         allSeenEvents = []
         events = cursor.fetchall()
+        
         for e in events:
+            if analysisOfTwoStandardDevices:
+                extra = e[extraIndex].encode('ascii', 'ignore').decode('ascii')
+                extra.replace("'", "")
+                if refDevice[1] != extra:
+                    continue #Reject this iteration. The extra does not match with the extra field of the current event.
+            
             strList = "%s" # The strList is used to select only the devices in the network
             for i in range(1, len(devicesExtra)):
                 strList = strList + " OR device=" + "%s"
@@ -219,19 +232,17 @@ class DatabaseNetworkCorrelator(object):
             tpl = (e[1], e[1], config.CORRELATION_MINUTES) + tuple(deviceNames)
             cursor.execute(query, tpl)
             eventsAfter = cursor.fetchall()
-            if config.EXTRA == "state":
-                extraIndex = 3
-            elif config.EXTRA == "tag":
-                extraIndex = 4
-            elif config.EXTRA == "description":
-                extraIndex = 5
+
             uniqueness = []
             # Now we count a device occurrence without duplicating events 
             for ea in eventsAfter:
                 if ea not in allSeenEvents or moreThanOnce: #each event will be considered exactly once (unless moreThanOnce is True)
                     allSeenEvents.append(ea)
+                    # FORSE VA INSERITA LA CONVERSIONE ALL'ASCII
                     if config.EXTRA:
-                        devExtra = ea[0] + "--" + ea[extraIndex]
+                        eaExtra = ea[extraIndex].encode('ascii', 'ignore').decode('ascii')
+                        eaExtra.replace("'", "")
+                        devExtra = ea[0] + "--" + eaExtra
                     else:
                         devExtra = ea[0] + "--"
                     if correlationUniquness: #if we want to count the event after only once per reference event
@@ -293,9 +304,11 @@ class DatabaseNetworkCorrelator(object):
                 if ea not in allSeenEvents: 
                     allSeenEvents.append(ea)
                     if config.EXTRA:
-                        if (ea[0], ea[extraIndex]) == dev1:
+                        eaExtra = ea[extraIndex].encode('ascii', 'ignore').decode('ascii')
+                        eaExtra.replace("'", "")
+                        if (ea[0], eaExtra) == dev1:
                             dev1check = True
-                        if (ea[0], ea[extraIndex]) == dev2:
+                        if (ea[0], eaExtra) == dev2:
                             dev2check = True
                     else:
                         if (ea[0], "") == dev1:
@@ -311,30 +324,36 @@ class DatabaseNetworkCorrelator(object):
         ''' Returns the number of times in which dev1(+extra) was found at the same timestamp of dev2(+extra) '''
         cnx = mysql.connector.connect(host='127.0.0.1', user='root', password='password', database='cern')
         cursor = cnx.cursor()
+        extraIndex = None
         if config.EXTRA:
             if config.EXTRA == "state":
-                extraCond = " and State=%s"
+                extraIndex = 3
             elif config.EXTRA == "tag":
-                extraCond = " and Tag=%s"
+                extraIndex = 4
             elif config.EXTRA == "description":
-                extraCond = " and Description=%s"
-            query = ("select Device, Time, id, State, Tag, Description from electric where action='Alarm CAME' and (device=%s)" + extraCond + " order by Time;")
-            cursor.execute(query, (dev1[0],dev1[1]))
-        else:
-            query = ("select Device, Time, id, State, Tag, Description from electric where action='Alarm CAME' and (device=%s) order by Time;")
-            cursor.execute(query, (dev1[0],))
+                extraIndex = 5
+        query = ("select Device, Time, id, State, Tag, Description from electric where action='Alarm CAME' and (device=%s) order by Time;")
+        cursor.execute(query, (dev1[0],))
         
         events = cursor.fetchall()
         sameTime = 0
         for e in events:
-            if config.EXTRA:
-                query = ("select count(*) from electric where time=(%s) and action='Alarm CAME' " + extraCond + " and device= %s;")
-                cursor.execute(query, (e[1], dev2[1], dev2[0]))
-            else:
-                query = ("select count(*) from electric where time=(%s) and action='Alarm CAME' and device= %s;")
-                cursor.execute(query, (e[1], dev2[0]))
-            counts = cursor.fetchall()
-            sameTime += counts[0][0]
+            if extraIndex != None:
+                extra = e[extraIndex].encode('ascii', 'ignore').decode('ascii')
+                extra.replace("'", "")
+                if dev1[1] != extra:
+                    continue #Reject this iteration
+            query = ("select Device, Time, id, State, Tag, Description from electric where time=(%s) and action='Alarm CAME' and device= %s;")
+            cursor.execute(query, (e[1], dev2[0]))
+            events2 = cursor.fetchall()
+            for e2 in events2:
+                if extraIndex != None:
+                    extra = e2[extraIndex].encode('ascii', 'ignore').decode('ascii')
+                    extra.replace("'", "")
+                    if dev2[1] == extra:
+                        if e[1] == e2[1]:
+                            sameTime += 1
+                            break
         cursor.close()
         return sameTime
     

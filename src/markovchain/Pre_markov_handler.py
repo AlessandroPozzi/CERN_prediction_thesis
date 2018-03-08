@@ -77,7 +77,7 @@ class Pre_markov_handler(object):
         Extracts some info about the distribution of state, tag and description in the devices in this network '''
         import columnAnalyzer
         columnAnalyzer.find_column_distribution(self.device_considered_realName, self.priority_considered,
-                                                self.extractor.get_variable_names())
+                                                self.extractor.get_variable_names(), write = True)
 
     def get_data_extractor(self):
         return self.extractor

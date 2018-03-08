@@ -34,7 +34,7 @@ def preprocess_network(select_priority, file_selection, gh, log):
     pre_network_handler.process_files(select_priority, file_selection, file_suffix, log)
     
     # 2) SELECT VARIABLES
-    var_type = "occurrences" #occurrences, frequency, variance_only, support_variance, lift
+    var_type = "lift" #occurrences, frequency, variance_only, support_variance, lift
     support = 0.3
     MIN = 4
     MAX = 8

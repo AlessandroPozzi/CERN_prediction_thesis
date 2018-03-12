@@ -39,7 +39,7 @@ true_device_names = ["EMC001*9", 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', '
 #                    ['ECD1*62']
 #true_device_names = ["EMC001*9", 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X']
 #true_device_names = ['EMD101/8E','EMD102/8E','EMD103/8E','EMD407/8E','EMD202/8E','EMD301/8E','EMD206/8E','EKC200/8U']
-mode = "one" #one, all  | "one" to do the single file-priority selected above;
+mode = "all" #one, all  | "one" to do the single file-priority selected above;
                         # "all" to do all the possible files and priorities in the lists above
 
 #import main

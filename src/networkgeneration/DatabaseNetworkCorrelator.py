@@ -216,7 +216,7 @@ class DatabaseNetworkCorrelator(object):
         events = cursor.fetchall()
         
         for e in events:
-            if analysisOfTwoStandardDevices:
+            if analysisOfTwoStandardDevices and config.EXTRA:
                 extra = e[extraIndex].encode('ascii', 'ignore').decode('ascii')
                 extra.replace("'", "")
                 if refDevice[1] != extra:

@@ -55,7 +55,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
                                 index = 6
                             if config.EXTRA:
                                 extraColumn = ea[index].encode('ascii', 'ignore').decode('ascii')
-                                extraColumn.replace("'", "")
+                                extraColumn = extraColumn.replace("'", "")
                                 #extraColumn = re.escape(extraColumn)
                             else:
                                 extraColumn = ""

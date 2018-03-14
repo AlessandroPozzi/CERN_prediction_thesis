@@ -37,7 +37,7 @@ def preprocess_network(select_priority, file_selection, gh, log):
     var_type = "frequency" #occurrences, frequency, variance_only, support_variance, lift
     support = 0.3
     MIN = 4
-    MAX = 8
+    MAX = 7
     pre_network_handler.select_variables(var_type, MIN, MAX, support, log)
     
     # 3) BUILD DATA

@@ -26,7 +26,7 @@ def preprocess_network(select_priority, file_selection, gh, sequences, log):
     pre_markov_handler.process_files(select_priority, file_selection, file_suffix, log)
 
     # 2) SELECT VARIABLES
-    var_type = "lift"  # occurrences, frequency, variance_only, support_variance, lift, couple_occurrences
+    var_type = "occurrences"  # occurrences, frequency, variance_only, support_variance, lift, couple_occurrences
     support = 0.4
     MIN = 3
     MAX = 4
@@ -45,8 +45,8 @@ def create_markov_chain(pnh, gh):
     markov_handler.create_mc_model(pnh.sequences)
 
     # 5) DRAW THE NETWORK
-    location_choice = True  # True, False
-    info_choice = False  # True, False
+    location_choice = False  # True, False
+    info_choice = True  # True, False
     avg_var_edges = True # True, False
     refDevice = True
     hideNames = False

@@ -250,7 +250,7 @@ class Network_handler:
             else: #add the node directly to the graph
                 if hideNames:
                     node = realFakeNamesDict[nodeName]
-                bn_graph.node(node)
+                bn_graph.node(nodeName)
                 
         # Reference device
         if refDevice and location_choice:

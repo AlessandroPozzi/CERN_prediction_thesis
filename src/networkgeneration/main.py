@@ -34,10 +34,10 @@ def preprocess_network(select_priority, file_selection, gh, log):
     pre_network_handler.process_files(select_priority, file_selection, file_suffix, log)
     
     # 2) SELECT VARIABLES
-    var_type = "frequency" #occurrences, frequency, variance_only, support_variance, lift
+    var_type = "occurrences" #occurrences, frequency, variance_only, support_variance, lift
     support = 0.3
     MIN = 4
-    MAX = 7
+    MAX = 15
     pre_network_handler.select_variables(var_type, MIN, MAX, support, log)
     
     # 3) BUILD DATA
@@ -73,9 +73,9 @@ def create_network(pnh, gh, log):
     label = "double" # none, single, double
     location_choice = False # True, False
     onlyH0 = False
-    info_choice = True
+    info_choice = False
     variance_filter = False # True, False
-    refDevice = True
+    refDevice = False
     hideNames = False
     network_handler.draw_network(label, location_choice, onlyH0, info_choice, variance_filter, refDevice, hideNames)
     
@@ -95,7 +95,7 @@ def post_processing(nh, gh, log):
     dnc.initAsPostProcessor(nh, gh, log)
     
     # 9) CHECK GENERAL CORRELATIONS
-    dnc.checkGeneralCorrelation()
+    #dnc.checkGeneralCorrelation()
     
     # 10) TOTAL OCCURRENCES ANALYSIS
     #dnc.totalOccurrencesNetworkAnalysis()

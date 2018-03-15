@@ -1,10 +1,5 @@
 # coding: utf-8
 '''
-QUESTO FILE e' lo script originale expandDevice.py ripulito dalle parti per noi inutili 
-e con l'aggiunta di una condizione sulla lista "markedEvents" per far si' che uno stesso evento
-NON venga considerato piu' volte per via dei problemi della DOPPIA QUERY.
-Inoltre, viene anche usato per aggiungere lo stato, la descrizione o il tag ai device nell'itemset.
-
 Note: The following are my database columns (+ index). The order of columns you have must be the same.
 Time, H0, H1, H2, Device, Tag, Description, PrevValue, Value, Unit, State, Action, Type, AlarmPriority, Week, Device_FirstLetter, 
    0,  1,  2,  3,      4,    5,          6,         7,      8,   9,    10,     11,   12,            13,   14,                 15,           
@@ -15,15 +10,18 @@ Device_SecondLetter_LevelOfTension, Device_ThirdLetter_Type, Device_Forth_Number
 id, LivelloPriorita
 21,              22
 '''
-import mysql.connector  # pip install mysql-connector-python
+
+import mysql.connector
 from File_writer import File_writer
-import re
 import config
 from datetime import datetime
-import os
 import json
-from blaze.expr.datetime import DateTime
 
+'''
+Extracts the critical timestamps from a file that contains data in json format
+Returns a list that contains two lists: the first one is a list of the 48 timestamps that "fanno
+saltare il fascio" and the second contains 3000+ (?) timestamps that "non fanno saltare il fascio"
+'''
 def loadGlitchesFromFile(filename):
     glitches = json.load(open(filename))
     glitches  = {float(k):v for k,v in glitches.items()}
@@ -41,61 +39,51 @@ def loadGlitchesFromFile(filename):
         stopBeam.append(k[0])
  
     for n in nostop_temp.items():
-       notStopBeam.append(n[0])
+        notStopBeam.append(n[0])
+        
     return [stopBeam, notStopBeam]
-    # In[8]:
-    
-    
-    
-    #print(str(len(stop)))
-    #print(stop)
-    #return returnList
+
 
 
 def compareChosenDevicesByAlarmPriority(cursor):
 
-    #tsList = loadGlitchesFromFile("glitchesDB.txt")
-    
     [stop, nonStop] = loadGlitchesFromFile("glitchesDB.txt")
-    
-    # In[9]:
-    # In[7]:
-    returnList = []
+    stopList = [] #list 1 with timestamp (stop)
     for unixTS in stop:
         dtObject = datetime.fromtimestamp(unixTS)
-        returnList.append(dtObject)
-    
-    chosenDevices = config.chosenDevices
-    levelsOfPriority = config.levelsOfPriority
+        stopList.append(dtObject)
+    fw = File_writer("validation", config.FILE_SUFFIX, config.EXTRA)
+    fw.create_txt("../../res/")
+    # For legacy reasons we need to use a priority, even if there's actually no priority involved
+    print '\n\tPRIORITY ' + ':' + "L0"
+    fw.write_txt('\n\tPRIORITY ' + ':' + "L0")
 
-    for ts in returnList:
-        fw = File_writer("new test", config.FILE_SUFFIX, config.EXTRA)
-        fw.create_txt("../../res/")
-        print '\nTIMESTAMP '+ str(ts) + ': '
-        fw.write_txt('\nTIMESTAMP '+ str(ts) + ': ')
-        print '\n\tPRIORITY ' + ':'
-        fw.write_txt('\n\tPRIORITY ' + ':')
-        query = ("select * from electric where action='Alarm CAME' and Time <= %s and Time >= (%s - %s minute) order by time")
-        cursor.execute(query, (ts,ts,5))
-        events = cursor.fetchall()
-
+    for ts in stopList:
+        if config.WINDOW == "after":
+            # Query on the AFTER
+            query = ("select * from electric where action='Alarm CAME' and Time >= %s and Time <= (%s + interval %s minute) order by time")
+            cursor.execute(query, (ts,ts,config.CORRELATION_MINUTES))
+            events = cursor.fetchall()
+        elif config.WINDOW == "before":
+            # Query on the BEFORE
+            query = ("select * from electric where action='Alarm CAME' and Time <= %s and Time >= (%s - interval %s minute) order by time")
+            cursor.execute(query, (ts,ts,config.CORRELATION_MINUTES))
+            events = cursor.fetchall()
+        
         #CONSOLE
-        print '\n\t\tDistinct devices after 5 minutes: [ '
         print '\t\t[ ',
-        for xx in events:
-            print "'" + str(xx[4] + "--" + xx[5]) + "', ",
+        for e in events:
+            print "'" + str(e[4] + "--" + e[5]) + "', ",
         print ']'
         
         #TEXT FILE
-        fw.write_txt('\n\t\tDistinct devices after 5 minutes: [ ')
         fw.write_inline( '\t\t[ ', )
-        for xx in events:
-            fw.write_inline( "'" + xx[4] + "--" + xx[5] + "', " )
-            fw.write_txt('], ')
+        for e in events:
+            fw.write_inline( "'" + e[4] + "--" + e[5] + "', " )
         fw.write_txt(']')
     
-        print("==>")
-        fw.write_txt('==>', newline = True) #KEEP THIS!
+    print("==>")
+    fw.write_txt('==>', newline = True) #KEEP THIS!
 
 def searchItemsets():
     cnx = mysql.connector.connect(host='127.0.0.1', user='root', password='password', database='cern')

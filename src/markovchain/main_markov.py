@@ -13,6 +13,7 @@ from DataError import DataError
 from Pre_markov_handler import Pre_markov_handler
 from MarkovHandler import MarkovHandler
 import expandDeviceMarkov
+import expandDeviceMarkovTimestamp
 import config
 
 
@@ -22,14 +23,18 @@ def preprocess_network(select_priority, file_selection, gh, sequences, log):
     pre_markov_handler = Pre_markov_handler(gh, sequences)
 
     # 1) PROCESS FILES
-    file_suffix = "_" + config.FILE_SUFFIX
+    if config.EXTRA:
+        extra = "_" + config.EXTRA
+    else:
+        extra = ""
+    file_suffix = "_" + config.FILE_SUFFIX + extra + "_MC"
     pre_markov_handler.process_files(select_priority, file_selection, file_suffix, log)
 
     # 2) SELECT VARIABLES
     var_type = "occurrences"  # occurrences, frequency, variance_only, support_variance, lift, couple_occurrences
-    support = 0.4
-    MIN = 3
-    MAX = 4
+    support = 0.3
+    MIN = 4
+    MAX = 10
     pre_markov_handler.select_variables(var_type, MIN, MAX, support, log)
 
     # *) COLUMNS INFO (state, tag, description)
@@ -45,10 +50,10 @@ def create_markov_chain(pnh, gh):
     markov_handler.create_mc_model(pnh.sequences)
 
     # 5) DRAW THE NETWORK
-    location_choice = False  # True, False
-    info_choice = True  # True, False
-    avg_var_edges = True # True, False
-    refDevice = True
+    location_choice = False # True, False
+    info_choice = False  # True, False
+    avg_var_edges = False # True, False
+    refDevice = False
     hideNames = False
     onlyH0 = False
     markov_handler.draw_mc_model(location_choice, info_choice, avg_var_edges, refDevice, hideNames, onlyH0)
@@ -62,7 +67,10 @@ def run_script(mode):
         try:
             gh = General_handler()
             file_selected = config.true_device_names[config.file_selection - 1]  # true device name
-            sequences = expandDeviceMarkov.create_sequences_txt(file_selected)
+            if not config.timestamp:
+                sequences = expandDeviceMarkov.create_sequences_txt(file_selected)
+            else:
+                sequences = expandDeviceMarkovTimestamp.create_sequences_txt()
             pnh = preprocess_network(config.selectPriority, config.file_selection, gh, sequences, log=True)
             print("Location search started...")
             gh.getLocations()  # LOCATION SEARCH
@@ -75,7 +83,7 @@ def run_script(mode):
         gh = General_handler()
         pnhs = []  # LIST OF THE PRE-MARKOV HANDLERS
         i = 1
-        while i <= 6:
+        while i < len(config.true_device_names):
             file_selected = config.true_device_names[i - 1]  # true device name
             sequences = expandDeviceMarkov.create_sequences_txt(file_selected)
             for p in priority:

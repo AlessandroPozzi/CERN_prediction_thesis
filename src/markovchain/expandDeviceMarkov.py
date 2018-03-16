@@ -34,12 +34,14 @@ def create_sequences_txt(device):
         sequences = __create_txt_clusters(cursor, device)
     else:
         sequences = __create_txt_noClusters(cursor, device)
+    cursor.close()
     return sequences
 
 def create_mc_model(device, priority, consideredDevices, sequences):
     cnx = mysql.connector.connect(host='127.0.0.1', user='root', password='password', database='cern')
     cursor = cnx.cursor()
     (mc, avg_var_list, ref_dev_avg_vars) = __get_markov_chain_model(cursor, device, priority, consideredDevices, sequences)
+    cursor.close()
     return (mc, avg_var_list, ref_dev_avg_vars)
 
 
@@ -79,7 +81,7 @@ def __create_txt_noClusters(cursor, d):
                             index = 6
                         if config.EXTRA:
                             extraColumn = ea[index].encode('ascii', 'ignore').decode('ascii')
-                            extraColumn.replace("'", "")
+                            extraColumn = extraColumn.replace("'", "")
                             #extraColumn = re.escape(extraColumn)
                         else:
                             extraColumn = ""
@@ -176,7 +178,7 @@ def __create_txt_clusters(cursor, d):
                     rawEvent = evstate.rawEvent
                     if config.EXTRA:
                         extraColumn = rawEvent[index].encode('ascii', 'ignore').decode('ascii')
-                        extraColumn.replace("'", "")
+                        extraColumn = extraColumn.replace("'", "")
                     else:
                         extraColumn = ""
                     devices.append(evstate.getDevice() + "--" + extraColumn)

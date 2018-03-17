@@ -70,17 +70,24 @@ def compareChosenDevicesByAlarmPriority(cursor):
             cursor.execute(query, (ts,ts,config.CORRELATION_MINUTES))
             events = cursor.fetchall()
         
-        #CONSOLE
-        print '\t\t[ ',
+        eventTagList = []
         for e in events:
-            print "'" + str(e[4] + "--" + e[5]) + "', ",
-        print ']'
+            eventTagList.append(e[4] + "--" + e[5])
+        eventTagListNodup = list(set(eventTagList))
         
-        #TEXT FILE
-        fw.write_inline( '\t\t[ ', )
-        for e in events:
-            fw.write_inline( "'" + e[4] + "--" + e[5] + "', " )
-        fw.write_txt(']')
+        if eventTagListNodup != []:
+        
+            #CONSOLE
+            print '\t\t[ ',
+            for ee in eventTagListNodup:
+                print "'" + ee + "', ",
+            print ']'
+            
+            #TEXT FILE
+            fw.write_inline( '\t\t[ ', )
+            for ee in eventTagListNodup:
+                fw.write_inline( "'" + ee + "', " )
+            fw.write_txt(']')
     
     print("==>")
     fw.write_txt('==>', newline = True) #KEEP THIS!

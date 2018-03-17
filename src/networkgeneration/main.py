@@ -37,7 +37,7 @@ def preprocess_network(select_priority, file_selection, gh, log):
     var_type = "occurrences" #occurrences, frequency, variance_only, support_variance, lift
     support = 0.3
     MIN = 4
-    MAX = 15
+    MAX = 40
     pre_network_handler.select_variables(var_type, MIN, MAX, support, log)
     
     # 3) BUILD DATA
@@ -56,17 +56,19 @@ def create_network(pnh, gh, log):
     
     # 4) LEARN THE STRUCTURE
     method = "scoring_approx"      #scoring_approx, constraint, scoring_exhaustive
-    scoring_method = "K2"  #bic, K2, bdeu
+    scoring_method = "bic"  #bic, K2, bdeu
     network_handler.learn_structure(method, scoring_method, log)
     
     # 5) ESTIMATE THE PARAMETERS
     network_handler.estimate_parameters(log)
     
     # 6) INFERENCE
-    mode = "auto" #manual, auto    | with "auto" inference is done on all variables by setting the parents to 1
+    mode = "no" #manual, auto, no    | with "auto" inference is done on all variables by setting the parents to 1
     variables = [""] #list of target variables (for manual mode)
     evidence = dict()
     evidence[""] = 1 #for manual mode, set the evidence to 1 in the dictionary
+    evidence[""] = 1
+    evidence[""] = 0
     network_handler.inference(variables, evidence, mode, log)
     
     # 7) DRAW THE NETWORK

@@ -19,7 +19,8 @@ WINDOW = "after" #after, before
                                
 '''markov settings'''
 clustering = "no_clustering" # no_clustering, mean_shift, db_scan, avg_plus_stdev, offline_average, static_distance
-variance = True
+variance = False
+timestamp = True
 
 ''' expandDevice settings '''
 chosenDevices = ['EHS60/BE', 'EXS4/8X', 'EMC001*9', 'EXS106/2X', 'ESS11/5H']

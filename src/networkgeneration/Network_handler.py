@@ -7,7 +7,7 @@ Created on 23 nov 2017
 from pgmpy.estimators import HillClimbSearch, BicScore, BayesianEstimator, K2Score, BdeuScore
 from pgmpy.models import BayesianModel
 from pgmpy.estimators import ConstraintBasedEstimator
-from pgmpy.inference import VariableElimination
+from pgmpy.inference import VariableElimination, BeliefPropagation
 from pgmpy.estimators.ExhaustiveSearch import ExhaustiveSearch
 from pgmpy.models import MarkovModel
 from Log_extractor import Log_extractor
@@ -109,7 +109,7 @@ class Network_handler:
         '''
             
         inference = VariableElimination(self.best_model)
-        #inference = BeliefPropagation(self.markov)
+        #inference = BeliefPropagation(self.best_model)
         #inference = Mplp(self.best_model)
         header = "------------------- INFERENCE ------------------------"
         self.log(header, log)
@@ -132,12 +132,14 @@ class Network_handler:
         elif mode == "manual":
             phi_query = inference.query(variables, evidence)
             for key in phi_query:
+                self.file_writer.write_txt(str(phi_query[key]))
                 self.log(phi_query[key], log)
-        
-            '''
-            map_query = inference.map_query(variables, evidence)
-            print(map_query)
-            '''
+        elif mode == "no":
+            return
+        '''
+        map_query = inference.map_query(variables, evidence)
+        print(map_query)
+        '''
                         
                                             
     def draw_network(self, label_choice, location_choice, onlyH0, info_choice, variance, refDevice, hideNames):
@@ -218,9 +220,9 @@ class Network_handler:
                 else:
                     deClean = de
                 info_subgraphs[deClean] = gv.Digraph(name)
-                label = "Tot: " + str(round(self.occurrences[de], 2)) + " | "
-                label = label + "Avg: " + str(round(self.devicesColumnDict[de].msAverage / 1000, 2)) + "s\n"
-                label = label + "St.Dev.: " + str(round(self.devicesColumnDict[de].msStandDev / 1000, 2)) + "s"
+                label = "Occurrences: " + str(round(self.occurrences[de], 2)) + " | "
+                #label = label + "Avg: " + str(round(self.devicesColumnDict[de].msAverage / 1000, 2)) + "s\n"
+                #label = label + "St.Dev.: " + str(round(self.devicesColumnDict[de].msStandDev / 1000, 2)) + "s"
                 info_subgraphs[deClean].graph_attr['label'] = label #Label with name to be visualized in the image
     
         # Create nodes

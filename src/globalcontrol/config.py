@@ -14,7 +14,7 @@ CORRELATION_UNIQUENESS = True # Used when computing the LIFT, in DatabaseNetwork
                                 # happened multiple times after each "n" minutes block. In general, leave this True
 
 ''' VALIDATION settings'''
-WINDOW = "after" #after, before
+WINDOW = "before" #after, before
 #---- RICORDATI di cambiare il FILE_SUFFIX in "timestampBefore" o "timestampAfter" + AGGIUNGI "tag" in EXTRA
                                
 '''markov settings'''

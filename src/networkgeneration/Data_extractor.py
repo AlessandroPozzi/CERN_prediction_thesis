@@ -108,7 +108,7 @@ class Data_extractor:
             if config.EXTRA:
                 extra = re.compile('\-\-(.*?)\Z').findall(f)
                 #extra[0].replace("--", "")
-                #extra[0].replace("'", "")
+                extra[0].replace("'", "")
             processed_findings.append((device[0], extra[0]))
         return processed_findings
     
@@ -170,20 +170,22 @@ class Data_extractor:
             couple_occurrences_list = couple_occurrences.items()
             couple_occurrences_list.sort(key=lambda tup: tup[1],
                                               reverse=True)  # order by occurrences of consecutive couples
+            #don't consider self loops for this criterion
             couple_occurrences_list_no_self = [fullCouple for fullCouple in couple_occurrences_list if not
                                                (fullCouple[0][0][0] == fullCouple[0][1][0] and fullCouple[0][0][1] == fullCouple[0][1][1])]
-            couple_occurrences_list_no_self = couple_occurrences_list_no_self[:20]
+            #take only the most 10, 15, 20 (choose a value) most frequent consecutive couples
+            couple_occurrences_list_no_self = couple_occurrences_list_no_self[:30]
             for fullCouple in couple_occurrences_list_no_self:
                 deviceExtra1 = fullCouple[0][0][0] + "--" + fullCouple[0][0][1]
                 deviceExtra2 = fullCouple[0][1][0] + "--" + fullCouple[0][1][1]
                 if deviceExtra1 not in self.mostFrequentDevInCouples:
-                    self.mostFrequentDevInCouples[deviceExtra1] = 1
+                    self.mostFrequentDevInCouples[deviceExtra1] = fullCouple[1]
                 else:
-                    self.mostFrequentDevInCouples[deviceExtra1] = self.mostFrequentDevInCouples[deviceExtra1] + 1
+                    self.mostFrequentDevInCouples[deviceExtra1] = self.mostFrequentDevInCouples[deviceExtra1] + fullCouple[1]
                 if deviceExtra2 not in self.mostFrequentDevInCouples:
-                    self.mostFrequentDevInCouples[deviceExtra2] = 1
+                    self.mostFrequentDevInCouples[deviceExtra2] = fullCouple[1]
                 else:
-                    self.mostFrequentDevInCouples[deviceExtra2] = self.mostFrequentDevInCouples[deviceExtra2] + 1
+                    self.mostFrequentDevInCouples[deviceExtra2] = self.mostFrequentDevInCouples[deviceExtra2] + fullCouple[1]
             for de in self.mostFrequentDevInCouples:
                 tupl = (de, frequency_by_device[de], occurrences[de],
                         self.devicesColumnDict[de].msAverage / 1000, self.devicesColumnDict[de].msStandDev / 1000,

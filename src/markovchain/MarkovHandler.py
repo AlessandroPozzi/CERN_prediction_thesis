@@ -45,7 +45,7 @@ class MarkovHandler:
             return
         mc_graph = gv.Digraph(format="png")
         mc_graph.graph_attr['overlap'] = "false"
-        #mc_graph.graph_attr['rankdir'] = 'LR'
+        mc_graph.graph_attr['rankdir'] = 'LR'
         devicesExtraString = self.variables_names #format string: "device--extra"
         devicesExtraCouple = [] #format couple: (device, extra)
         for de in devicesExtraString:
@@ -118,6 +118,7 @@ class MarkovHandler:
                 info_subgraphs[de].graph_attr['overlap'] = 'scale'
 
         # Create nodes
+        '''
         for de in devicesExtraCouple:
             nodeName = de[0] + "--" + de[1]
             devName = de[0]
@@ -143,7 +144,7 @@ class MarkovHandler:
                 info_subgraphs[nodeName].node(nodeName3)
             else:  # add the node directly to the graph
                 mc_graph.node(nodeName3)
-
+        '''
         # Reference device
         if refDevice and location_choice:
             ref = self.device_considered_realName
@@ -195,7 +196,7 @@ class MarkovHandler:
                 edge1 = realFakeNamesDict[edge1]
 
             prob = round(cpt[i][2], 2)
-            if (prob <= 0.2 and prob >= 0.0):
+            if (prob <= 0.33 and prob >= 0.0):
                 #mc_graph.edge(edge0, edge1, color="Grey")
                 pass
             else:
@@ -233,21 +234,21 @@ class MarkovHandler:
                     #oldLink rewriting
                     oldLink = (edgeDraw1, edgeDraw0)
                     oldLab = drawnEdges[oldLink]
-                    if (prob >= 0.2 and prob < 0.5):
+                    if (prob >= 0.33 and prob < 0.5):
                         mc_graph.edge(edgeDraw1, edgeDraw0, color="black", label=oldLab, portPos="nw", style="invis")
                     elif (prob >= 0.5):
                         mc_graph.edge(edgeDraw1, edgeDraw0, color="red", label=oldLab, portPos="nw", style="invis")
                     #new link in opposite direction
-                    if (prob >= 0.2 and prob < 0.5):
+                    if (prob >= 0.33 and prob < 0.5):
                         mc_graph.edge(edgeDraw0, edgeDraw1, color="black", label=lab, portPos="se")
                     elif (prob >= 0.5):
                         mc_graph.edge(edgeDraw0, edgeDraw1, color="red", label=lab, portPos="se")
                 else:
-                    if (prob >= 0.2 and prob < 0.5):
+                    if (prob >= 0.33 and prob < 0.5):
                         mc_graph.edge(edgeDraw0, edgeDraw1, color="black", label=lab)
                     elif (prob >= 0.5):
                         mc_graph.edge(edgeDraw0, edgeDraw1, color="red", label=lab)
-                #it is in drawnEdges only if prob > 0.1
+                #it is in drawnEdges only if prob > 0.33
                 drawnEdges[(edgeDraw0, edgeDraw1)] = lab
 
         if refDevice:

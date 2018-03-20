@@ -34,7 +34,7 @@ def preprocess_network(select_priority, file_selection, gh, sequences, log):
     var_type = "occurrences"  # occurrences, frequency, variance_only, support_variance, lift, couple_occurrences
     support = 0.3
     MIN = 4
-    MAX = 150
+    MAX = 70
     pre_markov_handler.select_variables(var_type, MIN, MAX, support, log)
 
     # *) COLUMNS INFO (state, tag, description)

@@ -34,10 +34,10 @@ def preprocess_network(select_priority, file_selection, gh, log):
     pre_network_handler.process_files(select_priority, file_selection, file_suffix, log)
     
     # 2) SELECT VARIABLES
-    var_type = "occurrences" #occurrences, frequency, variance_only, support_variance, lift
+    var_type = "frequency" #occurrences, frequency, variance_only, support_variance, lift
     support = 0.3
-    MIN = 4
-    MAX = 40
+    MIN = 3
+    MAX = 7
     pre_network_handler.select_variables(var_type, MIN, MAX, support, log)
     
     # 3) BUILD DATA
@@ -56,28 +56,28 @@ def create_network(pnh, gh, log):
     
     # 4) LEARN THE STRUCTURE
     method = "scoring_approx"      #scoring_approx, constraint, scoring_exhaustive
-    scoring_method = "bic"  #bic, K2, bdeu
+    scoring_method = "K2"  #bic, K2, bdeu
     network_handler.learn_structure(method, scoring_method, log)
     
     # 5) ESTIMATE THE PARAMETERS
     network_handler.estimate_parameters(log)
     
     # 6) INFERENCE
-    mode = "no" #manual, auto, no    | with "auto" inference is done on all variables by setting the parents to 1
-    variables = [""] #list of target variables (for manual mode)
+    mode = "manual" #manual, auto, no    | with "auto" inference is done on all variables by setting the parents to 1
+    variables = ["EMD311*9--"] #list of target variables (for manual mode)
     evidence = dict()
-    evidence[""] = 1 #for manual mode, set the evidence to 1 in the dictionary
-    evidence[""] = 1
-    evidence[""] = 0
+    evidence["EMD104*9--"] = 1 #for manual mode, set the evidence to 1 in the dictionary
+    #evidence[""] = 1
+    #evidence["EMD210*9--"] = 1
     network_handler.inference(variables, evidence, mode, log)
     
     # 7) DRAW THE NETWORK
-    label = "double" # none, single, double
+    label = "single" # none, single, double
     location_choice = False # True, False
     onlyH0 = False
     info_choice = False
     variance_filter = False # True, False
-    refDevice = False
+    refDevice = True
     hideNames = False
     network_handler.draw_network(label, location_choice, onlyH0, info_choice, variance_filter, refDevice, hideNames)
     

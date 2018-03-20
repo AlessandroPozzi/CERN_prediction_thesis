@@ -304,6 +304,7 @@ class Data_extractor:
         ''' Takes a list of devices + extras and checks if at least one variable is present in that list.
         If the priority node is not present, will required that at least 2 devices are present
         '''
+        '''
         deviceExtra_list = [(x[0] + "--" + x[1]) for x in tuples_list]
         i = 0
         for d in self.variable_names:
@@ -313,6 +314,8 @@ class Data_extractor:
                     return True
         self.skipped_lines += 1
         return False
+        '''
+        return True
     
     def get_data_txt(self):
         return self.data_txt

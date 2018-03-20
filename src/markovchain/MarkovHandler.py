@@ -196,7 +196,7 @@ class MarkovHandler:
                 edge1 = realFakeNamesDict[edge1]
 
             prob = round(cpt[i][2], 2)
-            if (prob <= 0.33 and prob >= 0.0):
+            if (prob <= 0.20 and prob >= 0.0):
                 #mc_graph.edge(edge0, edge1, color="Grey")
                 pass
             else:

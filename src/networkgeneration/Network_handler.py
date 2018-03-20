@@ -319,8 +319,8 @@ class Network_handler:
                 value_inv = round(value_inv, 2)
                 label = str(value) + "|" + str(value_inv)
                 
-            # Save a list of tuples with edge-label data (will be used in post-processing):
-            self.edgeLabels.append((edge[0], edge[1], value, value_inv))
+                # Save a list of tuples with edge-label data (will be used in post-processing):
+                self.edgeLabels.append((edge[0], edge[1], value, value_inv))
             
             edge0 = edge[0]
             edge1 = edge[1]

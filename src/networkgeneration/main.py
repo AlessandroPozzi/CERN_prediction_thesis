@@ -36,8 +36,8 @@ def preprocess_network(select_priority, file_selection, gh, log):
     # 2) SELECT VARIABLES
     var_type = "frequency" #occurrences, frequency, variance_only, support_variance, lift
     support = 0.3
-    MIN = 3
-    MAX = 7
+    MIN = 4
+    MAX = 8
     pre_network_handler.select_variables(var_type, MIN, MAX, support, log)
     
     # 3) BUILD DATA
@@ -56,14 +56,14 @@ def create_network(pnh, gh, log):
     
     # 4) LEARN THE STRUCTURE
     method = "scoring_approx"      #scoring_approx, constraint, scoring_exhaustive
-    scoring_method = "K2"  #bic, K2, bdeu
+    scoring_method = "bic"  #bic, K2, bdeu
     network_handler.learn_structure(method, scoring_method, log)
     
     # 5) ESTIMATE THE PARAMETERS
     network_handler.estimate_parameters(log)
     
     # 6) INFERENCE
-    mode = "manual" #manual, auto, no    | with "auto" inference is done on all variables by setting the parents to 1
+    mode = "auto" #manual, auto, no    | with "auto" inference is done on all variables by setting the parents to 1
     variables = ["EMD311*9--"] #list of target variables (for manual mode)
     evidence = dict()
     evidence["EMD104*9--"] = 1 #for manual mode, set the evidence to 1 in the dictionary
@@ -72,17 +72,17 @@ def create_network(pnh, gh, log):
     network_handler.inference(variables, evidence, mode, log)
     
     # 7) DRAW THE NETWORK
-    label = "single" # none, single, double
+    label = "double" # none, single, double
     location_choice = False # True, False
     onlyH0 = False
-    info_choice = False
+    info_choice = True
     variance_filter = False # True, False
-    refDevice = True
+    refDevice = False
     hideNames = False
     network_handler.draw_network(label, location_choice, onlyH0, info_choice, variance_filter, refDevice, hideNames)
     
     # 8) DATA INFO
-    selection = [1, 2] #Put in the list what you want to show
+    selection = [1, 2, 4] #Put in the list what you want to show
     # 1: Device frequency and occurrences
     # 2: Edges of the network
     # 3: Markov Network

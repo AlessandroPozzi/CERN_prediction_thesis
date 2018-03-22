@@ -81,13 +81,13 @@ class ColumnStats(object):
         for ts in self.deltaTimestamps:
             tsum += ts
         average = tsum / len(self.deltaTimestamps) #Average as a TimeDelta
-        self.msAverage = average.total_seconds() * 1000 + average.microseconds / 1000 #Average in milliseconds
+        self.msAverage = average.total_seconds() * 1000 #+ average.microseconds / 1000 #Average in milliseconds
         standDev = None
         if len(self.deltaTimestamps) > 1: #do not compute variance with only 1 data point:
             numerator = 0.000000000 # numerator of the variance formula
             for ts in self.deltaTimestamps:
                 par = ts - average
-                msPar = par.total_seconds() * 1000 + par.microseconds / 1000
+                msPar = par.total_seconds() * 1000 #+ par.microseconds / 1000
                 numerator += (msPar * msPar)
             variancems = numerator / (len(self.deltaTimestamps) - 1) #variance in milliseconds
             standDev = timedelta(milliseconds = math.sqrt(variancems)) #standard deviation as a timedelta

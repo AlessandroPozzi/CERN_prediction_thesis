@@ -35,7 +35,8 @@ class EventState(object):
         else:
             previousTimestamp = datetime.strptime(previous_event[0], '%Y-%m-%d %H:%M:%S.%f')
             self.timeDelta = self.timestamp - previousTimestamp #time elapsed since PREVIOUS event
-            self.timeDelta_ms = self.timeDelta.total_seconds() * 1000 + self.timeDelta.microseconds / 1000
+            self.timeDelta_ms = self.timeDelta.total_seconds() * 1000 
+            #+ self.timeDelta.microseconds / 1000
         timeElapsed = (self.timestamp - datetime.strptime(initTime, '%Y-%m-%d %H:%M:%S.%f')) #time elapsed since REFERENCE event
         seconds = timeElapsed.total_seconds()
         milliseconds = timeElapsed.microseconds / 1000
@@ -115,13 +116,16 @@ class ClusterHandler(object):
             # Now, divide the groups of events based on the average:
             j = 0 # "j" indicates the first element from which we'll start the next cluster
             for i in range(1, len(esl)):
-                if esl[i].getTimeDelta() > 1 * average:
+                if esl[i].getTimeDelta() > 2 * average:
                     newCluster = esl[j:i]
                     self.clustersList.append(newCluster)
                     if debug:
                         fw.write_txt("CLUSTER:")
                         for s in newCluster:
-                            fw.write_txt(str(s.getTimestamp()) + " - " + s.getDevice())
+                            addition = ""
+                            if s.timeDelta_ms != None:
+                                addition = " (+" + self.roundToStr(s.timeDelta_ms / 1000) + "s)"
+                            fw.write_txt(str(s.getTimestamp()) + " - " + s.getDevice() + addition)
                     j = i
             l = len(esl) - 1 # "l" = total number of events in this 5 minutes
             # Add the last cluster (if left):
@@ -131,7 +135,10 @@ class ClusterHandler(object):
                 if debug:
                     fw.write_txt("CLUSTER:")
                     for s in newCluster:
-                        fw.write_txt(str(s.getTimestamp()) + " - " + s.getDevice())
+                        addition = ""
+                        if s.timeDelta_ms != None:
+                            addition = " (+" + self.roundToStr(s.timeDelta_ms / 1000) + "s)"
+                        fw.write_txt(str(s.getTimestamp()) + " - " + s.getDevice() + addition)
                         
     def findClustersAverageDeviation(self, fw, debug = False):
         '''
@@ -226,7 +233,10 @@ class ClusterHandler(object):
                     if debug:
                         fw.write_txt("CLUSTER:")
                         for s in newCluster:
-                            fw.write_txt(str(s.getTimestamp()) + " - " + s.getDevice())
+                            addition = ""
+                            if s.timeDelta_ms != None:
+                                addition = " (+" + self.roundToStr(s.timeDelta_ms / 1000) + "s)"
+                            fw.write_txt(str(s.getTimestamp()) + " - " + s.getDevice() + addition)
                     j = i
             l = len(esl) - 1 # "l" = total number of events in this 5 minutes
             # Add the last cluster (if left):
@@ -236,7 +246,10 @@ class ClusterHandler(object):
                 if debug:
                     fw.write_txt("CLUSTER:")
                     for s in newCluster:
-                        fw.write_txt(str(s.getTimestamp()) + " - " + s.getDevice())
+                        addition = ""
+                        if s.timeDelta_ms != None:
+                            addition = " (+" + self.roundToStr(s.timeDelta_ms / 1000) + "s)"
+                        fw.write_txt(str(s.getTimestamp()) + " - " + s.getDevice() + addition)
             
     def findClustersOnlineAverage(self):
         '''
@@ -265,8 +278,11 @@ class ClusterHandler(object):
                 fw.write_txt("Number of events: " + str(self.eventStateList.__len__()))
                 fw.write_txt('Estimated number of clusters: %d' % n_clusters_)
                 for i in range(len(self.eventStateList)):
-                    event = self.eventStateList
-                    fw.write_txt(str(event[i].getTimestamp()) + " - " + event[i].getDevice() + " --> " + str(labels[i]))
+                    events = self.eventStateList
+                    addition = ""
+                    if events[i].timeDelta_ms != None:
+                        addition = " (+" + self.roundToStr(events[i].timeDelta_ms / 1000) + "s)"
+                    fw.write_txt(str(events[i].getTimestamp()) + " - " + events[i].getDevice() + " --> " + str(labels[i]) + addition)
                 fw.write_txt('Labelling of clusters: ' + str(labels))
         
             #Saving the clusters in the list:

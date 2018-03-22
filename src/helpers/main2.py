@@ -9,12 +9,8 @@ from datetime import datetime
 from datetime import timedelta
 import numpy as np
 #from DatabaseNetworkCorrelator import DatabaseNetworkCorrelator as DNC
-
-unicodeString = "טעא+ששששששששט+!£$%"
-unicodeString2 = "טעא+ששששששששט+!£$%"
-
-extraUnicode = unicodeString.encode('ascii', 'ignore').decode('ascii')
-extraString = "hello" + unicodeString2
+check = 0 * 1000
+print(str(check))
 
 
 

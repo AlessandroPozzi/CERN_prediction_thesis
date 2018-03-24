@@ -112,7 +112,7 @@ class Data_extractor:
             processed_findings.append((device[0], extra[0]))
         return processed_findings
     
-    def prepare_candidates(self, var_type):
+    def prepare_candidates(self, var_type, manualList):
         '''
         Extracts occurrences and frequency of the devices (i.e. the candidate for becoming variables of the network).
         Occurrences and frequency are computed by looking ONLY at the txt itemsets.
@@ -123,6 +123,7 @@ class Data_extractor:
         frequency_by_device = dict() # key = device, value = sum of frequencies of device
         allDevicesExtra = set() #contain couples (device, extra)
         couple_occurrences = dict()
+        self.manualList = manualList
 
         for key in self.events_by_file:
             occurrences = dict() #key = device; value = number of occurrences in SINGLE FILE
@@ -149,7 +150,7 @@ class Data_extractor:
         self.devicesColumnDict = colAnal.find_column_distribution(self.true_file_names[0], self.priority_selected, list(allDevicesExtra))
         self.occurrences = occurrences
 
-        if var_type == "occurrences" or var_type == "frequency":
+        if var_type == "occurrences" or var_type == "frequency" or var_type == "manual":
             for de in frequency_by_device:
                 tupl = (de, frequency_by_device[de], occurrences[de], -1, -1)
                 self.ranked_devices.append(tupl)
@@ -191,6 +192,7 @@ class Data_extractor:
                         self.devicesColumnDict[de].msAverage / 1000, self.devicesColumnDict[de].msStandDev / 1000,
                         self.mostFrequentDevInCouples[de]) #it's a 6-tuple, instead of 5-tuple
                 self.ranked_devices.append(tupl) #not yet ranked
+            
 
                 
         
@@ -209,7 +211,7 @@ class Data_extractor:
 
         if var_type == "occurrences":
             self.ranked_devices.sort(key = lambda tup: tup[2], reverse=True) #order by occurrences
-        elif var_type == "frequency" or var_type == "support_variance":
+        elif var_type == "frequency" or var_type == "support_variance" or var_type == "manual":
             self.ranked_devices.sort(key = lambda tup: tup[1], reverse=True) #order by support
         elif var_type == "variance_only":
             self.ranked_devices.sort(key = lambda tup: tup[4]) #order by variance (actually, standard deviation) O
@@ -229,6 +231,12 @@ class Data_extractor:
 
         if var_type == "variance_only" or var_type == "lift":
             ordered_ranking = [tup for tup in ordered_ranking if tup[2] > 5] #remove devices with less than n occurrences
+
+        if var_type == "manual": #bypass everything and select variables manually
+            for dev in self.manualList:
+                self.variable_names.append(dev + "--")
+            self.ranked_devices = ordered_ranking
+            return
 
         for i in range(len(ordered_ranking)):
             NUM = len(self.variable_names)

@@ -31,11 +31,16 @@ def preprocess_network(select_priority, file_selection, gh, sequences, log):
     pre_markov_handler.process_files(select_priority, file_selection, file_suffix, log)
 
     # 2) SELECT VARIABLES
-    var_type = "occurrences"  # occurrences, frequency, variance_only, support_variance, lift, couple_occurrences
+    var_type = "manual"  # occurrences, frequency, variance_only, support_variance, lift, couple_occurrences, manual
     support = 0.3
     MIN = 4
-    MAX = 70
-    pre_markov_handler.select_variables(var_type, MIN, MAX, support, log)
+    MAX = 4
+    manualList = [] # nomi delle variabili da aggiungere, senza doppio trattino (NO COPPIE)
+    manualList.append("EHT1/BE")
+    manualList.append("EHT2/BE")
+    manualList.append("EHT3/BE")
+    manualList.append("ECE001/BE")
+    pre_markov_handler.select_variables(var_type, MIN, MAX, support, log, manualList)
 
     # *) COLUMNS INFO (state, tag, description)
     pre_markov_handler.checkColumnDistribution()

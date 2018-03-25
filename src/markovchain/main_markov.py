@@ -27,14 +27,14 @@ def preprocess_network(select_priority, file_selection, gh, sequences, log):
         extra = "_" + config.EXTRA
     else:
         extra = ""
-    file_suffix = "_" + config.FILE_SUFFIX + extra + "_MC"
+    file_suffix = "_" + config.FILE_SUFFIX + extra #+ "_MC"
     pre_markov_handler.process_files(select_priority, file_selection, file_suffix, log)
 
     # 2) SELECT VARIABLES
-    var_type = "occurrences"  # occurrences, frequency, variance_only, support_variance, lift, couple_occurrences
+    var_type = "variance_only"  # occurrences, frequency, variance_only, support_variance, lift, couple_occurrences
     support = 0.3
-    MIN = 4
-    MAX = 70
+    MIN = 3
+    MAX = 4
     pre_markov_handler.select_variables(var_type, MIN, MAX, support, log)
 
     # *) COLUMNS INFO (state, tag, description)
@@ -51,9 +51,9 @@ def create_markov_chain(pnh, gh):
 
     # 5) DRAW THE NETWORK
     location_choice = False # True, False
-    info_choice = True  # True, False
+    info_choice = False # True, False
     avg_var_edges = False # True, False
-    refDevice = False
+    refDevice = True
     hideNames = False
     onlyH0 = False
     markov_handler.draw_mc_model(location_choice, info_choice, avg_var_edges, refDevice, hideNames, onlyH0)

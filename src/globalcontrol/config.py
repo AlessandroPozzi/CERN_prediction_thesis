@@ -7,20 +7,20 @@ Config file. Can also run the entire system
 
 ''' GENERAL settings '''
 CORRELATION_MINUTES = 5
-FILE_SUFFIX = "averageDeviation_clustering" #clusters_mc_dbscan, afterNoDup, afterStateNodup, clusters_offline_average1x, clusters_static_distance12sec
+FILE_SUFFIX = "afterNoDup" #clusters_mc_dbscan, afterNoDup, afterStateNodup, clusters_offline_average1x, clusters_static_distance12sec
                             #clusters_offline_average1x, clusters_static_distance12sec, clusters_meanShift, clusters_averageDeviation...
 EXTRA = "" # state, tag, description, "" : use this to select the extra info to attach to Device (needed also in main).
 CORRELATION_UNIQUENESS = True # Used when computing the LIFT, in DatabaseNetworkCorrelator. If True, will consider only ONCE events
                                 # happened multiple times after each "n" minutes block. In general, leave this True
 #RIGENERA GLI AFTER NO DUP!!!! CLUSTERING OVERWRITE
 ''' VALIDATION settings'''
-WINDOW = "before" #after, before   
+WINDOW = "after" #after, before
 #---- RICORDATI di cambiare il FILE_SUFFIX in "timestampBefore" o "timestampAfter" + AGGIUNGI "tag" in EXTRA
                                
 '''markov settings'''
 clustering = "avg_plus_stdev" # no_clustering, mean_shift, db_scan, avg_plus_stdev, offline_average, static_distance
-variance = False
-timestamp = True
+variance = True
+timestamp = False #set to use CERN timestamp's
 
 ''' expandDevice settings '''
 chosenDevices = ['EHS60/BE', 'EXS4/8X', 'EMC001*9', 'EXS106/2X', 'ESS11/5H', 'ESS1*84',
@@ -52,7 +52,7 @@ true_device_names = ['EHS60/BE', 'EXS4/8X', 'EMC001*9', 'EXS106/2X', 'ESS11/5H',
 #true_device_names = ["EMC001*9", 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X']
 #true_device_names = ['EMD101/8E','EMD102/8E','EMD103/8E','EMD407/8E','EMD202/8E','EMD301/8E','EMD206/8E','EKC200/8U']
                     #'validation'
-mode = "all" #one, all  | "one" to do the single file-priority selected above;
+mode = "one" #one, all  | "one" to do the single file-priority selected above;
                         # "all" to do all the possible files and priorities in the lists above
 
 #import main

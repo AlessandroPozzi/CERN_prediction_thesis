@@ -34,11 +34,18 @@ def preprocess_network(select_priority, file_selection, gh, log):
     pre_network_handler.process_files(select_priority, file_selection, file_suffix, log)
     
     # 2) SELECT VARIABLES
-    var_type = "frequency" #occurrences, frequency, variance_only, support_variance, lift
+    var_type = "manual" #occurrences, frequency, variance_only, support_variance, lift, manual
     support = 0.3
     MIN = 4
-    MAX = 8
-    pre_network_handler.select_variables(var_type, MIN, MAX, support, log)
+    MAX = 8 
+    manualList = [] # nomi delle variabili da aggiungere, senza doppio trattino (NO COPPIE)
+    manualList.append("EHT1/BE")
+    manualList.append("EHT2/BE")
+    manualList.append("EHT3/BE")
+    manualList.append("ECE001/BE")
+    manualList.append("EKD203/5E")
+    manualList.append("EHD20/BE")
+    pre_network_handler.select_variables(var_type, MIN, MAX, support, log, manualList)
     
     # 3) BUILD DATA
     training_instances="all_events" #all_events, all_events_priority
@@ -75,7 +82,7 @@ def create_network(pnh, gh, log):
     label = "double" # none, single, double
     location_choice = False # True, False
     onlyH0 = False
-    info_choice = True
+    info_choice = False
     variance_filter = False # True, False
     refDevice = False
     hideNames = False

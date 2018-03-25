@@ -112,11 +112,12 @@ class ClusterHandler(object):
                     timeSum += delta
             average = timeSum / (len(esl)-1) 
             if debug:
-                fw.write_txt("AVERAGE = " + str(average))
+                #fw.write_txt("AVERAGE = " + str(average))
+                fw.write_txt("AVERAGE = " + self.roundToStr(average.total_seconds() / 1000) + " seconds")
             # Now, divide the groups of events based on the average:
             j = 0 # "j" indicates the first element from which we'll start the next cluster
             for i in range(1, len(esl)):
-                if esl[i].getTimeDelta() > 2 * average:
+                if esl[i].getTimeDelta() > 1 * average:
                     newCluster = esl[j:i]
                     self.clustersList.append(newCluster)
                     if debug:

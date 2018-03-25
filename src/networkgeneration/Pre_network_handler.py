@@ -48,7 +48,7 @@ class Pre_network_handler(object):
         self.log("Text files data extraction completed.", log)
     
     
-    def select_variables(self, var_type, MIN, MAX, support, log = True):
+    def select_variables(self, var_type, MIN, MAX, support, log = True, manualList = None):
         ''' (2)
         Method that selects the variables to be used in the network.
         -----------------
@@ -64,7 +64,7 @@ class Pre_network_handler(object):
         if self.extractor.nodata():
             raise DataError("No data in this file - priority")
             
-        self.extractor.prepare_candidates(var_type) #computes occurrences and frequency of the devices
+        self.extractor.prepare_candidates(var_type, manualList) #computes occurrences and frequency of the devices
         self.extractor.select_candidates(var_type, support, MIN, MAX)
         self.devicesColumnDict = self.extractor.get_columnAnalysis()
         self.occurrences = self.extractor.get_occurrences()

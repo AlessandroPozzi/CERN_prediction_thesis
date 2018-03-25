@@ -43,6 +43,8 @@ def preprocess_network(select_priority, file_selection, gh, log):
     manualList.append("EHT2/BE")
     manualList.append("EHT3/BE")
     manualList.append("ECE001/BE")
+    manualList.append("EKD203/5E")
+    manualList.append("EHD20/BE")
     pre_network_handler.select_variables(var_type, MIN, MAX, support, log, manualList)
     
     # 3) BUILD DATA

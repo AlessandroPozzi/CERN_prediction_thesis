@@ -88,10 +88,10 @@ class Data_extractor:
         and also stores the priority
         '''
         devices_extra_found = self.find_devices(line)
-        if devices_extra_found:
-            tupl = (devices_extra_found, p)
-            self.events_by_file[file_name].append(tupl)
-            self.totalRows = self.totalRows + 1
+        #if devices_extra_found:
+        tupl = (devices_extra_found, p)
+        self.events_by_file[file_name].append(tupl)
+        self.totalRows = self.totalRows + 1
             
     def find_devices(self, line):
         ''' 

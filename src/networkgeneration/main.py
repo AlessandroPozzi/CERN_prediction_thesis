@@ -34,17 +34,18 @@ def preprocess_network(select_priority, file_selection, gh, log):
     pre_network_handler.process_files(select_priority, file_selection, file_suffix, log)
     
     # 2) SELECT VARIABLES
-    var_type = "manual" #occurrences, frequency, variance_only, support_variance, lift, manual
+    var_type = "occurrences" #occurrences, frequency, variance_only, support_variance, lift, manual
     support = 0.3
-    MIN = 4
-    MAX = 8 
-    manualList = [] # nomi delle variabili da aggiungere, senza doppio trattino (NO COPPIE)
-    manualList.append("EHT1/BE")
-    manualList.append("EHT2/BE")
-    manualList.append("EHT3/BE")
-    manualList.append("ECE001/BE")
-    manualList.append("EKD203/5E")
-    manualList.append("EHD20/BE")
+    MIN = 3
+    MAX = 15
+    manualList = [] # nomi delle variabili da aggiungere, CON doppio trattino (COPPIE)
+    manualList.append("ESS316/7E--A08")
+    manualList.append("EBS1/12--A15")
+    manualList.append("EBS1/32--A08")
+    manualList.append("EBS1/12--A30")
+    manualList.append("ESS10/1DX--4C-5")
+    manualList.append("EXS311*80--44-2")
+    #manualList.append("EBS1/32--A08")
     pre_network_handler.select_variables(var_type, MIN, MAX, support, log, manualList)
     
     # 3) BUILD DATA

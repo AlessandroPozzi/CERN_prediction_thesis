@@ -75,19 +75,19 @@ def compareChosenDevicesByAlarmPriority(cursor):
             eventTagList.append(e[4] + "--" + e[5])
         eventTagListNodup = list(set(eventTagList))
         
-        if eventTagListNodup != []:
+      #  if eventTagListNodup != []:
         
-            #CONSOLE
-            print '\t\t[ ',
-            for ee in eventTagListNodup:
-                print "'" + ee + "', ",
-            print ']'
-            
-            #TEXT FILE
-            fw.write_inline( '\t\t[ ', )
-            for ee in eventTagListNodup:
-                fw.write_inline( "'" + ee + "', " )
-            fw.write_txt(']')
+        #CONSOLE
+        print '\t\t[ ',
+        for ee in eventTagListNodup:
+            print "'" + ee + "', ",
+        print ']'
+        
+        #TEXT FILE
+        fw.write_inline( '\t\t[ ', )
+        for ee in eventTagListNodup:
+            fw.write_inline( "'" + ee + "', " )
+        fw.write_txt(']')
     
     print("==>")
     fw.write_txt('==>', newline = True) #KEEP THIS!

@@ -129,14 +129,18 @@ class Data_extractor:
             occurrences = dict() #key = device; value = number of occurrences in SINGLE FILE
             total_events = len(self.events_by_file[key])
             for tupl in self.events_by_file[key]: # each tuple is: (device_list, priority)
+                if config.occurrencesAsBN:
+                    maxOnce = dict() #max once couple per sequence/itemset
                 for index, couple in enumerate(tupl[0]):
                     devExtra = couple[0] + "--" + couple[1]
                     allDevicesExtra.add(couple)
-                    if devExtra not in occurrences: #create new key
-                        occurrences[devExtra] = 1
-                    else: #update key
-                        occurrences[devExtra] = occurrences[devExtra] + 1
+                    if config.occurrencesAsBN and devExtra not in maxOnce:
+                        if devExtra not in occurrences: #create new key
+                            occurrences[devExtra] = 1
+                        else: #update key
+                            occurrences[devExtra] = occurrences[devExtra] + 1
                     #part related to couple_occurrences criterion
+                    maxOnce[devExtra] = True
                     next = index + 1
                     if next < len(tupl[0]):
                         futureCouple = (tupl[0][index], tupl[0][next])
@@ -234,7 +238,7 @@ class Data_extractor:
 
         if var_type == "manual": #bypass everything and select variables manually
             for dev in self.manualList:
-                self.variable_names.append(dev + "--")
+                self.variable_names.append(dev)
             self.ranked_devices = ordered_ranking
             return
 

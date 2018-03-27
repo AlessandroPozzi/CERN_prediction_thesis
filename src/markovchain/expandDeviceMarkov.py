@@ -79,6 +79,8 @@ def __create_txt_noClusters(cursor, d):
                             index = 5
                         elif config.EXTRA == "description":
                             index = 6
+                        elif config.EXTRA == "livelloPriorita":
+                            index = 22
                         if config.EXTRA:
                             extraColumn = ea[index].encode('ascii', 'ignore').decode('ascii')
                             extraColumn = extraColumn.replace("'", "")
@@ -170,6 +172,8 @@ def __create_txt_clusters(cursor, d):
                 index = 5
             elif config.EXTRA == "description":
                 index = 6
+            elif config.EXTRA == "livelloPriorita":
+                index = 22
             
             #Create the list of itemsets
             for stateList in newClusters:

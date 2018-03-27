@@ -132,19 +132,21 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_extra, cursor
         extraIndex = 3
     elif config.EXTRA == "description":
         extraIndex = 4
+    elif config.EXTRA == "livelloPriorita":
+        extraIndex = 5
     # 3 cases for the query:
     if len(priority)==1:
         priorCond = "and livellopriorita=%s"
-        query = ("select Device, Time, State, Tag, Description from electric where device=%s " + priorCond + " and action='Alarm CAME' order by time")
+        query = ("select Device, Time, State, Tag, Description, LivelloPriorita from electric where device=%s " + priorCond + " and action='Alarm CAME' order by time")
         cursor.execute(query, (d,l[0]))
     elif isinstance(fileName, tuple):
         #The reference device has the format (device,extra)
-        extraCond = " and state=%s"
-        query = ("select Device, Time, State, Tag, Description from electric where device=%s " + extraCond + " and action='Alarm CAME' order by time")
+        extraCond = " and " + config.EXTRA + "=%s"
+        query = ("select Device, Time, State, Tag, Description, LivelloPriorita from electric where device=%s " + extraCond + " and action='Alarm CAME' order by time")
         cursor.execute(query, (fileName[0],fileName[1]))
         flagCoupleRef = True
     else: 
-        query = ("select Device, Time, State, Tag, Description from electric where device=%s and action='Alarm CAME' order by time")
+        query = ("select Device, Time, State, Tag, Description, LivelloPriorita from electric where device=%s and action='Alarm CAME' order by time")
         cursor.execute(query, (d,))
    
     events = cursor.fetchall()
@@ -162,7 +164,7 @@ def compareChosenDevicesByAlarmPriority(fileName, priority, device_extra, cursor
             devicesDict[keyName] = ColumnStats(write, fw)
         
         #allSeenEvents.append((e[0], e[1]))
-        query = ("select Device, Time, State, Tag, Description from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
+        query = ("select Device, Time, State, Tag, Description, LivelloPriorita from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
         cursor.execute(query, (e[1], e[1], config.CORRELATION_MINUTES))
         eventsAfter = cursor.fetchall()
         

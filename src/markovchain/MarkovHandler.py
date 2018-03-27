@@ -45,7 +45,7 @@ class MarkovHandler:
             return
         mc_graph = gv.Digraph(format="png")
         mc_graph.graph_attr['overlap'] = "false"
-        #mc_graph.graph_attr['rankdir'] = 'LR'
+        mc_graph.graph_attr['rankdir'] = 'LR'
         devicesExtraString = self.variables_names #format string: "device--extra"
         devicesExtraCouple = [] #format couple: (device, extra)
         for de in devicesExtraString:
@@ -196,7 +196,7 @@ class MarkovHandler:
                 edge1 = realFakeNamesDict[edge1]
 
             prob = round(cpt[i][2], 2)
-            if (prob <= 0.20 and prob >= 0.0):
+            if (prob <= 0.10 and prob >= 0.0):
                 #mc_graph.edge(edge0, edge1, color="Grey")
                 pass
             else:

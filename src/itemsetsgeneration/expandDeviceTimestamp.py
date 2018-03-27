@@ -52,7 +52,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
     for unixTS in stop:
         dtObject = datetime.fromtimestamp(unixTS)
         stopList.append(dtObject)
-    fw = File_writer("validation", config.FILE_SUFFIX, config.EXTRA)
+    fw = File_writer(config.VALIDATION_NAME, config.FILE_SUFFIX, config.EXTRA)
     fw.create_txt("../../res/")
     # For legacy reasons we need to use a priority, even if there's actually no priority involved
     print '\n\tPRIORITY ' + ':' + "L0"

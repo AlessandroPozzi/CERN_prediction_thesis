@@ -456,11 +456,12 @@ class Network_handler:
                         self.fix_node_presence(ls, nice_graph)
                         if prob1 >= prob2:
                             double_label = str(prob1) + "|" + str(prob2)
-                            nice_graph.add_edge(pydot.Edge(node1, node2, color = "orange", label = double_label))
+                            nice_graph.add_edge(pydot.Edge(node1, node2, color = "red", label = double_label))
                         else:
                             double_label = str(prob2) + "|" + str(prob1)
-                            nice_graph.add_edge(pydot.Edge(node2, node1, color = "orange", label = double_label))
-                    elif prob1 >= 0.40 and prob2 >= 0.40:
+                            nice_graph.add_edge(pydot.Edge(node2, node1, color = "red", label = double_label))
+                    '''
+                    elif prob1 >= 0.50 and prob2 >= 0.50:
                         ls = [node1, node2]
                         self.fix_node_presence(ls, nice_graph)
                         if prob1 >= prob2:
@@ -469,7 +470,7 @@ class Network_handler:
                         else:
                             double_label = str(prob2) + "|" + str(prob1)
                             nice_graph.add_edge(pydot.Edge(node2, node1, color = "black", label = double_label))
-            
+                    '''
             if self.device_considered=="CUSTOM":
                 imgPath = '../../output/CUSTOM' + self.file_suffix
                 nice_graph.write_png(imgPath + "-inference_network.png")

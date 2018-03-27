@@ -34,7 +34,7 @@ def preprocess_network(select_priority, file_selection, gh, sequences, log):
     var_type = "occurrences"  # occurrences, frequency, variance_only, support_variance, lift, couple_occurrences, manual
     support = 0.3
     MIN = 4
-    MAX = 15
+    MAX = 10
     manualList = [] # nomi delle variabili da aggiungere, senza doppio trattino (NO COPPIE)
     manualList.append("EHT1/BE")
     manualList.append("EHT2/BE")

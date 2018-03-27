@@ -1,5 +1,5 @@
 '''
-QUESTO FILE e' lo script originale expandDevice.py ripulito dalle parti per noi inutili
+QUESTO FILE e' lo script originale expandDeviceTestGraphs.py ripulito dalle parti per noi inutili
 e con l'aggiunta di una condizione sulla lista "markedEvents" per far si' che uno stesso evento
 NON venga considerato piu' volte per via dei problemi della DOPPIA QUERY.
 Inoltre, viene anche usato per aggiungere lo stato, la descrizione o il tag ai device nell'itemset.

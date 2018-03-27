@@ -26,10 +26,10 @@ def compareChosenDevicesByAlarmPriority(cursor):
     for d in chosenDevices:
         fw = File_writer(d, config.FILE_SUFFIX, config.EXTRA)
         fw.create_txt("../../res/")
-        markedEvents = []
         print '\nDEVICE '+ str(d) + ': '
         fw.write_txt('\nDEVICE '+ str(d) + ': ')
         for l in levelsOfPriority:
+            markedEvents = []
             print '\n\tPRIORITY ' + str(l) + ':'
             fw.write_txt('\n\tPRIORITY ' + str(l) + ':')
             query = ("select * from electric where device=%s and livellopriorita=%s and action='Alarm CAME' order by time")
@@ -44,22 +44,22 @@ def compareChosenDevicesByAlarmPriority(cursor):
                 eventsAfter = cursor.fetchall()
                 devicesAfter = []  # all events that happened 5 min after the event "e"
                 for ea in eventsAfter:
-                   # if ea not in markedEvents: #CONDIZIONE per rimuovere i DUPLICATI
-                    markedEvents.append(ea)
-                    if ea[4] != d: #CONDIZIONE per evitare problemi con il device di riferimento e l'aggiunta di stati, tag o descr.
-                        if config.EXTRA == "state":
-                            index = 10
-                        elif config.EXTRA == "tag":
-                            index = 5
-                        elif config.EXTRA == "description":
-                            index = 6
-                        if config.EXTRA:
-                            extraColumn = ea[index].encode('ascii', 'ignore').decode('ascii')
-                            extraColumn = extraColumn.replace("'", "")
-                            #extraColumn = re.escape(extraColumn)
-                        else:
-                            extraColumn = ""
-                        devicesAfter.append(ea[4] + "--" + extraColumn)
+                    if ea not in markedEvents: #CONDIZIONE per rimuovere i DUPLICATI
+                        markedEvents.append(ea)
+                        if ea[4] != d: #CONDIZIONE per evitare problemi con il device di riferimento e l'aggiunta di stati, tag o descr.
+                            if config.EXTRA == "state":
+                                index = 10
+                            elif config.EXTRA == "tag":
+                                index = 5
+                            elif config.EXTRA == "description":
+                                index = 6
+                            if config.EXTRA:
+                                extraColumn = ea[index].encode('ascii', 'ignore').decode('ascii')
+                                extraColumn = extraColumn.replace("'", "")
+                                #extraColumn = re.escape(extraColumn)
+                            else:
+                                extraColumn = ""
+                            devicesAfter.append(ea[4] + "--" + extraColumn)
                 #if devicesAfter != []:
                 afterSequence.append(devicesAfter) # Contiene tutte le liste di deviceAfter (con duplicati). E' una lista di liste
                 devicesAfter=list(set(devicesAfter)) #Lista non ordinata di distinct devices

@@ -34,17 +34,24 @@ def preprocess_network(select_priority, file_selection, gh, log):
     pre_network_handler.process_files(select_priority, file_selection, file_suffix, log)
     
     # 2) SELECT VARIABLES
-    var_type = "occurrences" #occurrences, frequency, variance_only, support_variance, lift, manual
+    var_type = "manual" #occurrences, frequency, variance_only, support_variance, lift, manual
     support = 0.3
-    MIN = 3
-    MAX = 15
+    MIN = 4
+    MAX = 5
     manualList = [] # nomi delle variabili da aggiungere, CON doppio trattino (COPPIE)
-    manualList.append("ESS316/7E--A08")
-    manualList.append("EBS1/12--A15")
-    manualList.append("EBS1/32--A08")
-    manualList.append("EBS1/12--A30")
-    manualList.append("ESS10/1DX--4C-5")
-    manualList.append("EXS311*80--44-2")
+    manualList.append("AUTO-TRANSFERT--")
+    #manualList.append("ECC01/5DX--")
+    manualList.append("EMD1A*9--")
+    manualList.append("EMD2A*9--")
+    manualList.append("EMD3A*9--")
+    manualList.append("EMC700/1E--")
+    #manualList.append("ESS316/7E--A08")
+    #manualList.append("EBS1/12--A15")
+    #manualList.append("EBS1/32--A08")
+    #manualList.append("EBS1/12--A30")
+    #manualList.append("ESS10/1DX--4C-5")
+    #manualList.append("EXS311*80--44-2")
+
     #manualList.append("EBS1/32--A08")
     pre_network_handler.select_variables(var_type, MIN, MAX, support, log, manualList)
     

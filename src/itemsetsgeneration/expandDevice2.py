@@ -1,5 +1,5 @@
 ''' 
-Questo modulo è l'expandDevice usato per generare reti con dispositivi arbitrari.
+Questo modulo è l'expandDeviceTestGraphs usato per generare reti con dispositivi arbitrari.
 In particolare qui si utilizzava anche il modulo "StateOfDevices" per generare itemsets da 
 sequenze SENZA DUPLICATI e SOVRAPPOSIZIONI.
 '''
@@ -17,7 +17,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
     levelsOfPriority = ['L0', 'L1', 'L2', 'L3']
 
 
-    fw = File_writer("CUSTOM_7net-nooverlaps-yesallsingledup-emc001") #always leave "CUSTOM_" in front
+    fw = File_writer("CUSTOM_7net-test") #always leave "CUSTOM_" in front
     fw2 = File_writer("last_SQL_query_results")
     fw.create_txt("../res/newres/")
     fw2.create_txt("../res/newres/")

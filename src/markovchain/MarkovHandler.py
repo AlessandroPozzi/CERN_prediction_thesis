@@ -117,8 +117,8 @@ class MarkovHandler:
                 info_subgraphs[de].graph_attr['label'] = label  # Label with name to be visualized in the image
                 info_subgraphs[de].graph_attr['overlap'] = 'scale'
 
-        # Create nodes
-        '''
+        # Create nodes. Comment this part if you want to eliminate nodes without edges. This has been done to send
+        # networks to CERN
         for de in devicesExtraCouple:
             nodeName = de[0] + "--" + de[1]
             devName = de[0]
@@ -144,7 +144,7 @@ class MarkovHandler:
                 info_subgraphs[nodeName].node(nodeName3)
             else:  # add the node directly to the graph
                 mc_graph.node(nodeName3)
-        '''
+
         # Reference device
         if refDevice and location_choice:
             ref = self.device_considered_realName
@@ -196,7 +196,8 @@ class MarkovHandler:
                 edge1 = realFakeNamesDict[edge1]
 
             prob = round(cpt[i][2], 2)
-            if (prob <= 0.10 and prob >= 0.0):
+            
+            if (prob <= 0.25 and prob >= 0.0):
                 #mc_graph.edge(edge0, edge1, color="Grey")
                 pass
             else:
@@ -234,17 +235,17 @@ class MarkovHandler:
                     #oldLink rewriting
                     oldLink = (edgeDraw1, edgeDraw0)
                     oldLab = drawnEdges[oldLink]
-                    if (prob >= 0.33 and prob < 0.5):
+                    if (prob > 0.25 and prob < 0.5):
                         mc_graph.edge(edgeDraw1, edgeDraw0, color="black", label=oldLab, portPos="nw", style="invis")
                     elif (prob >= 0.5):
                         mc_graph.edge(edgeDraw1, edgeDraw0, color="red", label=oldLab, portPos="nw", style="invis")
                     #new link in opposite direction
-                    if (prob >= 0.33 and prob < 0.5):
+                    if (prob > 0.25 and prob < 0.5):
                         mc_graph.edge(edgeDraw0, edgeDraw1, color="black", label=lab, portPos="se")
                     elif (prob >= 0.5):
                         mc_graph.edge(edgeDraw0, edgeDraw1, color="red", label=lab, portPos="se")
                 else:
-                    if (prob >= 0.33 and prob < 0.5):
+                    if (prob > 0.25 and prob < 0.5):
                         mc_graph.edge(edgeDraw0, edgeDraw1, color="black", label=lab)
                     elif (prob >= 0.5):
                         mc_graph.edge(edgeDraw0, edgeDraw1, color="red", label=lab)
@@ -262,7 +263,7 @@ class MarkovHandler:
                     else:
                         otherNode = node
                         refNode = self.device_considered_realName
-                    if prob > 0.1:
+                    if prob > 0.15:
                         if not config.EXTRA and "--" in node:
                             # remove the "--" from the name since there is no extra
                             nodeToDraw, _ = otherNode.split("--")

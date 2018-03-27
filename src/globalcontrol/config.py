@@ -15,7 +15,7 @@ CORRELATION_UNIQUENESS = True # Used when computing the LIFT, in DatabaseNetwork
                                 # happened multiple times after each "n" minutes block. In general, leave this True
 
 ''' VALIDATION settings'''
-WINDOW = "before" #after, before   
+WINDOW = "after" #after, before
 #---- RICORDATI di cambiare il FILE_SUFFIX in "timestampBefore" o "timestampAfter" + AGGIUNGI "tag" in EXTRA
 VALIDATION_NAME = "validation"
 
@@ -27,24 +27,27 @@ FIXED_NETWORK_DEVICES = ["AUTO-TRANSFERT", "EMD1A*9", "EMD2A*9", "EMD3A*9", "EMC
 '''markov settings'''
 clustering = "no_clustering" # no_clustering, mean_shift, db_scan, avg_plus_stdev, offline_average, static_distance
 variance = False
-timestamp = False
+timestamp = False #set to use CERN timestamp's
 occurrencesAsBN = True #Metti True per contare le occorrenze come nelle BN
-
-chosenDevices = ['EHS60/BE', 'EXS4/8X', 'EMC001*9', 'EXS106/2X', 'ESS11/5H', 'ESS1*84',
-                'ESS406/E91', 'ESS520/E91'] #, 'ECD1*62'], 'ESS520/E91', 'ESS407/E91',
+#chosenDevices = ['EHS60/BE', 'EXS4/8X', 'EMC001*9', 'EXS106/2X', 'ESS11/5H', 'ESS1*84',
+#                'ESS406/E91', 'ESS520/E91'] #, 'ECD1*62'], 'ESS520/E91', 'ESS407/E91',
 #chosenDevices = ['ERD15*45']
+
+''' expandDevice settings '''
+chosenDevices = ['EHS60/BE', 'EMC001*9', 'EXS106/2X', 'ESS11/5H', 'ESS1*84',
+                'ESS406/E91', 'ESS407/E91', 'ESS520/E91']
 #              'EMD101/8E','EMD102/8E','EMD103/8E','EMD407/8E','EMD202/8E','EMD301/8E','EMD206/8E','EKC200/8U']
 #'ESS1*84'
 #chosenDevices = ['EMC001*9', 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X'] #our devices
 levelsOfPriority = ['L0', 'L1', 'L2', 'L3']
-unitePriorities = False #If this is true, all the priority above will be put together (automatically even in the main if mode="one")
+unitePriorities = True #If this is true, all the priority above will be put together (automatically even in the main if mode="one")
 
 ''' main settings '''
 file_selection = 1  # 1 to the len of the lists below (only for "one" mode. Select in the lists below)
 selectPriority = 'L0' # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE". If unitePriorities = True --> this will be forced to "L0"
 #escaped_file_names = "EMC0019", "EHS60BE", "ESS115H", "ESS184", "EXS48X", "EXS1062X"]
 #                    'ESS406E91', 'ESS407E91', 'ESS520E91', 'ESS1184']
- #                   'ECD162']
+#                   'ECD162']
 #['EMD1018E','EMD1028E','EMD1038E','EMD4078E','EMD2028E','EMD3018E','EMD2068E','EKC2008U']
 escaped_file_names = ['custom', 'EHS60BE', 'EXS48X', 'EMC0019', 'EXS1062X', 'ESS115H', 'ESS184',
                      'ESS406E91', 'ESS407E91', 'ESS520E91']#, 'ECD162']

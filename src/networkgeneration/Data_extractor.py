@@ -173,13 +173,32 @@ class Data_extractor:
                 self.ranked_devices.append(tupl)
         elif var_type == "couple_occurrences":
             couple_occurrences_list = couple_occurrences.items()
+            '''
+            # divide occurrences for the support of the first couple
+            normalized_occ_list = []
+            for coup in couple_occurrences_list:
+                currCoupleSorg = (coup[0][0][0], coup[0][0][1])
+                supportSorg = 0
+                for coup2 in couple_occurrences_list:#count the support of the couple
+                    if currCoupleSorg == (coup2[0][0][0], coup2[0][0][1]):
+                        supportSorg = supportSorg + coup2[1]
+                if currCoupleSorg not in normalized_occ_list:
+                    for coup2 in couple_occurrences_list:
+                        if supportSorg < 10:# apply minimum threshold for support
+                            coup2[1] = 0
+                        else:
+                            if currCoupleSorg == (coup2[0][0][0], coup2[0][0][1]):
+                                coup2[1] = coup2[1] / supportSorg
+                normalized_occ_list.append(currCoupleSorg)
+            # --- END of this part
+            '''
             couple_occurrences_list.sort(key=lambda tup: tup[1],
                                               reverse=True)  # order by occurrences of consecutive couples
             #don't consider self loops for this criterion
             couple_occurrences_list_no_self = [fullCouple for fullCouple in couple_occurrences_list if not
                                                (fullCouple[0][0][0] == fullCouple[0][1][0] and fullCouple[0][0][1] == fullCouple[0][1][1])]
-            #take only the most 10, 15, 20 (choose a value) most frequent consecutive couples
-            couple_occurrences_list_no_self = couple_occurrences_list_no_self[:30]
+            #take only the most 10, 15, 20 (choose a value) frequent consecutive couples
+            couple_occurrences_list_no_self = couple_occurrences_list_no_self[:10]
             for fullCouple in couple_occurrences_list_no_self:
                 deviceExtra1 = fullCouple[0][0][0] + "--" + fullCouple[0][0][1]
                 deviceExtra2 = fullCouple[0][1][0] + "--" + fullCouple[0][1][1]

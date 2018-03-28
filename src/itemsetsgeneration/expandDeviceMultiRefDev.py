@@ -75,13 +75,14 @@ def compareChosenDevicesByAlarmPriority(cursor):
                         extraColumn = ""
                     devicesAfter.append(ea[4] + "--" + extraColumn)
         
-        #if devicesAfter != []:
-        devicesAfter.append(e[4] + "--" + extraColumn)
-
-        afterSequence.append(devicesAfter) # Contiene tutte le liste di deviceAfter (con duplicati). E' una lista di liste
-        devicesAfter=list(set(devicesAfter)) #Lista non ordinata di distinct devices
-        afterSeq.append(devicesAfter) #Lista di liste (i.e. tutti quello dopo "distinct device after 5 min")
-        print(e[4] + str(devicesAfter) + " - ID " + str(e[21]))
+        if devicesAfter != []:
+            devicesAfter.append(e[4] + "--" + extraColumn)
+        
+        if devicesAfter != []:
+            afterSequence.append(devicesAfter) # Contiene tutte le liste di deviceAfter (con duplicati). E' una lista di liste
+            devicesAfter=list(set(devicesAfter)) #Lista non ordinata di distinct devices
+            afterSeq.append(devicesAfter) #Lista di liste (i.e. tutti quello dopo "distinct device after 5 min")
+            print(e[4] + str(devicesAfter) + " - ID " + str(e[21]))
         
     #CONSOLE
     print '\n\t\tDistinct devices after 5 minutes: [ '

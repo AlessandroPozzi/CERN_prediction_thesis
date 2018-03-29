@@ -41,18 +41,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
     markedEvents = []
     for e in events:
         #print '\n' + str(e)
-        if config.EXTRA == "state":
-            index = 10
-        elif config.EXTRA == "tag":
-            index = 5
-        elif config.EXTRA == "description":
-            index = 6
-        if config.EXTRA:
-            extraColumn = e[index].encode('ascii', 'ignore').decode('ascii')
-            extraColumn = extraColumn.replace("'", "")
-            #extraColumn = re.escape(extraColumn)
-        else:
-            extraColumn = ""
+        
         query = ("select * from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
         cursor.execute(query, (e[0], e[0], config.CORRELATION_MINUTES))
         eventsAfter = cursor.fetchall()
@@ -75,6 +64,19 @@ def compareChosenDevicesByAlarmPriority(cursor):
                         extraColumn = ""
                     devicesAfter.append(ea[4] + "--" + extraColumn)
         
+        if config.EXTRA == "state":
+            index = 10
+        elif config.EXTRA == "tag":
+            index = 5
+        elif config.EXTRA == "description":
+            index = 6
+        if config.EXTRA:
+            extraColumn = e[index].encode('ascii', 'ignore').decode('ascii')
+            extraColumn = extraColumn.replace("'", "")
+            #extraColumn = re.escape(extraColumn)
+        else:
+            extraColumn = ""
+            
         if devicesAfter != []:
             devicesAfter.append(e[4] + "--" + extraColumn)
         

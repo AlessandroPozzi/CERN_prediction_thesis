@@ -92,6 +92,8 @@ def compareChosenDevicesByAlarmPriority(cursor):
     print("==>")
     fw.write_txt('==>', newline = True) #KEEP THIS!
 
+    
+
 def searchItemsets():
     cnx = mysql.connector.connect(host='127.0.0.1', user='root', password='password', database='cern')
     cursor = cnx.cursor()

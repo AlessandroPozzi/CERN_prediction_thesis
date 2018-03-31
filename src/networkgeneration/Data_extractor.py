@@ -134,13 +134,14 @@ class Data_extractor:
                 for index, couple in enumerate(tupl[0]):
                     devExtra = couple[0] + "--" + couple[1]
                     allDevicesExtra.add(couple)
-                    if config.occurrencesAsBN and devExtra not in maxOnce:
+                    if (config.occurrencesAsBN and devExtra not in maxOnce) or not config.occurrencesAsBN:
                         if devExtra not in occurrences: #create new key
                             occurrences[devExtra] = 1
                         else: #update key
                             occurrences[devExtra] = occurrences[devExtra] + 1
                     #part related to couple_occurrences criterion
-                    maxOnce[devExtra] = True
+                    if config.occurrencesAsBN:
+                        maxOnce[devExtra] = True
                     next = index + 1
                     if next < len(tupl[0]):
                         futureCouple = (tupl[0][index], tupl[0][next])

@@ -47,6 +47,8 @@ def compareChosenDevicesByAlarmPriority(cursor):
             index = 5
         elif config.EXTRA == "description":
             index = 6
+        elif config.EXTRA == "livelloPriorita":
+            index = 22
         if config.EXTRA:
             extraColumn = e[index].encode('ascii', 'ignore').decode('ascii')
             extraColumn = extraColumn.replace("'", "")

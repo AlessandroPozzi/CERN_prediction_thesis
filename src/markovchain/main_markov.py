@@ -32,7 +32,7 @@ def preprocess_network(select_priority, file_selection, gh, sequences, log):
 
     # 2) SELECT VARIABLES
     var_type = "couple_occurrences"  # occurrences, frequency, variance_only, support_variance, lift, couple_occurrences, manual
-    support = 0.3
+    support = 0.1
     MIN = 4
     MAX = 10
     manualList = [] # nomi delle variabili da aggiungere, senza doppio trattino (NO COPPIE)

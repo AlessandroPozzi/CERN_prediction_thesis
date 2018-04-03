@@ -1,3 +1,4 @@
+#from __future__ import division
 import numpy as np
 import mysql.connector  # pip install mysql-connector-python
 import os
@@ -8,6 +9,7 @@ import graphviz as gv
 import expandDeviceMarkov
 from DataError import DataError
 import string
+
 
 class MarkovHandler:
     '''
@@ -298,9 +300,12 @@ class MarkovHandler:
                 total = len(self.seqWithDevConsideredOnly)
                 refNode = self.device_considered_realName
                 for varName in varListInGraph:
-                    lab = str(refDevLastOccDict[varName] / total)
+                    value = refDevLastOccDict[varName] / float(total)
+                    value = round(value, 2)
+                    lab = str(value)
                     varNameNoDouble, _ = varName.split("--")
-                    mc_graph.edge(refNode, varNameNoDouble, color="blue", label=lab)
+                    if value > 0:
+                        mc_graph.edge(refNode, varNameNoDouble, color="blue", label=lab)
                 
 
         # save the .png graph

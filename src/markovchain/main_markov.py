@@ -31,11 +31,12 @@ def preprocess_network(select_priority, file_selection, gh, sequences, log):
     pre_markov_handler.process_files(select_priority, file_selection, file_suffix, log)
 
     # 2) SELECT VARIABLES
-    var_type = "couple_occurrences"  # occurrences, frequency, variance_only, support_variance, lift, couple_occurrences, manual
+    var_type = "manual"  # occurrences, frequency, variance_only, support_variance, lift, couple_occurrences, manual
     support = 0.3
     MIN = 4
     MAX = 10
-    manualList = [] # nomi delle variabili da aggiungere, senza doppio trattino (NO COPPIE)
+    manualList = [] # nomi delle variabili da aggiungere, CON doppio trattino (COPPIE)
+    manualList = ['EBS132/2X--', 'ESS11*13--', 'EBS1/22--', 'EBS1/28--', 'ESS10/1DX--', 'EXS311*80--']
     '''
     manualList.append("EHT1/BE")
     manualList.append("EHT2/BE")
@@ -60,7 +61,7 @@ def create_markov_chain(pnh, gh):
     location_choice = False # True, False
     info_choice = False  # True, False
     avg_var_edges = False # True, False
-    refDevice = False
+    refDevice = True
     hideNames = False
     onlyH0 = False
     markov_handler.draw_mc_model(location_choice, info_choice, avg_var_edges, refDevice, hideNames, onlyH0)

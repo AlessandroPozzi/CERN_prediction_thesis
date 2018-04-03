@@ -75,7 +75,7 @@ class ClusterHandler(object):
         '''
         global markedEvents
         if event in markedEvents:
-            return
+            return 1
         else:
             markedEvents.append(event)
             if self.referenceEvent == None:

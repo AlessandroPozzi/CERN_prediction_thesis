@@ -39,7 +39,11 @@ def compareChosenDevicesByAlarmPriority(cursor):
             afterSequence = [] # Contiene tutte le liste di deviceAfter (con duplicati). E' una lista di liste
 
             for e in events:
-                query = ("select * from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
+                #MESSO IL BEFORE!!!
+                if config.WINDOW == "before":
+                    query = ("select * from electric where time<=(%s) and time >= (%s - interval %s minute) and action='Alarm CAME' order by time;")
+                elif config.WINDOW == "after":
+                    query = ("select * from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
                 cursor.execute(query, (e[0], e[0], config.CORRELATION_MINUTES))
                 eventsAfter = cursor.fetchall()
                 devicesAfter = []  # all events that happened 5 min after the event "e"

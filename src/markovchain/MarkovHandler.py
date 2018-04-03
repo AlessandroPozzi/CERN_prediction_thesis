@@ -36,6 +36,7 @@ class MarkovHandler:
     def create_mc_model(self, seqWithPriority):
         sequences = self.getSequencesOfPriority(seqWithPriority)
         seqWithDevConsideredOnly = self.getOnlyDevConsidered(sequences)
+        self.seqWithDevConsideredOnly = seqWithDevConsideredOnly
         (self.mc, self.avg_var_list, self.ref_dev_avg_vars) = expandDeviceMarkov.create_mc_model(self.device_considered_realName,
             self.priority_considered, self.variables_names, seqWithDevConsideredOnly)
 
@@ -45,7 +46,7 @@ class MarkovHandler:
             return
         mc_graph = gv.Digraph(format="png")
         mc_graph.graph_attr['overlap'] = "false"
-        mc_graph.graph_attr['rankdir'] = 'LR'
+        #mc_graph.graph_attr['rankdir'] = 'LR'
         devicesExtraString = self.variables_names #format string: "device--extra"
         devicesExtraCouple = [] #format couple: (device, extra)
         for de in devicesExtraString:
@@ -197,7 +198,7 @@ class MarkovHandler:
 
             prob = round(cpt[i][2], 2)
             
-            if (prob <= 0.25 and prob >= 0.0):
+            if (prob <= 0.01 and prob >= 0.0):
                 #mc_graph.edge(edge0, edge1, color="Grey")
                 pass
             else:
@@ -235,17 +236,17 @@ class MarkovHandler:
                     #oldLink rewriting
                     oldLink = (edgeDraw1, edgeDraw0)
                     oldLab = drawnEdges[oldLink]
-                    if (prob > 0.25 and prob < 0.5):
+                    if (prob > 0.15 and prob < 0.5):
                         mc_graph.edge(edgeDraw1, edgeDraw0, color="black", label=oldLab, portPos="nw", style="invis")
                     elif (prob >= 0.5):
                         mc_graph.edge(edgeDraw1, edgeDraw0, color="red", label=oldLab, portPos="nw", style="invis")
                     #new link in opposite direction
-                    if (prob > 0.25 and prob < 0.5):
+                    if (prob > 0.15 and prob < 0.5):
                         mc_graph.edge(edgeDraw0, edgeDraw1, color="black", label=lab, portPos="se")
                     elif (prob >= 0.5):
                         mc_graph.edge(edgeDraw0, edgeDraw1, color="red", label=lab, portPos="se")
                 else:
-                    if (prob > 0.25 and prob < 0.5):
+                    if (prob > 0.15 and prob < 0.5):
                         mc_graph.edge(edgeDraw0, edgeDraw1, color="black", label=lab)
                     elif (prob >= 0.5):
                         mc_graph.edge(edgeDraw0, edgeDraw1, color="red", label=lab)
@@ -253,31 +254,54 @@ class MarkovHandler:
                 drawnEdges[(edgeDraw0, edgeDraw1)] = lab
 
         if refDevice:
-            devProbList = self.mc.distributions[0].parameters
-            for i in range(0, len(devProbList)):
-                for node in devProbList[i]:
-                    prob = round(devProbList[i][node], 2)
-                    if hideNames:
-                        otherNode = realFakeNamesDict[node]
-                        refNode = realFakeNamesDict[self.device_considered_realName]
-                    else:
-                        otherNode = node
-                        refNode = self.device_considered_realName
-                    if prob > 0.15:
-                        if not config.EXTRA and "--" in node:
-                            # remove the "--" from the name since there is no extra
-                            nodeToDraw, _ = otherNode.split("--")
+            if config.WINDOW == "after":
+                devProbList = self.mc.distributions[0].parameters
+                for i in range(0, len(devProbList)):
+                    for node in devProbList[i]:
+                        prob = round(devProbList[i][node], 2)
+                        if hideNames:
+                            otherNode = realFakeNamesDict[node]
+                            refNode = realFakeNamesDict[self.device_considered_realName]
                         else:
-                            nodeToDraw = otherNode
-                        if avg_var_edges:
-                            avg, var = self.find_avg_var(refNode, otherNode, hideNames, True)
-                            if (avg == None or var == None):
-                                lab = str(prob)
+                            otherNode = node
+                            refNode = self.device_considered_realName
+                        if prob > 0.00:
+                            if not config.EXTRA and "--" in node:
+                                # remove the "--" from the name since there is no extra
+                                nodeToDraw, _ = otherNode.split("--")
                             else:
-                                lab = str(prob) + " | (" + str(avg) + "," + str(var) + ")"
-                        else:
-                            lab = str(prob)
-                        mc_graph.edge(refNode, nodeToDraw, color="blue", label=lab)
+                                nodeToDraw = otherNode
+                            if avg_var_edges:
+                                avg, var = self.find_avg_var(refNode, otherNode, hideNames, True)
+                                if (avg == None or var == None):
+                                    lab = str(prob)
+                                else:
+                                    lab = str(prob) + " | (" + str(avg) + "," + str(var) + ")"
+                            else:
+                                lab = str(prob)
+                            mc_graph.edge(refNode, nodeToDraw, color="blue", label=lab)
+            elif config.WINDOW == "before":
+                varListInGraph = []
+                for node in self.variables_names:
+                    if not config.EXTRA and "--" in node:
+                        newName = node
+                    varListInGraph.append(newName) 
+                #create dict for the ref dev probability
+                refDevLastOccDict = dict()
+                for varName in varListInGraph:
+                    refDevLastOccDict[varName] = 0
+                # Count last occurrences:
+                for sequence in self.seqWithDevConsideredOnly:
+                    lastElement = sequence[-1]
+                    refDevLastOccDict[lastElement] = refDevLastOccDict[lastElement] + 1
+                #Compute probabilities
+                total = len(self.seqWithDevConsideredOnly)
+                refNode = self.device_considered_realName
+                for varName in varListInGraph:
+                    lab = str(refDevLastOccDict[varName] / total)
+                    varNameNoDouble, _ = varName.split("--")
+                    mc_graph.edge(refNode, varNameNoDouble, color="blue", label=lab)
+                
 
         # save the .png graph
         if location_choice:

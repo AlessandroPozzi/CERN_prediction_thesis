@@ -12,6 +12,7 @@ from ClusteringHandler import ClusterHandler
 from DataError import DataError
 from datetime import timedelta
 import config
+from Graph_drawer import Graph_drawer
 
 def compareChosenDevicesByAlarmPriority(cursor):
     #chosenDevices = ['EHS60/BE', 'EXS4/8X', 'EMC001*9', 'EXS106/2X', 'ESS1*84',

@@ -42,7 +42,11 @@ def compareChosenDevicesByAlarmPriority(cursor):
             clusterList = []
 
             for e in events:
-                query = ("select * from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
+                #query = ("select * from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
+                if config.WINDOW == "before":
+                    query = ("select * from electric where time<=(%s) and time >= (%s - interval %s minute) and action='Alarm CAME' order by time;")
+                elif config.WINDOW == "after":
+                    query = ("select * from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
                 cursor.execute(query, (e[0], e[0], config.CORRELATION_MINUTES))
                 clusterHandler = ClusterHandler(e) #Initialize the ClusterHandler with the reference event
                 eventsAfter = cursor.fetchall()

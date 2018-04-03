@@ -12,6 +12,7 @@ from ClusteringHandler import ClusterHandler
 from DataError import DataError
 from datetime import timedelta
 import config
+from Graph_drawer import Graph_drawer
 
 def compareChosenDevicesByAlarmPriority(cursor):
     #chosenDevices = ['EHS60/BE', 'EXS4/8X', 'EMC001*9', 'EXS106/2X', 'ESS1*84',
@@ -41,7 +42,11 @@ def compareChosenDevicesByAlarmPriority(cursor):
             clusterList = []
 
             for e in events:
-                query = ("select * from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
+                #query = ("select * from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
+                if config.WINDOW == "before":
+                    query = ("select * from electric where time<=(%s) and time >= (%s - interval %s minute) and action='Alarm CAME' order by time;")
+                elif config.WINDOW == "after":
+                    query = ("select * from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
                 cursor.execute(query, (e[0], e[0], config.CORRELATION_MINUTES))
                 clusterHandler = ClusterHandler(e) #Initialize the ClusterHandler with the reference event
                 eventsAfter = cursor.fetchall()

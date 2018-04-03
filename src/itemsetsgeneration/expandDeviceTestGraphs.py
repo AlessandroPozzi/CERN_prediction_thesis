@@ -45,12 +45,12 @@ def compareChosenDevicesByAlarmPriority(cursor):
     fw.create_txt("../../res/")
     
     #x = [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,2,3,4,5,6,7,8,9,10]
-    x = createRange(0,0.5,10)
+    x = createRange(0,1,10)
     lb = 0
     ally = []
     for d in chosenDevices:
         y = []
-        yRanges = createRange(0.00,0.5,10)
+        yRanges = createRange(0.00,1,10)
         for t in yRanges:
             minutes = t
             print("Minutes = " + str(minutes))
@@ -79,6 +79,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
                 continue
             
             for l in levelsOfPriority:
+                duplicates = 0
                 markedEvents = []
                 print '\n\tPRIORITY ' + str(l) + ':'
                 fw.write_txt('\n\tPRIORITY ' + str(l) + ':')
@@ -89,7 +90,10 @@ def compareChosenDevicesByAlarmPriority(cursor):
                 afterSequence = [] # Contiene tutte le liste di deviceAfter (con duplicati). E' una lista di liste
     
                 for e in events:
-                    query = ("select * from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
+                    if config.WINDOW == "after":
+                        query = ("select * from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' order by time;")
+                    elif config.WINDOW == "before":
+                        query = ("select * from electric where time<=(%s) and time >= (%s - interval %s minute) and action='Alarm CAME' order by time;")
                     cursor.execute(query, (e[0], e[0], minutes))
                     eventsAfter = cursor.fetchall()
                     devicesAfter = []  # all events that happened 5 min after the event "e"
@@ -110,6 +114,8 @@ def compareChosenDevicesByAlarmPriority(cursor):
                                 else:
                                     extraColumn = ""
                                 devicesAfter.append(ea[4] + "--" + extraColumn)
+                        else:
+                            duplicates += 1
                     #if devicesAfter != []:
                     afterSequence.append(devicesAfter) # Contiene tutte le liste di deviceAfter (con duplicati). E' una lista di liste
                     devicesAfter=list(set(devicesAfter)) #Lista non ordinata di distinct devices
@@ -129,9 +135,10 @@ def compareChosenDevicesByAlarmPriority(cursor):
                 #NUMBER OF EVENTS
                 print("Number of events: " + str(len(markedEvents)))
                 totMarked += len(markedEvents)
-                if l =='L3':
-                    #y.append(len(markedEvents))
-                    y.append(totMarked)
+                if l =='L1':
+                    y.append(len(markedEvents))
+                    #y.append(totMarked)
+                    #y.append(duplicates)
                 
                 #TEXT FILE
                 fw.write_txt('\n\t\tDistinct devices after 5 minutes: [ ')
@@ -159,7 +166,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
         lb += 1
     
     
-    plt.xticks(np.arange(min(x), max(x)+1, 0.5))
+    plt.xticks(np.arange(min(x), max(x)+1, 1))
     plt.grid()
     #colormap = plt.cm.gist_ncar
     colormap = plt.cm.get_cmap('Spectral')

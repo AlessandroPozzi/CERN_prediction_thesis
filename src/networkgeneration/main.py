@@ -39,7 +39,8 @@ def preprocess_network(select_priority, file_selection, gh, log):
     MIN = 4
     MAX = 6
     #manualList = [] # nomi delle variabili da aggiungere, CON doppio trattino (COPPIE)
-    manualList = ["ECE001*9--", "ECE001/BE--", "EKD208/6E--", "ECE001/8E--", "EKD203/5E--"]
+    #manualList = ["ECE001*9--", "ECE001/BE--", "EKD208/6E--", "ECE001/8E--", "EKD203/5E--"]
+    manualList = ['EBS132/2X--', 'ESS11*13--', 'EBS1/22--', 'EBS1/28--', 'ESS10/1DX--', 'EXS311*80--']
     #manualList = ["ESS11*13--", "EBS1/28--", "EBS1/22--", "EBS132/2X--"]
     #manualList.append("AUTO-TRANSFERT--")
     #manualList.append("ECC01/5DX--")

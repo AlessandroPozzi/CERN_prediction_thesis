@@ -7,7 +7,7 @@ Config file. Can also run the entire system
 
 ''' GENERAL settings '''
 CORRELATION_MINUTES = 5
-FILE_SUFFIX = "afterNoDup" #clusters_mc_dbscan, afterNoDup, afterStateNodup, clusters_offline_average1x, clusters_static_distance12sec
+FILE_SUFFIX = "afterNoDupMC" #clusters_mc_dbscan, afterNoDup, afterStateNodup, clusters_offline_average1x, clusters_static_distance12sec
                             #clusters_offline_average1x, clusters_static_distance12sec, clusters_meanShift, clusters_averageDeviation...
                             #afterNoDupClustering_avg+stdev, beforeTS_5min, customNoDup
 EXTRA = "" # state, tag, description, livelloPriorita "" : use this to select the extra info to attach to Device (needed also in main).
@@ -31,7 +31,7 @@ FIXED_NETWORK_DEVICES = ["ECE001*9", "ECE001/BE", "EKD208/6E", "ECE001/8E", "EKD
                        
 '''markov settings'''
 clustering = "no_clustering" # no_clustering, mean_shift, db_scan, avg_plus_stdev, offline_average, static_distance
-variance = False
+variance = True #doesn't calculate the standard deviation and average between devices of the network
 timestamp = False #set to use CERN timestamp's
 occurrencesAsBN = True #Metti True per contare le occorrenze come nelle BN
 #chosenDevices = ['EHS60/BE', 'EXS4/8X', 'EMC001*9', 'EXS106/2X', 'ESS11/5H', 'ESS1*84',
@@ -48,8 +48,9 @@ levelsOfPriority = ['L0', 'L1', 'L2', 'L3']
 unitePriorities = False #If this is true, all the priority above will be put together (automatically even in the main if mode="one")
 
 ''' main settings '''
-file_selection = 2 # 1 to the len of the lists below (only for "one" mode. Select in the lists below)
-selectPriority = 'L1' # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE". If unitePriorities = True --> this will be forced to "L0"
+file_selection = 4 # 1 to the len of the lists below (only for "one" mode. Select in the lists below)
+selectPriority = 'L2' # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE". If unitePriorities = True --> this will be forced to "L0"
+
 #escaped_file_names = "EMC0019", "EHS60BE", "ESS115H", "ESS184", "EXS48X", "EXS1062X"]
 #                    'ESS406E91', 'ESS407E91', 'ESS520E91', 'ESS1184']
 #                   'ECD162']

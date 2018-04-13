@@ -211,6 +211,8 @@ class DatabaseNetworkCorrelator(object):
             extraIndex = 4
         elif config.EXTRA == "description":
             extraIndex = 5
+        elif config.EXTRA == "livelloPriorita":
+            extraIndex = 6
             
         allSeenEvents = []
         events = cursor.fetchall()
@@ -226,7 +228,7 @@ class DatabaseNetworkCorrelator(object):
             for i in range(1, len(devicesExtra)):
                 strList = strList + " OR device=" + "%s"
             # Query to find the events n minutes later
-            query = ("select Device, Time, Id, State, Tag, Description from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' and (device=" 
+            query = ("select Device, Time, Id, State, Tag, Description, livellopriorita from electric where time>=(%s) and time <= (%s + interval %s minute) and action='Alarm CAME' and (device=" 
                      + strList + ") order by time;")
             deviceNames = [x[0] for x in devicesExtra]
             tpl = (e[1], e[1], config.CORRELATION_MINUTES) + tuple(deviceNames)

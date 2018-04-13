@@ -48,24 +48,24 @@ def compareChosenDevicesByAlarmPriority(cursor):
                 eventsAfter = cursor.fetchall()
                 devicesAfter = []  # all events that happened 5 min after the event "e"
                 for ea in eventsAfter:
-                    if ea not in markedEvents: #CONDIZIONE per rimuovere i DUPLICATI
-                        markedEvents.append(ea)
-                        if ea[4] != d: #CONDIZIONE per evitare problemi con il device di riferimento e l'aggiunta di stati, tag o descr.
-                            if config.EXTRA == "state":
-                                index = 10
-                            elif config.EXTRA == "tag":
-                                index = 5
-                            elif config.EXTRA == "description":
-                                index = 6
-                            elif config.EXTRA == "livelloPriorita":
-                                index = 22
-                            if config.EXTRA:
-                                extraColumn = ea[index].encode('ascii', 'ignore').decode('ascii')
-                                extraColumn = extraColumn.replace("'", "")
-                                #extraColumn = re.escape(extraColumn)
-                            else:
-                                extraColumn = ""
-                            devicesAfter.append(ea[4] + "--" + extraColumn)
+                    #if ea not in markedEvents: #CONDIZIONE per rimuovere i DUPLICATI
+                    markedEvents.append(ea)
+                    if ea[4] != d: #CONDIZIONE per evitare problemi con il device di riferimento e l'aggiunta di stati, tag o descr.
+                        if config.EXTRA == "state":
+                            index = 10
+                        elif config.EXTRA == "tag":
+                            index = 5
+                        elif config.EXTRA == "description":
+                            index = 6
+                        elif config.EXTRA == "livelloPriorita":
+                            index = 22
+                        if config.EXTRA:
+                            extraColumn = ea[index].encode('ascii', 'ignore').decode('ascii')
+                            extraColumn = extraColumn.replace("'", "")
+                            #extraColumn = re.escape(extraColumn)
+                        else:
+                            extraColumn = ""
+                        devicesAfter.append(ea[4] + "--" + extraColumn)
                 #if devicesAfter != []:
                 afterSequence.append(devicesAfter) # Contiene tutte le liste di deviceAfter (con duplicati). E' una lista di liste
                 devicesAfter=list(set(devicesAfter)) #Lista non ordinata di distinct devices

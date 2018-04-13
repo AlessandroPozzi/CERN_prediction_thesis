@@ -74,16 +74,16 @@ class ClusterHandler(object):
         If the event has been already considered in another cluster, it is not added.
         '''
         global markedEvents
-        if event in markedEvents:
-            return 1
+        #if event in markedEvents:
+        #    return 1
+        #else:
+        #markedEvents.append(event)
+        if self.referenceEvent == None:
+            eventState = EventState(event, None, self.startingEvent[0])
         else:
-            markedEvents.append(event)
-            if self.referenceEvent == None:
-                eventState = EventState(event, None, self.startingEvent[0])
-            else:
-                eventState = EventState(event, self.referenceEvent, self.startingEvent[0])
-            self.eventStateList.append(eventState) # update the list of events (states)
-            self.referenceEvent = event # the current event becomes the next "previous event"
+            eventState = EventState(event, self.referenceEvent, self.startingEvent[0])
+        self.eventStateList.append(eventState) # update the list of events (states)
+        self.referenceEvent = event # the current event becomes the next "previous event"
             
     def findClustersOfflineAverage(self, fw, debug = False):
         '''

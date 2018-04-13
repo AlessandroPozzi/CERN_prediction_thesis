@@ -36,6 +36,7 @@ def compareChosenDevicesByAlarmPriority(cursor):
         for l in levelsOfPriority:
             print '\n\tPRIORITY ' + str(l) + ':'
             fw.write_txt('\n\tPRIORITY ' + str(l) + ':')
+            fw2.write_txt('\n\tPRIORITY ' + str(l) + ':')
             query = ("select * from electric where device=%s and livellopriorita=%s and action='Alarm CAME' order by time")
             cursor.execute(query, (d,l))
             events = cursor.fetchall()
@@ -81,6 +82,8 @@ def compareChosenDevicesByAlarmPriority(cursor):
                     index = 5
                 elif config.EXTRA == "description":
                     index = 6
+                elif config.EXTRA == "livelloPriorita":
+                    index = 22
                 
                     
                 #Create the list of itemsets

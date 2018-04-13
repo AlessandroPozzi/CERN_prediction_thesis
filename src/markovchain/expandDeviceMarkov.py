@@ -26,7 +26,6 @@ import columnAnalyzer
 from datetime import timedelta
 import string
 
-
 def create_sequences_txt(device):
     cnx = mysql.connector.connect(host='127.0.0.1', user='root', password='password', database='cern')
     cursor = cnx.cursor()
@@ -253,5 +252,8 @@ def __get_markov_chain_model(cursor, d, l, consideredDevices, sequences):
         for destDev in var_one_vs_all_full:
             ref_dev_avg_vars.append((d, destDev, var_one_vs_all_full[destDev].msAverage, var_one_vs_all_full[destDev].msStandDev))
 
-    mc = pomgr.MarkovChain.from_samples(sequences)
+    if sequences:
+        mc = pomgr.MarkovChain.from_samples(sequences)
+    else:
+        raise DataError("No data in this device - priority combination")
     return (mc, avg_var_list, ref_dev_avg_vars)

@@ -1,22 +1,23 @@
 '''
 Created on 05 feb 2018
-@author: Alessandro Pozzi
-Config file. Can also run the entire system
+@author: Alessandro Pozzi, Lorenzo Costantini
+Config file. Contains many parameters that change the results of preprocessing, model generation and postprocessing.
+As a general rule, do not change this parameters in between the two phases related to the BN (see README)
 '''
 
 
 ''' GENERAL settings '''
 CORRELATION_MINUTES = 5
+#Name of the .txt file in /res that will be generated from the log / used to generate the BN or MC model:
 FILE_SUFFIX = "afterDup" #clusters_mc_dbscan, afterNoDup, afterStateNodup, clusters_offline_average1x, clusters_static_distance12sec
                             #clusters_offline_average1x, clusters_static_distance12sec, clusters_meanShift, clusters_averageDeviation...
                             #afterNoDupClustering_avg+stdev, beforeTS_5min, customNoDup
-EXTRA = "" # state, tag, description, livelloPriorita "" : use this to select the extra info to attach to Device (needed also in main).
+EXTRA = "" # state, tag, description, livelloPriorita "" : use this to select the extra info to attach to Device (i.e. the "additional field")
 CORRELATION_UNIQUENESS = True # Used when computing the LIFT, in DatabaseNetworkCorrelator. If True, will consider only ONCE events
                                 # happened multiple times after each "n" minutes block. In general, leave this True
 
 ''' VALIDATION settings'''
-WINDOW = "after" #after, before | ALSO VALID FOR GRAPHS AND REF DEVICE IN MC
-#---- RICORDATI di cambiare il FILE_SUFFIX in "timestampBefore" o "timestampAfter" + AGGIUNGI "tag" in EXTRA
+WINDOW = "after" #after, before. This is the "direction" of the analysis window. ALSO VALID FOR GRAPHS AND REF DEVICE IN MC
 VALIDATION_NAME = "validation"
 
 ''' Multiple reference devices '''

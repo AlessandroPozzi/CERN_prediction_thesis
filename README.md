@@ -36,16 +36,19 @@ Main external dependencies:
 The generation of the models (Bayesian networks BN and Markov chains MC) is divided in two phases.
 
 The first phase consists in extracting the training set (i.e. the itemsets or the sequences) from the log provided by the CERN. The log we used is about events happened in the year 2016 and it is a .csv file ("electric.csv.zip") that have been exported to a Mysql database. All the code that performs this first phase access to this database, so you have to set it up correctly (check the calls to mysql.connector.connect) in order to being able to run it.
-For the BN, this phase must be done by running one of the "expandDevice..." modules in the package "itemsetsgeneration". This will generate, in the "/res" folder, a .txt file with the itemsets. Each "expandDevice" corresponds a  different way to preprocess data. The preprocessing with clustering must be done with the "expandDeviceClustering" module found in the "clustering" package.
-For the MC, this phase is automatically performed when running the "main_markov" module, which will generate a .txt file containing the sequences.
+For the BN, this phase must be done by running one of the "expandDevice..." modules in the package "itemsetsgeneration". This will generate, in the "/res" folder, a .txt file with the itemsets. Each "expandDevice" corresponds to a different way to preprocess data.
+The preprocessing with clustering must be done with the "expandDeviceClustering" module found in the "clustering" package. If you don't want to apply clustering, use "expandDevice.py". "expandDevice2.py" should not be used, "expandDeviceMultiRefDev" manages the case of multiple reference devices, "expandDeviceClusteringTestGraph" has been used for the generation of the graphs for the event distributions after or before different minutes from the reference device events. "expandDeviceTimestamp" has to be called if you want to use CERN's timestamp used for the validation.
+
+For the MC, this phase is automatically performed when running the "main_markov" module, which will generate a .txt file containing the sequences. If you want to use clustering for MC, you should run main_markov and set the clustering method you want to use in the config.py, which should be different from "no_clustering". There's not a separate expandDevice for clustering for MC's to be run as for BN's. "expandDeviceMarkov2.py" is never called. If config.Timestamp is set to True "expandDeviceMarkovTimestamp.py" will be called automatically, otherwise "expandDeviceMarkov.py" is called by main_markov.
 
 The second phase consists in actually building the models (BN or MC) from the training sets generated in the previous phase. This will also generate the postprocessing analysis.
-For the BN, you must run the module "main" in the "networkgeneration" package.
+For the BN, you must run the module "main" in the "networkgeneration" package. The value of config.FILE_SUFFIX determines which .txt will be considered for the BN generation.
 For the MC, you just have to run the "main_markov" module (that will also perform automatically the first phase).
 
 Note: BN and MC phases are different and may present incoherences because of many tests, changes and scope alterations performed during the thesis. We are sorry for that.
 
 The variations to the preprocessing, model generation and postprocessing phases presented in the thesis can be done by changing the parameters in the "main", "main_markov" and "config" modules. Refer to the documentation and the thesis.
 
-
+There are many references in the code to "variance". They are not correct, because in the code we compute the standard deviation, as we have said in the thesis.
+Also, when we write about "lift" in the code, we are referring to the confidence criterion presented in our thesis.
 

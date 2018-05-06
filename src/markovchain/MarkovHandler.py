@@ -42,13 +42,15 @@ class MarkovHandler:
         (self.mc, self.avg_var_list, self.ref_dev_avg_vars) = expandDeviceMarkov.create_mc_model(self.device_considered_realName,
             self.priority_considered, self.variables_names, seqWithDevConsideredOnly)
 
+    
+
     def draw_mc_model(self, location_choice, info_choice, avg_var_edges, refDevice, hideNames, onlyH0):
         if location_choice and info_choice:
             DataError("location_choice and info_choice can't be both True")
             return
         mc_graph = gv.Digraph(format="png")
         mc_graph.graph_attr['overlap'] = "false"
-        #mc_graph.graph_attr['rankdir'] = 'LR'
+        mc_graph.graph_attr['rankdir'] = 'LR'
         devicesExtraString = self.variables_names #format string: "device--extra"
         devicesExtraCouple = [] #format couple: (device, extra)
         for de in devicesExtraString:
@@ -115,8 +117,8 @@ class MarkovHandler:
                 '''
                 info_subgraphs[de] = gv.Digraph(name)
                 label = "Occurrences: " + str(round(self.occurrences[de], 2)) #+ " | "
-                #label = label + "Avg: " + str(round(self.devicesColumnDict[de].msAverage / 1000, 2)) + "s\n"
-                #label = label + "St.Dev.: " + str(round(self.devicesColumnDict[de].msStandDev / 1000, 2)) + "s"
+                label = label + "Avg: " + str(round(self.devicesColumnDict[de].msAverage / 1000, 2)) + "s\n"
+                label = label + "St.Dev.: " + str(round(self.devicesColumnDict[de].msStandDev / 1000, 2)) + "s"
                 info_subgraphs[de].graph_attr['label'] = label  # Label with name to be visualized in the image
                 info_subgraphs[de].graph_attr['overlap'] = 'scale'
 

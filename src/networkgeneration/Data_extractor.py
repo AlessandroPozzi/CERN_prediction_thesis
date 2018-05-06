@@ -227,10 +227,12 @@ class Data_extractor:
         "occurrences" -- Select the "MAX" variables with most occurrences.
         "frequency" -- Select the "MIN" variables with highest support plus a maximum of ("MAX"-"MIN") variables
                        that have a support higher than the "support" parameter.
-        "variance_only" -- Select the "MIN" variables with highest variance, plus a maximum of ("MAX"-"MIN") variables
+        "variance_only" -- Select the "MIN" variables with highest standard deviation, plus a maximum of ("MAX"-"MIN") variables
                        that have a variance higher than a fixed value (ex: 30 seconds).
         "support_variance" -- Select the "MIN" variables with highest support plus a number ("MAX"-"MIN") of remaining variables
-                              with the highest variance.
+                              with the highest standard deviation.
+        "couple_occurrences" -- Select the "MAX" variables that appear most frequently in the most frequent couples of consecutive
+                              devices.
         '''
 
         if var_type == "occurrences":
@@ -238,7 +240,7 @@ class Data_extractor:
         elif var_type == "frequency" or var_type == "support_variance" or var_type == "manual":
             self.ranked_devices.sort(key = lambda tup: tup[1], reverse=True) #order by support
         elif var_type == "variance_only":
-            self.ranked_devices.sort(key = lambda tup: tup[4]) #order by variance (actually, standard deviation) O
+            self.ranked_devices.sort(key = lambda tup: tup[4]) #order by variance (actually, standard deviation)
         elif var_type == "lift":
             self.ranked_devices.sort(key = lambda tup: tup[4], reverse=True) #order by lift
         elif var_type == "couple_occurrences":
@@ -253,8 +255,9 @@ class Data_extractor:
             if dev not in self.true_file_names[0]:
                 ordered_ranking.append(varRanked)
 
+        min_occ = 5
         if var_type == "variance_only" or var_type == "lift":
-            ordered_ranking = [tup for tup in ordered_ranking if tup[2] > 5] #remove devices with less than n occurrences
+            ordered_ranking = [tup for tup in ordered_ranking if tup[2] > min_occ] #remove devices with less than "min_occ" occurrences
 
         if var_type == "manual": #bypass everything and select variables manually
             for dev in self.manualList:
@@ -277,7 +280,8 @@ class Data_extractor:
                 elif var_type == "occurrences" or var_type == "couple_occurrences":
                     self.variable_names.append(deviceExtra)
                 elif var_type =="variance_only":
-                    if stDev < 1000 * 30:
+                    max_stdev_seconds = 30
+                    if stDev < 1000 * max_stdev_seconds:
                         self.variable_names.append(deviceExtra)
                 elif var_type == "support_variance":
                     ordered_ranking = [x for x in ordered_ranking if x[0] not in self.variable_names] #remove devices already added

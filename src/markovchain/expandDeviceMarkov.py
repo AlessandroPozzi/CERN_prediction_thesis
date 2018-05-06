@@ -66,16 +66,13 @@ def __create_txt_noClusters(cursor, d):
             if config.WINDOW == "after":
                 # Query on the AFTER
                 query = (
-                "select * from electric where action='Alarm CAME' and Time >= %s and Time <= (%s + interval %s minute) order by time")
-                cursor.execute(query, (e[0], e[0], config.CORRELATION_MINUTES))
-                eventsAfter = cursor.fetchall()
+                "select * from electric where action='Alarm CAME' and Time >= (%s) and Time <= (%s + interval %s minute) order by time")
             elif config.WINDOW == "before":
                 # Query on the BEFORE
                 query = (
-                "select * from electric where action='Alarm CAME' and Time <= %s and Time >= (%s - interval %s minute) order by time")
-                cursor.execute(query, (e[0], e[0], config.CORRELATION_MINUTES))
-                eventsAfter = cursor.fetchall()
-
+                "select * from electric where action='Alarm CAME' and Time <= (%s) and Time >= (%s - interval %s minute) order by time")
+            cursor.execute(query, (e[0], e[0], config.CORRELATION_MINUTES))
+            eventsAfter = cursor.fetchall()
             devicesAfter = []  # all events that happened 5 min after the event "e"
             for ea in eventsAfter:
                 if ea not in markedEvents:  # CONDIZIONE per rimuovere i DUPLICATI
@@ -147,18 +144,16 @@ def __create_txt_clusters(cursor, d):
             if config.WINDOW == "after":
                 # Query on the AFTER
                 query = (
-                "select * from electric where action='Alarm CAME' and Time >= %s and Time <= (%s + interval %s minute) order by time")
+                "select * from electric where action='Alarm CAME' and Time >= (%s) and Time <= (%s + interval %s minute) order by time")
                 cursor.execute(query, (e[0], e[0], config.CORRELATION_MINUTES))
-                clusterHandler = ClusterHandler(e)  # Initialize the ClusterHandler with the reference event
-                eventsAfter = cursor.fetchall()
             elif config.WINDOW == "before":
                 # Query on the BEFORE
                 query = (
-                "select * from electric where action='Alarm CAME' and Time <= %s and Time >= (%s - interval %s minute) order by time")
+                "select * from electric where action='Alarm CAME' and Time <= (%s) and Time >= (%s - interval %s minute) order by time")
                 cursor.execute(query, (e[0], e[0], config.CORRELATION_MINUTES))
-                clusterHandler = ClusterHandler(e)  # Initialize the ClusterHandler with the reference event
-                eventsAfter = cursor.fetchall()
 
+            clusterHandler = ClusterHandler(e)  # Initialize the ClusterHandler with the reference event
+            eventsAfter = cursor.fetchall()
             for ea in eventsAfter:
                 if ea != e:  # Ensures the reference event is not considered as a clustering point
                     clusterHandler.addEvent(ea)

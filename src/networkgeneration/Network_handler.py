@@ -220,9 +220,9 @@ class Network_handler:
                 else:
                     deClean = de
                 info_subgraphs[deClean] = gv.Digraph(name)
-                label = "Occurrences: " + str(round(self.occurrences[de], 2)) + " | "
-                #label = label + "Avg: " + str(round(self.devicesColumnDict[de].msAverage / 1000, 2)) + "s\n"
-                #label = label + "St.Dev.: " + str(round(self.devicesColumnDict[de].msStandDev / 1000, 2)) + "s"
+                label = "Occurrences: " + str(round(self.occurrences[de], 2)) + "\n"
+                label = label + "Avg: " + str(round(self.devicesColumnDict[de].msAverage / 1000, 2)) + "s\n"
+                label = label + "St.Dev.: " + str(round(self.devicesColumnDict[de].msStandDev / 1000, 2)) + "s"
                 info_subgraphs[deClean].graph_attr['label'] = label #Label with name to be visualized in the image
     
         # Create nodes

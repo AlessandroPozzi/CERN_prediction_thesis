@@ -7,7 +7,7 @@ As a general rule, do not change this parameters in between the two phases relat
 
 
 ''' GENERAL settings '''
-CORRELATION_MINUTES = 5
+CORRELATION_MINUTES = 5 #usually set to 5 minutes
 #Name of the .txt file in /res that will be generated from the log / used to generate the BN or MC model:
 FILE_SUFFIX = "afterDup" #clusters_mc_dbscan, afterNoDup, afterStateNodup, clusters_offline_average1x, clusters_static_distance12sec
                             #clusters_offline_average1x, clusters_static_distance12sec, clusters_meanShift, clusters_averageDeviation...
@@ -17,7 +17,7 @@ CORRELATION_UNIQUENESS = True # Used when computing the LIFT, in DatabaseNetwork
                                 # happened multiple times after each "n" minutes block. In general, leave this True
 
 ''' VALIDATION settings'''
-WINDOW = "after" #after, before. This is the "direction" of the analysis window. ALSO VALID FOR GRAPHS AND REF DEVICE IN MC
+WINDOW = "after" #after, before. This is the "direction" of the analysis window. ALSO VALID FOR GRAPHS AND REF DEVICE IN MARKOV CHAIND
 VALIDATION_NAME = "validation"
 
 ''' Multiple reference devices '''
@@ -32,8 +32,9 @@ FIXED_NETWORK_DEVICES = ["ECE001*9", "ECE001/BE", "EKD208/6E", "ECE001/8E", "EKD
                        
 '''markov settings'''
 clustering = "mean_shift" # no_clustering, mean_shift, db_scan, avg_plus_stdev, offline_average, static_distance
-variance = True
-timestamp = False #set to use CERN timestamp's
+variance = True #Set it always to True. If you set it to false, the calculation of st.dev between nodes is skipped,
+                #but you have to set avg_var_edges to False in main_markov to not show those informations
+timestamp = False #True, False. Set to True to use CERN timestamp's (in the case of Markov Chains, it calls expandDeviceMarkovTimestamp.py)
 occurrencesAsBN = True #Metti True per contare le occorrenze come nelle BN
 #chosenDevices = ['EHS60/BE', 'EXS4/8X', 'EMC001*9', 'EXS106/2X', 'ESS11/5H', 'ESS1*84',
 #                'ESS406/E91', 'ESS520/E91'] #, 'ECD1*62'], 'ESS520/E91', 'ESS407/E91',

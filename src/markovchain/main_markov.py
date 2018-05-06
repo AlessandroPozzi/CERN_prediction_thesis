@@ -31,10 +31,10 @@ def preprocess_network(select_priority, file_selection, gh, sequences, log):
     pre_markov_handler.process_files(select_priority, file_selection, file_suffix, log)
 
     # 2) SELECT VARIABLES
-    var_type = "variance_only"  # occurrences, frequency, variance_only, support_variance, lift, couple_occurrences, manual
-    support = 0.1
-    MIN = 4
-    MAX = 6
+    var_type = "occurrences"  # occurrences, frequency, variance_only, support_variance, lift, couple_occurrences, manual
+    support = 0.1 #it considers only variables with a support higher than the value chosen (with frequency criterion)
+    MIN = 4 #minimum number of variables to consider in the network
+    MAX = 4 #maximum number of variables to consider in the network
     manualList = [] # nomi delle variabili da aggiungere, senza doppio trattino (NO COPPIE)
     manualList = ['EBS132/2X--', 'EBS1/22--', 'EBS1/28--',  'EXS311*80--']#'ESS11*13--' 'ESS10/1DX--'
     pre_markov_handler.select_variables(var_type, MIN, MAX, support, log, manualList)
@@ -52,12 +52,13 @@ def create_markov_chain(pnh, gh):
     markov_handler.create_mc_model(pnh.sequences)
 
     # 5) DRAW THE NETWORK
-    location_choice = False # True, False
-    info_choice = False  # True, False
-    avg_var_edges = False # True, False
-    refDevice = True
-    hideNames = False
-    onlyH0 = False
+    location_choice = False # True, False | True means that location of devices (H0-H1) will be shown in the network
+    info_choice = True # True, False | True means that the graph will show additional device statistics (avg, st.dev, occ..).
+    # info_choice and location_choice can't be both True at the same time.
+    avg_var_edges = False # True, False | True adds on every edge the avg and st.dev between two nodes.
+    refDevice = False # True, False | True means that the reference device with blue arcs will be added to the network
+    hideNames = False # True, False | True means that the device names will be crypted in the graph. Set it to false since CERN allowed to use original device names
+    onlyH0 = False # True, False | If location_choice is true and onlyH0 is true, H1 won't be shown in the graph, but only H0
     markov_handler.draw_mc_model(location_choice, info_choice, avg_var_edges, refDevice, hideNames, onlyH0)
 
 

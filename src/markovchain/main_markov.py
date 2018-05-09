@@ -31,12 +31,12 @@ def preprocess_network(select_priority, file_selection, gh, sequences, log):
     pre_markov_handler.process_files(select_priority, file_selection, file_suffix, log)
 
     # 2) SELECT VARIABLES
-    var_type = "occurrences"  # occurrences, frequency, variance_only, support_variance, lift, couple_occurrences, manual
+    var_type = "occurrences"  # occurrences, frequency, stdev_only, support_stdev, confidence, couple_occurrences, manual
     support = 0.1 #it considers only variables with a support higher than the value chosen (with frequency criterion)
     MIN = 4 #minimum number of variables to consider in the network
     MAX = 4 #maximum number of variables to consider in the network
-    manualList = [] # nomi delle variabili da aggiungere, senza doppio trattino (NO COPPIE)
-    manualList = ['EBS132/2X--', 'EBS1/22--', 'EBS1/28--',  'EXS311*80--']#'ESS11*13--' 'ESS10/1DX--'
+    #manualList = [] # names of variables to manually consider in the MC. Use couples with the "--"
+    manualList = ['EBS132/2X--', 'EBS1/22--', 'EBS1/28--',  'EXS311*80--'] 
     pre_markov_handler.select_variables(var_type, MIN, MAX, support, log, manualList)
 
     # *) COLUMNS INFO (state, tag, description)

@@ -117,7 +117,7 @@ class Data_extractor:
         Extracts occurrences and frequency of the devices (i.e. the candidate for becoming variables of the network).
         Occurrences and frequency are computed by looking ONLY at the txt itemsets.
         This data is stored in ranked_devices, as a tuple of the kind (device--extra), frequency, occurrences, average, st.dev.).
-        '''
+        ''' 
         self.ranked_devices = []
         self.mostFrequentDevInCouples = dict()
         frequency_by_device = dict() # key = device, value = sum of frequencies of device
@@ -159,20 +159,20 @@ class Data_extractor:
             for de in frequency_by_device:
                 tupl = (de, frequency_by_device[de], occurrences[de], -1, -1)
                 self.ranked_devices.append(tupl)
-        elif var_type == "variance_only" or var_type == "support_variance":
+        elif var_type == "stdev_only" or var_type == "support_stdev":
             for de in frequency_by_device:
                 tupl = (de, frequency_by_device[de], occurrences[de],
                         self.devicesColumnDict[de].msAverage / 1000, self.devicesColumnDict[de].msStandDev / 1000)
                 self.ranked_devices.append(tupl)
-        elif var_type == "lift":
+        elif var_type == "confidence":
             dnc = DatabaseNetworkCorrelator()
             dnc.initAsPreProcessor(self.true_file_names[0], self.priority_selected, log = True)
             lift = dnc.totalOccurrencesCandidatesAnalysis(list(allDevicesExtra))
             for de in lift:
                 tupl = (de, frequency_by_device[de], occurrences[de],
-                        "lift:", lift[de])
+                        "confidence:", lift[de])
                 self.ranked_devices.append(tupl)
-        elif var_type == "couple_occurrences":
+        elif var_type == "couple_occurrences": #for MC only
             couple_occurrences_list = couple_occurrences.items()
             '''
             # divide occurrences for the support of the first couple
@@ -227,22 +227,24 @@ class Data_extractor:
         "occurrences" -- Select the "MAX" variables with most occurrences.
         "frequency" -- Select the "MIN" variables with highest support plus a maximum of ("MAX"-"MIN") variables
                        that have a support higher than the "support" parameter.
-        "variance_only" -- Select the "MIN" variables with highest standard deviation, plus a maximum of ("MAX"-"MIN") variables
-                       that have a variance higher than a fixed value (ex: 30 seconds).
-        "support_variance" -- Select the "MIN" variables with highest support plus a number ("MAX"-"MIN") of remaining variables
+        "stdev_only" -- Select the "MIN" variables with highest standard deviation, plus a maximum of ("MAX"-"MIN") variables
+                       that have a stdev higher than a fixed value (ex: 30 seconds).
+        "support_stdev" -- Select the "MIN" variables with highest support plus a number ("MAX"-"MIN") of remaining variables
                               with the highest standard deviation.
+        "confidence" -- Select the variables with highest confidence
         "couple_occurrences" -- Select the "MAX" variables that appear most frequently in the most frequent couples of consecutive
                               devices.
+                              
         '''
 
         if var_type == "occurrences":
             self.ranked_devices.sort(key = lambda tup: tup[2], reverse=True) #order by occurrences
-        elif var_type == "frequency" or var_type == "support_variance" or var_type == "manual":
+        elif var_type == "frequency" or var_type == "support_stdev" or var_type == "manual":
             self.ranked_devices.sort(key = lambda tup: tup[1], reverse=True) #order by support
-        elif var_type == "variance_only":
-            self.ranked_devices.sort(key = lambda tup: tup[4]) #order by variance (actually, standard deviation)
-        elif var_type == "lift":
-            self.ranked_devices.sort(key = lambda tup: tup[4], reverse=True) #order by lift
+        elif var_type == "stdev_only":
+            self.ranked_devices.sort(key = lambda tup: tup[4]) #order by stdev (actually, standard deviation)
+        elif var_type == "confidence":
+            self.ranked_devices.sort(key = lambda tup: tup[4], reverse=True) #order by confidence
         elif var_type == "couple_occurrences":
             self.ranked_devices.sort(key = lambda tup: tup[5], reverse=True)
 
@@ -256,7 +258,7 @@ class Data_extractor:
                 ordered_ranking.append(varRanked)
 
         min_occ = 5
-        if var_type == "variance_only" or var_type == "lift":
+        if var_type == "stdev_only" or var_type == "confidence":
             ordered_ranking = [tup for tup in ordered_ranking if tup[2] > min_occ] #remove devices with less than "min_occ" occurrences
 
         if var_type == "manual": #bypass everything and select variables manually
@@ -279,18 +281,18 @@ class Data_extractor:
                         self.variable_names.append(deviceExtra)
                 elif var_type == "occurrences" or var_type == "couple_occurrences":
                     self.variable_names.append(deviceExtra)
-                elif var_type =="variance_only":
+                elif var_type =="stdev_only":
                     max_stdev_seconds = 30
                     if stDev < 1000 * max_stdev_seconds:
                         self.variable_names.append(deviceExtra)
-                elif var_type == "support_variance":
+                elif var_type == "support_stdev":
                     ordered_ranking = [x for x in ordered_ranking if x[0] not in self.variable_names] #remove devices already added
-                    ordered_ranking.sort(key = lambda tup: tup[4]) #order by variance
+                    ordered_ranking.sort(key = lambda tup: tup[4]) #order by stdev
                     for j in range(NUM, MAX):
                         self.variable_names.append(ordered_ranking[j - NUM][0])
                     break
-                elif var_type == "lift":
-                    if (stDev / 100) >= 0.5: #stDev here is actually the lift in %
+                elif var_type == "confidence":
+                    if (stDev / 100) >= 0.5: #stDev here is actually the confidence in %
                         self.variable_names.append(deviceExtra)
             else:
                 break

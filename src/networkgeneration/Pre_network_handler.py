@@ -28,9 +28,10 @@ class Pre_network_handler(object):
         Method that extracts data from the text files.
         -----------------
         Parameters:
-        select_priority -- A string with the priority level to be considered
-        files_used      -- The number of the file to be used
-        log             -- "True" if you want to print debug information in the console
+        select_priority : A string with the priority level to be considered
+        files_used      : The number of the file to be used
+        file_suffix     : Name of the txt file to process
+        log             : "True" if you want to print debug information in the console
         '''
         if not select_priority or not file_selection:
             raise DataError("Priority or file not chosen. Exiting now.")
@@ -55,11 +56,15 @@ class Pre_network_handler(object):
         Parameters:
         var_type  : The origin of the variables to be considered. Accepted values:
            -> occurrences       - If we consider the devices 
-           -> frequency   - If we consider the frequency of the devices
-        MIN: Minimum number of variables to take
-        MAX: Maximum number of variables to take
+           -> frequency         - If we consider the frequency of the devices
+           -> stdev_only        
+           -> support_stdev     
+           -> confidence        
+        MIN       : Minimum number of variables to take
+        MAX       : Maximum number of variables to take
         support   : Minimum support to consider the device in the final Bayesian Network
         log       : "True" if you want to print debug information in the console
+        manualList: manual list of variables to use in the network
         '''
         if self.extractor.nodata():
             raise DataError("No data in this file - priority")
@@ -82,10 +87,10 @@ class Pre_network_handler(object):
         training_instances : 
             support                -- to use duplicated training instances based on the support of the frequent sets
             all_events             -- to generate one training instance per event (in "distinct devices after 5 minutes")
-            all_events_with_causes -- like all_events, but also considers the 6 causes variables
             all_events_priority    -- like all_event but instead of using [0, 1] as values for variables, uses the priority related to the event: [0, L0, L1, L2, L3]
+                                      (Note that this option has not been tested in a long time. It was a test done very early on in the work)
         priority_node   : True if you want the priority node, false otherwise.
-        log       : "True" if you want to print debug information in the console    
+        log       : "True" if you want to print debug information in the console
         '''
         
         variables = self.extractor.get_variable_names()

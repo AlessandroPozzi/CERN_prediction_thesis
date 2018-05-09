@@ -54,6 +54,7 @@ class Pre_markov_handler(object):
         var_type  : The origin of the variables to be considered. Accepted values:
            -> occurrences       - If we consider the devices
            -> frequency   - If we consider the frequency of the devices
+           -> 
         MIN: Minimum number of variables to take
         MAX: Maximum number of variables to take
         support   : Minimum support to consider the device in the final Bayesian Network

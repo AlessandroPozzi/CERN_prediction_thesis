@@ -34,14 +34,13 @@ def preprocess_network(select_priority, file_selection, gh, log):
     pre_network_handler.process_files(select_priority, file_selection, file_suffix, log)
     
     # 2) SELECT VARIABLES
-    var_type = "occurrences" #occurrences, frequency, variance_only, support_variance, lift, manual
-    support = 0.1
-    MIN = 4
-    MAX = 5
-    #manualList = [] # nomi delle variabili da aggiungere, CON doppio trattino (COPPIE)
+    var_type = "confidence" #occurrences, frequency, stdev_only, support_stdev, confidence, manual
+    support = 0.2
+    MIN = 4 #minimum number of variables to consider in the network
+    MAX = 5 #maximum number of variables to consider in the network
+    #manualList = [] # names of variables to manually consider in the MC. Use couples with the "--"
     manualList = ['EMD311*9--', 'EMD104*9--', 'EMD204*9--', 'EMD210*9--']
 
-    #manualList.append("EBS1/32--A08")
     pre_network_handler.select_variables(var_type, MIN, MAX, support, log, manualList)
     
     # 3) BUILD DATA
@@ -67,7 +66,7 @@ def create_network(pnh, gh, log):
     network_handler.estimate_parameters(log)
     
     # 6) INFERENCE
-    mode = "manual" #manual, auto, no    | with "auto" inference is done on all variables by setting the parents to 1
+    mode = "auto" #manual, auto, no    | with "auto" inference is done on all variables by setting the parents to 1
     variables = ["EMC700/1E--"] #list of target variables (for manual mode)
     evidence = dict()
     evidence["EMD2A*9--"] = 1 #for manual mode, set the evidence to 1 in the dictionary
@@ -83,10 +82,9 @@ def create_network(pnh, gh, log):
     onlyH0 = False # True, False | If location_choice is true and onlyH0 is true, H1 won't be shown in the graph, but only H0
     info_choice = True # True, False | True means that the graph will show additional device statistics (avg, st.dev, occ..).
     #info_choice and location_choice can't be both True at the same time.
-    variance_filter = False # True, False
     refDevice = False # True, False | True means that the reference device with blue arcs will be added to the network
     hideNames = False # True, False | True means that the device names will be crypted in the graph. Set it to false since CERN allowed to use original device names
-    network_handler.draw_network(label, location_choice, onlyH0, info_choice, variance_filter, refDevice, hideNames)
+    network_handler.draw_network(label, location_choice, onlyH0, info_choice, refDevice, hideNames)
     
     # 8) DATA INFO
     selection = [1, 2] #Put in the list what you want to show

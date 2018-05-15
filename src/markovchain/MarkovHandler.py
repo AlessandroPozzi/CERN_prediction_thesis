@@ -42,7 +42,7 @@ class MarkovHandler:
         (self.mc, self.avg_var_list, self.ref_dev_avg_vars) = expandDeviceMarkov.create_mc_model(self.device_considered_realName,
             self.priority_considered, self.variables_names, seqWithDevConsideredOnly)
 
-    
+
 
     def draw_mc_model(self, location_choice, info_choice, avg_var_edges, refDevice, hideNames, onlyH0):
         if location_choice and info_choice:
@@ -201,8 +201,9 @@ class MarkovHandler:
                 edge1 = realFakeNamesDict[edge1]
 
             prob = round(cpt[i][2], 2)
-            
-            if (prob <= 0.01 and prob >= 0.0):
+            minProbToDraw = 0.15
+            probToDrawInRed = 0.5
+            if (prob <= minProbToDraw and prob >= 0.0):
                 #mc_graph.edge(edge0, edge1, color="Grey")
                 pass
             else:
@@ -240,21 +241,21 @@ class MarkovHandler:
                     #oldLink rewriting
                     oldLink = (edgeDraw1, edgeDraw0)
                     oldLab = drawnEdges[oldLink]
-                    if (prob > 0.15 and prob < 0.5):
+                    if (prob > minProbToDraw and prob < probToDrawInRed):
                         mc_graph.edge(edgeDraw1, edgeDraw0, color="black", label=oldLab, portPos="nw", style="invis")
-                    elif (prob >= 0.5):
+                    elif (prob >= probToDrawInRed):
                         mc_graph.edge(edgeDraw1, edgeDraw0, color="red", label=oldLab, portPos="nw", style="invis")
                     #new link in opposite direction
-                    if (prob > 0.15 and prob < 0.5):
+                    if (prob > minProbToDraw and prob < probToDrawInRed):
                         mc_graph.edge(edgeDraw0, edgeDraw1, color="black", label=lab, portPos="se")
-                    elif (prob >= 0.5):
+                    elif (prob >= probToDrawInRed):
                         mc_graph.edge(edgeDraw0, edgeDraw1, color="red", label=lab, portPos="se")
                 else:
-                    if (prob > 0.15 and prob < 0.5):
+                    if (prob > minProbToDraw and prob < probToDrawInRed):
                         mc_graph.edge(edgeDraw0, edgeDraw1, color="black", label=lab)
-                    elif (prob >= 0.5):
+                    elif (prob >= probToDrawInRed):
                         mc_graph.edge(edgeDraw0, edgeDraw1, color="red", label=lab)
-                #it is in drawnEdges only if prob > 0.33
+                #it is in drawnEdges only if prob > minProb
                 drawnEdges[(edgeDraw0, edgeDraw1)] = lab
 
         if refDevice:
@@ -288,26 +289,37 @@ class MarkovHandler:
                 varListInGraph = []
                 for node in self.variables_names:
                     if not config.EXTRA and "--" in node:
+                        # remove the "--" from the name since there is no extra
+                        newName, _ = node.split("--")
+                    else:
                         newName = node
-                    varListInGraph.append(newName) 
-                #create dict for the ref dev probability
+                    varListInGraph.append(newName)
+                    # create dict for the ref dev probability
                 refDevLastOccDict = dict()
                 for varName in varListInGraph:
-                    refDevLastOccDict[varName] = 0
+                    if not config.EXTRA and "--" in node:
+                        correctName = varName + "--"
+                    else:
+                        correctName = varName
+                    refDevLastOccDict[correctName] = 0
                 # Count last occurrences:
                 for sequence in self.seqWithDevConsideredOnly:
                     lastElement = sequence[-1]
                     refDevLastOccDict[lastElement] = refDevLastOccDict[lastElement] + 1
-                #Compute probabilities
+                # Compute probabilities
                 total = len(self.seqWithDevConsideredOnly)
                 refNode = self.device_considered_realName
                 for varName in varListInGraph:
-                    value = refDevLastOccDict[varName] / float(total)
+                    if not config.EXTRA and "--" in node:
+                        correctName = varName + "--"
+                    else:
+                        correctName = varName
+                    value = refDevLastOccDict[correctName] / float(total)
                     value = round(value, 2)
                     lab = str(value)
-                    varNameNoDouble, _ = varName.split("--")
+                    # varNameNoDouble, _ = varName.split("--")
                     if value > 0:
-                        mc_graph.edge(refNode, varNameNoDouble, color="blue", label=lab)
+                        mc_graph.edge(refNode, varName, color="blue", label=lab)
                 
 
         # save the .png graph
@@ -328,7 +340,7 @@ class MarkovHandler:
         if not config.timestamp:
             imgPath = '../../output/' + str(device_name) + '_' + str(self.priority_considered) + '_' + 'MC' + locat + info + avg_var
         else:
-            imgPath = '../../output/' + str(device_name) + '_' + config.WINDOW + '_' + str(config.CORRELATION_MINUTES) + 'min_' + 'MC'
+            imgPath = '../../output/' + config.VALIDATION_NAME + '_' + config.WINDOW + '_' + str(config.CORRELATION_MINUTES) + 'min_' + 'MC'
         mc_graph.render(imgPath)
         os.remove(imgPath)  # remove the source code generated by graphviz
 

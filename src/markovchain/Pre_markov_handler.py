@@ -60,8 +60,10 @@ class Pre_markov_handler(object):
         support   : Minimum support to consider the device in the final Bayesian Network
         log       : "True" if you want to print debug information in the console
         '''
-        if self.extractor.nodata():
-            raise DataError("No data in this file - priority")
+
+        if not config.timestamp:
+            if self.extractor.nodata():
+                raise DataError("No data in this file - priority")
 
         self.extractor.prepare_candidates(var_type, manualList)  # computes occurrences and frequency of the devices
         self.extractor.select_candidates(var_type, support, MIN, MAX)

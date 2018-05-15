@@ -237,11 +237,13 @@ def __get_markov_chain_model(cursor, d, l, consideredDevices, sequences):
     if config.variance == True:
         #get average and standard deviation for every couple of considered devices
         for sourceDev in consideredDevices:
-            sourceOnlyDevName, sourceOnlyExtraName = string.split(sourceDev, "--")
-            var_one_vs_all_full = columnAnalyzer.find_column_distribution(sourceOnlyDevName, ['L0','L1','L2','L3'], consideredDevices)
-            for destDev in var_one_vs_all_full:
-                avg_var_list.append((sourceDev, destDev, var_one_vs_all_full[destDev].msAverage, var_one_vs_all_full[destDev].msStandDev))
-
+            try:
+                sourceOnlyDevName, sourceOnlyExtraName = string.split(sourceDev, "--")
+                var_one_vs_all_full = columnAnalyzer.find_column_distribution(sourceOnlyDevName, ['L0','L1','L2','L3'], consideredDevices)
+                for destDev in var_one_vs_all_full:
+                    avg_var_list.append((sourceDev, destDev, var_one_vs_all_full[destDev].msAverage, var_one_vs_all_full[destDev].msStandDev))
+            except:
+                print 'Variable with name equal to ' + sourceDev + ' could not be processed'
         # get average and standard deviation for <reference device - other devices>
         var_one_vs_all_full = columnAnalyzer.find_column_distribution(d, ['L0', 'L1', 'L2', 'L3'], consideredDevices)
         for destDev in var_one_vs_all_full:

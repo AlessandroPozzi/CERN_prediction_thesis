@@ -62,8 +62,12 @@ class Data_extractor:
         self.txt_file_names.append(txtfile)
         self.priority_selected = select_priority
         self.events_by_file[true_device_name] = []
-        
-        with open ('../../res/' + txtfile + file_suffix + '.txt', 'r') as in_file:
+
+        if config.timestamp:
+            file_text = file_suffix
+        else:
+            file_text = txtfile + file_suffix
+        with open ('../../res/' + file_text + '.txt', 'r') as in_file:
             all_events = 1
             p = 0
             

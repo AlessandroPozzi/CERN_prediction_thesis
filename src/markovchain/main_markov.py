@@ -27,14 +27,18 @@ def preprocess_network(select_priority, file_selection, gh, sequences, log):
         extra = "_" + config.EXTRA
     else:
         extra = ""
-    file_suffix = "_" + config.FILE_SUFFIX #+ extra + "_MC"
+    if config.timestamp:
+        file_suffix = config.VALIDATION_NAME + "_" + config.FILE_SUFFIX + extra + "_MC"
+    else:
+        file_suffix = "_" + config.FILE_SUFFIX
     pre_markov_handler.process_files(select_priority, file_selection, file_suffix, log)
+
 
     # 2) SELECT VARIABLES
     var_type = "occurrences"  # occurrences, frequency, stdev_only, support_stdev, confidence, couple_occurrences, manual
     support = 0.1 #it considers only variables with a support higher than the value chosen (with frequency criterion)
-    MIN = 4 #minimum number of variables to consider in the network
-    MAX = 4 #maximum number of variables to consider in the network
+    MIN = 15 #minimum number of variables to consider in the network
+    MAX = 15 #maximum number of variables to consider in the network
     #manualList = [] # names of variables to manually consider in the MC. Use couples with the "--"
     manualList = ['EBS132/2X--', 'EBS1/22--', 'EBS1/28--',  'EXS311*80--'] 
     pre_markov_handler.select_variables(var_type, MIN, MAX, support, log, manualList)
@@ -55,8 +59,8 @@ def create_markov_chain(pnh, gh):
     location_choice = False # True, False | True means that location of devices (H0-H1) will be shown in the network
     info_choice = True # True, False | True means that the graph will show additional device statistics (avg, st.dev, occ..).
     # info_choice and location_choice can't be both True at the same time.
-    avg_var_edges = False # True, False | True adds on every edge the avg and st.dev between two nodes.
-    refDevice = False # True, False | True means that the reference device with blue arcs will be added to the network
+    avg_var_edges = True # True, False | True adds on every edge the avg and st.dev between two nodes.
+    refDevice = True # True, False | True means that the reference device with blue arcs will be added to the network
     hideNames = False # True, False | True means that the device names will be crypted in the graph. Set it to false since CERN allowed to use original device names
     onlyH0 = False # True, False | If location_choice is true and onlyH0 is true, H1 won't be shown in the graph, but only H0
     markov_handler.draw_mc_model(location_choice, info_choice, avg_var_edges, refDevice, hideNames, onlyH0)

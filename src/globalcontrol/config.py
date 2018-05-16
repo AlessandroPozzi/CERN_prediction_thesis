@@ -18,7 +18,7 @@ CORRELATION_UNIQUENESS = True # Used when computing the LIFT, in DatabaseNetwork
 
 ''' VALIDATION settings'''
 WINDOW = "before" #after, before. This is the "direction" of the analysis window. ALSO VALID FOR GRAPHS AND REF DEVICE IN MARKOV CHAINS
-VALIDATION_NAME = "validation"
+VALIDATION_NAME = "validation" # Name of the txt file created when performing validaton
 
 ''' Multiple reference devices '''
 # To create BN or MC over multiple reference devices, use the FILE_SUFFIX "custom" and set the "mode" (in this file) to "one" and the priority to L0
@@ -43,28 +43,29 @@ unitePriorities = False #If this is true, all the priority above will be put tog
 
 ''' main settings '''
 file_selection = 1 # 1 to the length of the lists below (only for "one" mode. Select in the lists below)
-selectPriority = 'L3' # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE". If unitePriorities = True --> this will be forced to "L0"
+selectPriority = 'L0' # 'L0', 'L1', 'L2', 'L3' -- ONLY FOR MODE=="ONE". If unitePriorities = True --> this will be forced to "L0"
 #escaped_file_names = "EMC0019", "EHS60BE", "ESS115H", "ESS184", "EXS48X", "EXS1062X"]
 #                    'ESS406E91', 'ESS407E91', 'ESS520E91', 'ESS1184']
 #                   'ECD162']
+#NOTE: use file_names = "validation", priority equal to L0 and mode="one" to perform the validation for BN or MC
 #['EMD1018E','EMD1028E','EMD1038E','EMD4078E','EMD2028E','EMD3018E','EMD2068E','EKC2008U']
-escaped_file_names = ['custom', 'EHS60BE', 'EXS48X', 'EMC0019', 'EXS1062X', 'ESS115H', 'ESS184',
+escaped_file_names = ['validation', 'EHS60BE', 'EXS48X', 'EMC0019', 'EXS1062X', 'ESS115H', 'ESS184',
                      'ESS406E91', 'ESS407E91', 'ESS520E91', 'ERD1545']#, 'ECD162']'custom',
-escaped_file_names = ['EHS60BE', 'EMC0019', 'EXS1062X', 'ESS115H', 'ESS184', 'EXS48X', 'ESS406E91', 'ESS407E91', 'ESS520E91']
+#escaped_file_names = ['EHS60BE', 'EMC0019', 'EXS1062X', 'ESS115H', 'ESS184', 'EXS48X', 'ESS406E91', 'ESS407E91', 'ESS520E91']
     #            'EMD1018E','EMD1028E','EMD1038E','EMD4078E','EMD2028E','EMD3018E','EMD2068E','EKC2008U']
 #true_device_names = ["EMC001*9", 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X',
 #                    'ESS406/E91', 'ESS407/E91', 'ESS520/E91', 'ESS11*84']
 #true_device_names = ["EMC001*9", 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X']
 #                    'ESS406/E91', 'ESS407/E91', 'ESS520/E91', 'ESS11*84']
 #                    'ECD1*62']
-true_device_names = ['custom','EHS60/BE', 'EXS4/8X', 'EMC001*9', 'EXS106/2X', 'ESS11/5H', 'ESS1*84'
+true_device_names = ['validation','EHS60/BE', 'EXS4/8X', 'EMC001*9', 'EXS106/2X', 'ESS11/5H', 'ESS1*84'
                      , 'ESS406/E91', 'ESS407/E91', 'ESS520/E91', 'ERD15*45']#, 'ECD1*62']#, 'ESS11*84', 'custom',
-true_device_names = ['EHS60/BE', 'EMC001*9', 'EXS106/2X', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'ESS406/E91', 'ESS407/E91', 'ESS520/E91']
+#true_device_names = ['EHS60/BE', 'EMC001*9', 'EXS106/2X', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'ESS406/E91', 'ESS407/E91', 'ESS520/E91']
     #            'EMD101/8E','EMD102/8E','EMD103/8E','EMD407/8E','EMD202/8E','EMD301/8E','EMD206/8E','EKC200/8U']
 #true_device_names = ["EMC001*9", 'EHS60/BE', 'ESS11/5H', 'ESS1*84', 'EXS4/8X', 'EXS106/2X']
 #true_device_names = ['EMD101/8E','EMD102/8E','EMD103/8E','EMD407/8E','EMD202/8E','EMD301/8E','EMD206/8E','EKC200/8U']
                     #'validation'
-mode = "one" #one, all  | "one" to do the single file-priority selected above;
+mode = "all" #one, all  | "one" to do the single file-priority selected above;
                         # "all" to do all the possible files and priorities in the lists above
 
 #import main

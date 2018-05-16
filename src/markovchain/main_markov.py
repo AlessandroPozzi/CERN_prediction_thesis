@@ -2,8 +2,9 @@
 Created on 24 nov 2017
 @author: Alessandro Pozzi, Lorenzo Costantini
 
-This is the main module of the project.
+This is the main module of Markov chain generation.
 Running this module will start the processing of one - or all - the file/priority combinations.
+It does not include the phase of itemset (.txt) generation.
 You can change some the parameters in this module in order to see how the output varies.
 Parameters that can be changed usually have a comment that shows which values can be selected.
 '''

@@ -2,8 +2,9 @@
 Created on 24 nov 2017
 @author: Alessandro Pozzi, Lorenzo Costantini
 
-This is the main module of the project. 
+This is the main module of Bayesian network generation.
 Running this module will start the processing of one - or all - the file/priority combinations.
+It does not include the phase of itemset (.txt) generation.
 You can change some the parameters in this module in order to see how the output varies.
 Parameters that can be changed usually have a comment that shows which values can be selected.
 '''
@@ -34,7 +35,7 @@ def preprocess_network(select_priority, file_selection, gh, log):
     pre_network_handler.process_files(select_priority, file_selection, file_suffix, log)
     
     # 2) SELECT VARIABLES
-    var_type = "confidence" #occurrences, frequency, stdev_only, support_stdev, confidence, manual
+    var_type = "frequency" #occurrences, frequency, stdev_only, support_stdev, confidence, manual
     support = 0.2
     MIN = 4 #minimum number of variables to consider in the network
     MAX = 5 #maximum number of variables to consider in the network
